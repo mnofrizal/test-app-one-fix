@@ -1,109 +1,109 @@
 import React, { useEffect } from "react";
 import {
   View,
-  Text,
   ScrollView,
   TouchableOpacity,
+  Text,
   BackHandler,
 } from "react-native";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
-import StepIndicator from "react-native-step-indicator";
-import { create } from "zustand";
 import { useNavigation } from "@react-navigation/native";
+import StepIndicator from "react-native-step-indicator";
 
-const useMealOrderStore = create((set) => ({
-  currentStep: 0,
-  setCurrentStep: (step) => set({ currentStep: step }),
-  resetStep: () => set({ currentStep: 0 }),
-}));
-
-const labels = ["Detail", "Pemesan", "Menu", "Summary"];
-const customStyles = {
-  stepIndicatorSize: 30,
-  currentStepIndicatorSize: 35,
-  separatorStrokeWidth: 2,
-  currentStepStrokeWidth: 2,
-  stepStrokeCurrentColor: "#007AFF",
-  stepStrokeWidth: 2,
-  stepStrokeFinishedColor: "#007AFF",
-  stepStrokeUnFinishedColor: "#aaaaaa",
-  separatorFinishedColor: "#007AFF",
-  separatorUnFinishedColor: "#aaaaaa",
-  stepIndicatorFinishedColor: "#007AFF",
-  stepIndicatorUnFinishedColor: "#ffffff",
-  stepIndicatorCurrentColor: "#ffffff",
-  stepIndicatorLabelFontSize: 13,
-  currentStepIndicatorLabelFontSize: 13,
-  stepIndicatorLabelCurrentColor: "#007AFF",
-  stepIndicatorLabelFinishedColor: "#ffffff",
-  stepIndicatorLabelUnFinishedColor: "#aaaaaa",
-  labelColor: "#999999",
-  labelSize: 13,
-  currentStepLabelColor: "#007AFF",
-};
-
-const DetailStep = () => (
-  <View className="p-4">
-    <Text className="mb-4 text-base font-medium text-gray-800">
-      Order Details
-    </Text>
-    {/* Add your detail form components here */}
-    <Text className="text-gray-600">Detail form will be implemented here</Text>
-  </View>
-);
-
-const PemesanStep = () => (
-  <View className="p-4">
-    <Text className="mb-4 text-base font-medium text-gray-800">
-      Pemesan Information
-    </Text>
-    {/* Add your pemesan form components here */}
-    <Text className="text-gray-600">Pemesan form will be implemented here</Text>
-  </View>
-);
-
-const MenuStep = () => (
-  <View className="p-4">
-    <Text className="mb-4 text-base font-medium text-gray-800">
-      Select Menu
-    </Text>
-    {/* Add your menu selection components here */}
-    <Text className="text-gray-600">
-      Menu selection will be implemented here
-    </Text>
-  </View>
-);
-
-const SummaryStep = () => (
-  <View className="p-4">
-    <Text className="mb-4 text-base font-medium text-gray-800">
-      Order Summary
-    </Text>
-    {/* Add your summary components here */}
-    <Text className="text-gray-600">
-      Order summary will be implemented here
-    </Text>
-  </View>
-);
+import { DetailStep } from "../components/meal-order/DetailStep";
+import { PemesanStep } from "../components/meal-order/PemesanStep";
+import { MenuStep } from "../components/meal-order/MenuStep";
+import { SummaryStep } from "../components/meal-order/SummaryStep";
+import {
+  customStyles,
+  labels,
+} from "../components/meal-order/StepIndicatorStyle";
+import { useMealOrderStore } from "../store/mealOrderStore";
+import {
+  isDetailStepValid,
+  isPemesanStepValid,
+  isMenuStepValid,
+} from "../store/mealOrderStore";
 
 const MealOrderScreen = () => {
   const navigation = useNavigation();
-  const { currentStep, setCurrentStep, resetStep } = useMealOrderStore();
+  const { currentStep, setCurrentStep, resetStep, formData } =
+    useMealOrderStore();
 
+  const canProceed = () => {
+    switch (currentStep) {
+      case 0:
+        return isDetailStepValid(formData);
+      case 1:
+        return isPemesanStepValid(formData);
+      case 2:
+        return isMenuStepValid(formData);
+      case 3:
+        return true;
+      default:
+        return false;
+    }
+  };
+
+  // Split useEffect for initialization and back handler
+  useEffect(() => {
+    // Reset form data when component mounts
+    resetStep();
+  }, []);
+
+  // Separate useEffect for back handler to update when currentStep changes
   useEffect(() => {
     const backHandler = BackHandler.addEventListener(
       "hardwareBackPress",
       () => {
+        // Only handle back press if we're not on the first step
         if (currentStep > 0) {
           setCurrentStep(currentStep - 1);
-          return true;
+          return true; // Prevent default back behavior
         }
-        return false;
+        return false; // Allow default back behavior on first step
       }
     );
 
     return () => backHandler.remove();
-  }, [currentStep]);
+  }, [currentStep, setCurrentStep]); // Include dependencies
+
+  const handleSubmit = () => {
+    console.log("Submitting order with data:", {
+      judulPekerjaan: formData.judulPekerjaan,
+      type: formData.type,
+      category: formData.category,
+      dropPoint: formData.dropPoint,
+      supervisor: formData.supervisor,
+      pic: formData.pic,
+      orderType: formData.orderType,
+      orders:
+        formData.orderType === "bulk"
+          ? {
+              type: "bulk",
+              menuItemId: formData.bulkOrder.menuItemId,
+              note: formData.bulkOrder.note,
+              entities: Object.entries(formData.selectedEntities)
+                .filter(([_, isSelected]) => isSelected)
+                .map(([entity]) => ({
+                  entity,
+                  count: formData.entityCounts[entity],
+                })),
+            }
+          : {
+              type: "detail",
+              orders: formData.employeeOrders.sort((a, b) => {
+                if (a.entity !== b.entity) {
+                  return a.entity.localeCompare(b.entity);
+                }
+                return a.index - b.index;
+              }),
+            },
+    });
+
+    // Reset form data and navigate to success screen
+    resetStep();
+    navigation.replace("MealOrderSuccess");
+  };
 
   const renderStep = () => {
     switch (currentStep) {
@@ -135,11 +135,13 @@ const MealOrderScreen = () => {
 
       <View className="bg-white p-4 shadow-sm">
         <TouchableOpacity
-          className="w-full rounded-lg bg-blue-500 py-4"
+          className={`w-full rounded-lg py-4 ${
+            canProceed() ? "bg-blue-500" : "bg-gray-300"
+          }`}
+          disabled={!canProceed()}
           onPress={() => {
             if (currentStep === 3) {
-              resetStep();
-              navigation.replace("MealOrderSuccess");
+              handleSubmit();
             } else {
               setCurrentStep(Math.min(3, currentStep + 1));
             }

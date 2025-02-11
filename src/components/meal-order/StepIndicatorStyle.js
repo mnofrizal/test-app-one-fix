@@ -1,0 +1,25 @@
+export const customStyles = {
+  stepIndicatorSize: 30,
+  currentStepIndicatorSize: 35,
+  separatorStrokeWidth: 2,
+  currentStepStrokeWidth: 2,
+  stepStrokeCurrentColor: "#007AFF",
+  stepStrokeWidth: 2,
+  stepStrokeFinishedColor: "#007AFF",
+  stepStrokeUnFinishedColor: "#aaaaaa",
+  separatorFinishedColor: "#007AFF",
+  separatorUnFinishedColor: "#aaaaaa",
+  stepIndicatorFinishedColor: "#007AFF",
+  stepIndicatorUnFinishedColor: "#ffffff",
+  stepIndicatorCurrentColor: "#ffffff",
+  stepIndicatorLabelFontSize: 13,
+  currentStepIndicatorLabelFontSize: 13,
+  stepIndicatorLabelCurrentColor: "#007AFF",
+  stepIndicatorLabelFinishedColor: "#ffffff",
+  stepIndicatorLabelUnFinishedColor: "#aaaaaa",
+  labelColor: "#999999",
+  labelSize: 13,
+  currentStepLabelColor: "#007AFF",
+};
+
+export const labels = ["Detail", "Pemesan", "Menu", "Summary"];
