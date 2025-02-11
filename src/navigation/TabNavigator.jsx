@@ -1,6 +1,7 @@
 import React from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { View } from "react-native";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 // Import screens
 import HomeScreen from "../screens/HomeScreen";
@@ -12,10 +13,10 @@ const Tab = createBottomTabNavigator();
 
 // Custom tab icon component
 const TabIcon = ({ focused, iconName }) => (
-  <View
-    className={`w-6 h-6 rounded-full ${
-      focused ? "bg-blue-500" : "bg-gray-400"
-    }`}
+  <MaterialCommunityIcons
+    name={iconName}
+    size={24}
+    color={focused ? "#007AFF" : "#8E8E93"}
   />
 );
 
@@ -37,7 +38,7 @@ const TabNavigator = () => {
         component={HomeScreen}
         options={{
           tabBarIcon: ({ focused }) => (
-            <TabIcon focused={focused} iconName="home" />
+            <TabIcon focused={focused} iconName="home-variant" />
           ),
         }}
       />
@@ -46,7 +47,7 @@ const TabNavigator = () => {
         component={OrderScreen}
         options={{
           tabBarIcon: ({ focused }) => (
-            <TabIcon focused={focused} iconName="document" />
+            <TabIcon focused={focused} iconName="clipboard-list" />
           ),
         }}
       />
@@ -55,7 +56,7 @@ const TabNavigator = () => {
         component={NotificationScreen}
         options={{
           tabBarIcon: ({ focused }) => (
-            <TabIcon focused={focused} iconName="notifications" />
+            <TabIcon focused={focused} iconName="bell" />
           ),
         }}
       />
@@ -64,7 +65,7 @@ const TabNavigator = () => {
         component={ProfileScreen}
         options={{
           tabBarIcon: ({ focused }) => (
-            <TabIcon focused={focused} iconName="person" />
+            <TabIcon focused={focused} iconName="account" />
           ),
         }}
       />

@@ -1,0 +1,158 @@
+# Project Context Documentation
+
+## Project Overview
+- Modern React Native application with navigation, state management, and a sophisticated UI
+- Uses JavaScript (.jsx files) with NativeWind for styling
+- Implements a bottom tab navigation system with icon-based navigation
+
+## Current Implementation Status
+
+### 1. Project Structure
+```
+src/
+├── api/          # API integration (prepared directory)
+├── components/   # Reusable components (prepared directory)
+├── navigation/   # Navigation configuration
+│   └── TabNavigator.jsx
+├── screens/      # Screen components
+│   ├── HomeScreen.jsx
+│   ├── OrderScreen.jsx
+│   ├── NotificationScreen.jsx
+│   └── ProfileScreen.jsx
+├── store/        # State management
+│   └── useStore.js
+├── theme/        # Theme configuration
+│   └── theme.js
+├── utils/        # Utility functions (prepared directory)
+└── hooks/        # Custom hooks (prepared directory)
+```
+
+### 2. Dependencies
+```json
+{
+  "@expo/vector-icons": "^14.0.4",
+  "@gorhom/bottom-sheet": "^4.6.3",
+  "@react-native-masked-view/masked-view": "^0.3.2",
+  "@react-navigation/bottom-tabs": "^7.2.0",
+  "@react-navigation/native": "^7.0.14",
+  "@react-navigation/native-stack": "^7.2.0",
+  "react-native-step-indicator": "^1.0.3",
+  "axios": "^1.7.9",
+  "expo": "52",
+  "expo-status-bar": "~2.0.1",
+  "nativewind": "^2.0.11",
+  "react": "18.3.1",
+  "react-native": "0.76.7",
+  "react-native-gesture-handler": "~2.20.2",
+  "react-native-reanimated": "~3.16.1",
+  "react-native-safe-area-context": "^5.2.0",
+  "react-native-screens": "^4.6.0",
+  "zustand": "^5.0.3"
+}
+```
+
+### 3. Implemented Features
+
+#### Navigation
+- Stack Navigation using @react-navigation/native-stack
+  - MainTabs screen (contains bottom tabs)
+  - MealOrder screen
+- Bottom tab navigation with 4 tabs:
+  - Home
+  - Order
+  - Notification
+  - Profile
+- Icon-based navigation using MaterialCommunityIcons
+- Icons change color when active/inactive
+- Custom header styling for stack navigation
+
+#### MealOrder Screens
+- Main Order Screen:
+  - Multi-step form with react-native-step-indicator
+  - Four steps: Detail, Pemesan, Menu, and Summary
+  - Custom styled step indicator with blue accent color
+  - Full-width Next/Submit button
+  - Hardware back button for previous step
+  - Step-specific content components
+  - Local state management using Zustand
+
+- Success Screen:
+  - Clean success message with checkmark icon
+  - Share functionality button
+  - Back to Home navigation
+  - Custom animations and transitions
+  - Full-screen design without header
+
+#### Home Screen
+- Header section with greeting and search bar
+- Services section with 4 menu items in a single row:
+  - Meal Order (food icon)
+  - Transport (car icon)
+  - Rooms (door icon)
+  - Stationary (pencil icon)
+- Request summary section with cards showing count for each service
+
+#### State Management
+- Global store using Zustand
+- Manages request counts for different services
+- Implemented in src/store/useStore.js
+
+#### Theme System
+- Custom theme configuration in src/theme/theme.js
+- Includes colors, spacing, typography, and layout settings
+- Uses NativeWind classes for consistent styling
+
+### 4. UI Components
+
+#### Service Menu Items
+- Circular icons with labels
+- Equal width distribution (flex-1)
+- Blue accent colors with shadows
+- Centered layout in a single row
+
+#### Summary Cards
+- Icon and title on the left
+- Count display with blue accent
+- Shadow and rounded corners
+- "Total Requests" subtitle
+
+#### Search Bar
+- Icon-prefixed design
+- Light gray background
+- Rounded corners
+- Custom placeholder text
+
+### 5. Current Status
+- Navigation system is complete with:
+  - Bottom tabs navigation
+  - Stack navigation for screens
+  - Hardware back button handling
+- Home screen UI is implemented with sophisticated design
+- MealOrder screen implemented with:
+  - 4-step form (Detail, Pemesan, Menu, Summary)
+  - Step indicator with custom styling
+  - Full-width Next/Submit button
+  - Hardware back button navigation between steps
+- Placeholder screens for Order, Notification, and Profile
+- State management set up:
+  - Global state with Zustand
+  - Local state for MealOrder steps
+- Theme system is in place with consistent styling
+
+### 6. Next Steps (Potential)
+- Complete the MealOrder form implementation
+- Add screens for other services (Transport, Rooms, Stationary)
+- Integrate API calls using axios
+- Add more interactive features
+- Implement bottom sheet functionality
+- Add form validation and error handling
+
+### 7. Notes for Future Development
+- All styling uses NativeWind classes
+- MaterialCommunityIcons are used for consistency
+- State updates should go through Zustand store
+- Follow existing component structure for new features
+- Maintain current UI/UX patterns
+
+## Extra Notes
+This project serves as a base for a service management application, with the current focus on the UI and structure. The implementation prioritizes scalability and maintainability while following React Native best practices.
