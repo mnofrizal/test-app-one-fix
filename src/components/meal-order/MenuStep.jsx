@@ -7,6 +7,8 @@ import {
   ScrollView,
 } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import EmployeeSelectSheet from "./EmployeeSelectSheet";
+import MenuSelectSheet from "./MenuSelectSheet";
 import { useMealOrderStore } from "../../store/mealOrderStore";
 
 const OptionCard = ({ title, isSelected, onSelect }) => (
@@ -35,6 +37,8 @@ const OptionCard = ({ title, isSelected, onSelect }) => (
 
 const PersonOrderForm = ({ entity, index }) => {
   const { formData, updateEmployeeOrders } = useMealOrderStore();
+  const [employeeSheetVisible, setEmployeeSheetVisible] = useState(false);
+  const [menuSheetVisible, setMenuSheetVisible] = useState(false);
   const orders = formData.employeeOrders.filter((o) => o.entity === entity);
   const order = orders[index] || {
     entity,
@@ -51,31 +55,85 @@ const PersonOrderForm = ({ entity, index }) => {
 
   return (
     <View className="mb-4 rounded-lg border border-gray-100 bg-white p-4">
+      {/* Selection sheets */}
+      <EmployeeSelectSheet
+        visible={employeeSheetVisible}
+        onClose={() => setEmployeeSheetVisible(false)}
+        onSelect={(employee) =>
+          updateOrder({ employeeName: employee.name, employeeId: employee.id })
+        }
+        selected={
+          order.employeeName
+            ? { name: order.employeeName, id: order.employeeId }
+            : null
+        }
+        department={formData.supervisor.subBidang}
+        isPlnip={entity === "PLNIP"}
+      />
+
+      <MenuSelectSheet
+        visible={menuSheetVisible}
+        onClose={() => setMenuSheetVisible(false)}
+        onSelect={(menu) =>
+          updateOrder({
+            items: [{ menuItemId: menu.id, menuName: menu.name }],
+          })
+        }
+        selected={
+          order.items[0]?.menuItemId
+            ? {
+                id: order.items[0].menuItemId,
+                name: order.items[0].menuName,
+              }
+            : null
+        }
+      />
+
       <Text className="mb-3 text-sm font-medium text-gray-600">
         Pegawai {index + 1}
       </Text>
       <View className="space-y-3">
+        <TouchableOpacity
+          onPress={() => setEmployeeSheetVisible(true)}
+          className="flex-row items-center justify-between rounded-lg border border-gray-200 bg-white px-3 py-2.5"
+        >
+          <Text
+            className={order.employeeName ? "text-gray-900" : "text-gray-400"}
+          >
+            {order.employeeName || "Select Employee Name"}
+          </Text>
+          <MaterialCommunityIcons
+            name="chevron-down"
+            size={20}
+            color="#9CA3AF"
+          />
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          onPress={() => setMenuSheetVisible(true)}
+          className="flex-row items-center justify-between rounded-lg border border-gray-200 bg-white px-3 py-2.5"
+        >
+          <Text
+            className={
+              order.items[0]?.menuName ? "text-gray-900" : "text-gray-400"
+            }
+          >
+            {order.items[0]?.menuName || "Select Menu"}
+          </Text>
+          <MaterialCommunityIcons
+            name="chevron-down"
+            size={20}
+            color="#9CA3AF"
+          />
+        </TouchableOpacity>
         <TextInput
+          ref={(ref) => {
+            if (ref) {
+              ref.setNativeProps({ text: order.note });
+            }
+          }}
           className="rounded-lg border border-gray-200 bg-white px-3 py-2.5"
-          value={order.employeeName}
-          onChangeText={(text) => updateOrder({ employeeName: text })}
-          placeholder="Nama Pegawai"
-          placeholderTextColor="#9CA3AF"
-        />
-        <TextInput
-          className="rounded-lg border border-gray-200 bg-white px-3 py-2.5"
-          value={order.items[0]?.menuItemId}
-          onChangeText={(text) =>
-            updateOrder({
-              items: [{ ...order.items[0], menuItemId: text }],
-            })
-          }
-          placeholder="Menu"
-          placeholderTextColor="#9CA3AF"
-        />
-        <TextInput
-          className="rounded-lg border border-gray-200 bg-white px-3 py-2.5"
-          value={order.note}
+          defaultValue={order.note}
           onChangeText={(text) => updateOrder({ note: text })}
           placeholder="Catatan"
           placeholderTextColor="#9CA3AF"
@@ -102,6 +160,7 @@ const EntityOrderSection = ({ entity, count }) => {
 
 export const MenuStep = () => {
   const { formData, setOrderType, updateBulkOrder } = useMealOrderStore();
+  const [bulkMenuSheetVisible, setBulkMenuSheetVisible] = useState(false);
   const selectedEntities = Object.entries(formData.selectedEntities)
     .filter(([_, isSelected]) => isSelected)
     .map(([entity]) => ({ entity, count: formData.entityCounts[entity] }));
@@ -136,16 +195,52 @@ export const MenuStep = () => {
 
           {formData.orderType === "bulk" ? (
             <View className="space-y-3">
-              <TextInput
-                className="rounded-lg border border-gray-200 bg-white px-3 py-2.5"
-                value={formData.bulkOrder.menuItemId}
-                onChangeText={(text) => updateBulkOrder({ menuItemId: text })}
-                placeholder="Menu untuk semua"
-                placeholderTextColor="#9CA3AF"
+              <MenuSelectSheet
+                visible={bulkMenuSheetVisible}
+                onClose={() => setBulkMenuSheetVisible(false)}
+                onSelect={(menu) =>
+                  updateBulkOrder({
+                    menuItemId: menu.id,
+                    menuName: menu.name,
+                  })
+                }
+                selected={
+                  formData.bulkOrder.menuItemId
+                    ? {
+                        id: formData.bulkOrder.menuItemId,
+                        name: formData.bulkOrder.menuName,
+                      }
+                    : null
+                }
               />
+
+              <TouchableOpacity
+                onPress={() => setBulkMenuSheetVisible(true)}
+                className="flex-row items-center justify-between rounded-lg border border-gray-200 bg-white px-3 py-2.5"
+              >
+                <Text
+                  className={
+                    formData.bulkOrder.menuName
+                      ? "text-gray-900"
+                      : "text-gray-400"
+                  }
+                >
+                  {formData.bulkOrder.menuName || "Select Menu for All"}
+                </Text>
+                <MaterialCommunityIcons
+                  name="chevron-down"
+                  size={20}
+                  color="#9CA3AF"
+                />
+              </TouchableOpacity>
               <TextInput
+                ref={(ref) => {
+                  if (ref) {
+                    ref.setNativeProps({ text: formData.bulkOrder.note });
+                  }
+                }}
                 className="rounded-lg border border-gray-200 bg-white px-3 py-2.5"
-                value={formData.bulkOrder.note}
+                defaultValue={formData.bulkOrder.note}
                 onChangeText={(text) => updateBulkOrder({ note: text })}
                 placeholder="Catatan"
                 placeholderTextColor="#9CA3AF"

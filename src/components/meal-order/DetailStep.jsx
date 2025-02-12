@@ -14,182 +14,231 @@ import DropPointSheet from "./DropPointSheet";
 import UserSelectSheet from "./UserSelectSheet";
 import DepartmentSheet from "./DepartmentSheet";
 import CustomPICSheet from "./CustomPICSheet";
+import JobTitleSheet from "./JobTitleSheet";
+import JobTitleSelection from "./JobTitleSelection";
 
 export const DetailStep = () => {
   const { formData, updateFormData, updatePIC, updateSupervisor } =
     useMealOrderStore();
   const [dropPointVisible, setDropPointVisible] = useState(false);
   const [picSheetVisible, setPicSheetVisible] = useState(false);
-  const [supervisorSheetVisible, setSupervisorSheetVisible] = useState(false);
   const [departmentSheetVisible, setDepartmentSheetVisible] = useState(false);
   const [customPicSheetVisible, setCustomPicSheetVisible] = useState(false);
+  const [jobTitleSheetVisible, setJobTitleSheetVisible] = useState(false);
   const [isCustomPic, setIsCustomPic] = useState(false);
 
-  const categories = ["Sarapan", "Makan Siang", "Makan Malam", "Snack"];
+  const mealTimes = [
+    { id: "breakfast", label: "Sarapan", startHour: 6, endHour: 9 },
+    { id: "lunch", label: "Makan Siang", startHour: 11, endHour: 14 },
+    { id: "afternoon", label: "Makan Sore", startHour: 15, endHour: 17 },
+    { id: "dinner", label: "Makan Malam", startHour: 18, endHour: 21 },
+  ];
+
+  // Get current recommendation based on time
+  const getCurrentMealRecommendation = () => {
+    const currentHour = new Date().getHours();
+    const recommendation = mealTimes.find(
+      (meal) => currentHour >= meal.startHour && currentHour <= meal.endHour
+    );
+    return recommendation?.label;
+  };
+
+  const currentRecommendation = getCurrentMealRecommendation();
+
+  // Common drop points for quick access
+  const quickDropPoints = ["Lobby Lantai 1", "Kantin Utama", "Ruang Meeting A"];
 
   return (
-    <ScrollView className="flex-1">
-      <View className="p-4">
-        <Text className="mb-4 text-lg font-semibold text-gray-800">
-          Order Details
-        </Text>
-
+    <ScrollView className="flex-1 rounded-t-3xl bg-gray-50">
+      <View className="py-0">
         {/* Category Selection */}
-        <View className="mb-4">
-          <Text className="mb-2 text-sm font-medium text-gray-700">
+        <View className="p-4">
+          <Text className="mb-3 text-base font-semibold text-gray-800">
             Tipe Pesanan
           </Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
             <View className="flex-row">
-              {categories.map((category) => (
+              {mealTimes.map((meal) => (
                 <TouchableOpacity
-                  key={category}
-                  onPress={() => updateFormData({ category })}
-                  className={`mr-2 rounded-full px-4 py-2 ${
-                    formData.category === category
-                      ? "bg-blue-500"
-                      : "bg-gray-100"
+                  key={meal.id}
+                  onPress={() => updateFormData({ category: meal.label })}
+                  className={`mr-3 rounded-full border px-6 py-2.5 ${
+                    formData.category === meal.label
+                      ? "border-blue-500 bg-blue-50"
+                      : "border-gray-200 bg-white"
                   }`}
                 >
                   <Text
                     className={`text-sm font-medium ${
-                      formData.category === category
-                        ? "text-white"
-                        : "text-gray-800"
+                      formData.category === meal.label
+                        ? "text-blue-600"
+                        : "text-gray-600"
                     }`}
                   >
-                    {category}
+                    {meal.label}
                   </Text>
                 </TouchableOpacity>
               ))}
             </View>
           </ScrollView>
-        </View>
-
-        {/* Judul Pekerjaan */}
-        <View className="mb-4">
-          <Text className="mb-2 text-sm font-medium text-gray-700">
-            Judul Pekerjaan
-          </Text>
-          <TextInput
-            className="rounded-lg border border-gray-200 bg-white px-3 py-2.5"
-            value={formData.judulPekerjaan}
-            onChangeText={(text) => updateFormData({ judulPekerjaan: text })}
-            placeholder="Masukkan judul pekerjaan"
-            placeholderTextColor="#9CA3AF"
-          />
-        </View>
-
-        {/* PIC Information */}
-        <View className="mb-4">
-          <View className="mb-3 flex-row items-center justify-between">
-            <Text className="text-sm font-medium text-gray-800">
-              PIC Information
-            </Text>
-            <View className="flex-row items-center">
-              <Text className="mr-2 text-sm text-gray-600">Custom</Text>
-              <Switch
-                value={isCustomPic}
-                onValueChange={(value) => {
-                  setIsCustomPic(value);
-                  if (!value) {
-                    // Reset PIC data when switching back to selection mode
-                    updatePIC({ name: "", nomorHp: "" });
-                  }
-                }}
-              />
-            </View>
-          </View>
-          <View className="space-y-3">
+          {currentRecommendation && (
             <TouchableOpacity
               onPress={() =>
-                isCustomPic
-                  ? setCustomPicSheetVisible(true)
-                  : setPicSheetVisible(true)
+                updateFormData({ category: currentRecommendation })
               }
-              className="flex-row items-center justify-between rounded-lg border border-gray-200 bg-white px-3 py-2.5"
+              className="mt-4 flex-row items-center"
             >
-              <Text
-                className={
-                  formData.pic.name ? "text-gray-900" : "text-gray-400"
-                }
-              >
-                {formData.pic.name || "Select PIC Name"}
-              </Text>
               <MaterialCommunityIcons
-                name="chevron-down"
-                size={20}
-                color="#9CA3AF"
+                name="clock-outline"
+                size={14}
+                color="#3B82F6"
               />
+              <Text className="font-base ml-1 text-sm text-blue-500">
+                Pilih jadwal makan sekarang - {currentRecommendation}
+              </Text>
             </TouchableOpacity>
-          </View>
+          )}
         </View>
 
-        {/* Supervisor Information */}
-        <View className="mb-4">
-          <Text className="mb-3 text-sm font-medium text-gray-800">
-            Supervisor Information
-          </Text>
-          <View className="space-y-3">
-            <TouchableOpacity
-              onPress={() => setSupervisorSheetVisible(true)}
-              className="flex-row items-center justify-between rounded-lg border border-gray-200 bg-white px-3 py-2.5"
-            >
-              <Text
-                className={
-                  formData.supervisor.name ? "text-gray-900" : "text-gray-400"
-                }
-              >
-                {formData.supervisor.name || "Select Supervisor"}
-              </Text>
-              <MaterialCommunityIcons
-                name="chevron-down"
-                size={20}
-                color="#9CA3AF"
-              />
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => setDepartmentSheetVisible(true)}
-              className="flex-row items-center justify-between rounded-lg border border-gray-200 bg-white px-3 py-2.5"
-            >
-              <Text
-                className={
-                  formData.supervisor.subBidang
-                    ? "text-gray-900"
-                    : "text-gray-400"
-                }
-              >
-                {formData.supervisor.subBidang || "Select Department"}
-              </Text>
-              <MaterialCommunityIcons
-                name="chevron-down"
-                size={20}
-                color="#9CA3AF"
-              />
-            </TouchableOpacity>
-          </View>
-        </View>
+        {/* Main Form Section */}
+        <View className="p-2 px-4">
+          {/* Job Title Selection */}
+          <JobTitleSelection
+            jobTitle={formData.judulPekerjaan}
+            onPress={() => setJobTitleSheetVisible(true)}
+          />
 
-        {/* Drop Point */}
-        <View className="mb-4">
-          <Text className="mb-2 text-sm font-medium text-gray-700">
-            Drop Point
-          </Text>
-          <TouchableOpacity
-            onPress={() => setDropPointVisible(true)}
-            className="flex-row items-center justify-between rounded-lg border border-gray-200 bg-white px-3 py-2.5"
-          >
-            <Text
-              className={formData.dropPoint ? "text-gray-900" : "text-gray-400"}
-            >
-              {formData.dropPoint || "Select drop point location"}
+          {/* PIC Information */}
+          <View className="mb-6">
+            <View className="flex-row items-center justify-between">
+              <Text className="text-sm font-medium text-gray-800">
+                PIC Information
+              </Text>
+              <View className="flex-row items-center">
+                <Text className="mr-2 text-sm text-gray-600">Custom</Text>
+                <Switch
+                  value={isCustomPic}
+                  onValueChange={(value) => {
+                    setIsCustomPic(value);
+                    if (!value) {
+                      updatePIC({ name: "", nomorHp: "" });
+                    }
+                  }}
+                />
+              </View>
+            </View>
+            <View className="space-y-3">
+              <View className="space-y-3">
+                <TouchableOpacity
+                  onPress={() =>
+                    isCustomPic
+                      ? setCustomPicSheetVisible(true)
+                      : setPicSheetVisible(true)
+                  }
+                  className="flex-row items-center justify-between rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-sm"
+                >
+                  <Text
+                    className={
+                      formData.pic.name ? "text-gray-900" : "text-gray-400"
+                    }
+                  >
+                    {formData.pic.name || "Select PIC Name"}
+                  </Text>
+                  <MaterialCommunityIcons
+                    name="chevron-down"
+                    size={20}
+                    color="#6B7280"
+                  />
+                </TouchableOpacity>
+              </View>
+              <View className="space-y-3">
+                <TouchableOpacity
+                  onPress={() => setDepartmentSheetVisible(true)}
+                  className="flex-row items-center justify-between rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-sm"
+                >
+                  <Text
+                    className={
+                      formData.supervisor.subBidang
+                        ? "text-gray-900"
+                        : "text-gray-400"
+                    }
+                  >
+                    {formData.supervisor.subBidang || "Select Subbidang"}
+                  </Text>
+                  <MaterialCommunityIcons
+                    name="chevron-down"
+                    size={20}
+                    color="#6B7280"
+                  />
+                </TouchableOpacity>
+                {formData.supervisor.subBidang && (
+                  <View className="flex-row items-center space-x-1.5 pl-1">
+                    <MaterialCommunityIcons
+                      name="information"
+                      size={14}
+                      color="#3B82F6"
+                    />
+                    <Text className="font-base text-xs italic text-blue-500">
+                      Supervisor: {formData.supervisor.name}
+                    </Text>
+                  </View>
+                )}
+              </View>
+            </View>
+          </View>
+
+          {/* Drop Point */}
+          <View>
+            <Text className="mb-2 text-sm font-medium text-gray-800">
+              Drop Point
             </Text>
-            <MaterialCommunityIcons
-              name="chevron-down"
-              size={20}
-              color="#9CA3AF"
-            />
-          </TouchableOpacity>
+            <View className="space-y-3">
+              <TouchableOpacity
+                onPress={() => setDropPointVisible(true)}
+                className="flex-row items-center justify-between rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-sm"
+              >
+                <Text
+                  className={
+                    formData.dropPoint ? "text-gray-900" : "text-gray-400"
+                  }
+                >
+                  {formData.dropPoint || "Select drop point location"}
+                </Text>
+                <MaterialCommunityIcons
+                  name="chevron-down"
+                  size={20}
+                  color="#6B7280"
+                />
+              </TouchableOpacity>
+
+              {/* Quick Drop Point Selection */}
+              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                <View className="flex-row py-1">
+                  {quickDropPoints.map((point) => (
+                    <TouchableOpacity
+                      key={point}
+                      onPress={() => updateFormData({ dropPoint: point })}
+                      className={`mr-2 rounded-full border px-4 py-1.5 ${
+                        formData.dropPoint === point
+                          ? "border-blue-500 bg-blue-50"
+                          : "border-gray-200 bg-white"
+                      }`}
+                    >
+                      <Text
+                        className={`text-xs font-medium ${
+                          formData.dropPoint === point
+                            ? "text-blue-600"
+                            : "text-gray-600"
+                        }`}
+                      >
+                        {point}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </ScrollView>
+            </View>
+          </View>
         </View>
 
         {/* Bottom Sheets */}
@@ -232,32 +281,34 @@ export const DetailStep = () => {
           title="Select PIC"
         />
 
-        <UserSelectSheet
-          visible={supervisorSheetVisible}
-          onClose={() => setSupervisorSheetVisible(false)}
-          onSelect={(user) => {
-            updateSupervisor({
-              name: user.name,
-              nomorHp: user.nomorHp || "",
-              subBidang: user.department,
-            });
-            // Also update the department when supervisor is selected
-            updateSupervisor({ subBidang: user.department });
-          }}
-          selected={
-            formData.supervisor.name ? { name: formData.supervisor.name } : null
-          }
-          title="Select Supervisor"
-          supervisorsOnly={true}
-        />
-
         <DepartmentSheet
           visible={departmentSheetVisible}
           onClose={() => setDepartmentSheetVisible(false)}
-          onSelect={(department) => updateSupervisor({ subBidang: department })}
+          onSelect={(department) => {
+            // Find supervisor (Asman) for the selected department
+            const departmentUsers = mockUsers[department];
+            const supervisor = departmentUsers.find((u) => u.isAsman);
+
+            // Update both subBidang and supervisor information
+            updateSupervisor({
+              subBidang: department,
+              name: supervisor ? supervisor.name : "",
+              nomorHp: supervisor ? supervisor.nomorHp || "" : "",
+            });
+          }}
           selected={formData.supervisor.subBidang}
+        />
+
+        {/* Job Title Bottom Sheet */}
+        <JobTitleSheet
+          visible={jobTitleSheetVisible}
+          onClose={() => setJobTitleSheetVisible(false)}
+          onSave={(title) => updateFormData({ judulPekerjaan: title })}
+          initialValue={formData.judulPekerjaan}
         />
       </View>
     </ScrollView>
   );
 };
+
+export default DetailStep;

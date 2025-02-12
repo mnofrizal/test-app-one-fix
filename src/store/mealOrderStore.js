@@ -34,6 +34,7 @@ const initialFormData = {
   employeeOrders: [],
   bulkOrder: {
     menuItemId: "",
+    menuName: "",
     note: "",
   },
 };
@@ -143,7 +144,10 @@ export const isPemesanStepValid = (formData) => {
 
 export const isMenuStepValid = (formData) => {
   if (formData.orderType === "bulk") {
-    return formData.bulkOrder.menuItemId.trim() !== "";
+    return (
+      formData.bulkOrder.menuItemId.trim() !== "" &&
+      formData.bulkOrder.menuName.trim() !== ""
+    );
   } else if (formData.orderType === "detail") {
     // Check if each selected entity has the correct number of orders
     return Object.entries(formData.selectedEntities)
@@ -156,7 +160,9 @@ export const isMenuStepValid = (formData) => {
           orders.length === formData.entityCounts[entity] &&
           orders.every(
             (order) =>
-              order.employeeName?.trim() && order.items?.[0]?.menuItemId?.trim()
+              order.employeeName?.trim() &&
+              order.items?.[0]?.menuItemId?.trim() &&
+              order.items?.[0]?.menuName?.trim()
           )
         );
       });

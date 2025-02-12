@@ -23,7 +23,11 @@ const DepartmentSheet = ({ visible, onClose, onSelect, selected }) => {
   }, [searchText]);
 
   return (
-    <BottomSheet visible={visible} onClose={onClose} snapPoints={["50%"]}>
+    <BottomSheet
+      visible={visible}
+      onClose={onClose}
+      snapPoints={["50%", "85%"]}
+    >
       <View className="flex-1">
         {/* Fixed Header */}
         <View className="border-b border-gray-100 bg-white px-4 pb-4">

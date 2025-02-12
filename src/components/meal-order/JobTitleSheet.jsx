@@ -1,29 +1,23 @@
-import React, { useRef, useState, useMemo, useCallback } from "react";
+import React, { useRef, useState, useMemo, useEffect } from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { BottomSheetTextInput } from "@gorhom/bottom-sheet";
 import BottomSheet from "../BottomSheet";
 
-const CustomPICSheet = ({ visible, onClose, onSave, initialData = {} }) => {
-  const nameRef = useRef(initialData.name || "");
-  const phoneRef = useRef(initialData.nomorHp || "");
-  const [isValid, setIsValid] = useState(
-    nameRef.current.trim() !== "" && phoneRef.current.trim() !== ""
-  );
+const JobTitleSheet = ({ visible, onClose, onSave, initialValue = "" }) => {
+  const titleRef = useRef(initialValue);
+  const [isValid, setIsValid] = useState(titleRef.current.trim() !== "");
 
   const handleSave = () => {
-    onSave({
-      name: nameRef.current,
-      nomorHp: phoneRef.current,
-    });
+    onSave(titleRef.current);
     onClose();
   };
 
-  const validateInputs = () => {
-    setIsValid(nameRef.current.trim() !== "" && phoneRef.current.trim() !== "");
+  const validateInput = () => {
+    setIsValid(titleRef.current.trim() !== "");
   };
 
   // Provide different snap points for keyboard visible/hidden states
-  const snapPoints = useMemo(() => ["50%", "85%"], []);
+  const snapPoints = useMemo(() => ["55%"], []);
 
   return (
     <BottomSheet visible={visible} onClose={onClose} snapPoints={snapPoints}>
@@ -31,40 +25,27 @@ const CustomPICSheet = ({ visible, onClose, onSave, initialData = {} }) => {
         {/* Fixed Header */}
         <View className="border-b border-gray-100 bg-white px-4">
           <Text className="mb-4 text-xl font-semibold text-gray-800">
-            Custom PIC Information
+            Judul Pekerjaan
           </Text>
         </View>
 
         {/* Form - Added bottom padding to prevent content being hidden behind fixed button */}
         <View className="p-4 pb-20">
           <View className="mb-4">
-            <Text className="mb-2 text-sm font-medium text-gray-700">Name</Text>
-            <BottomSheetTextInput
-              className="rounded-lg border border-gray-200 bg-white px-3 py-2.5"
-              defaultValue={nameRef.current}
-              onChangeText={(text) => {
-                nameRef.current = text;
-                validateInputs();
-              }}
-              placeholder="Enter name"
-              placeholderTextColor="#9CA3AF"
-            />
-          </View>
-
-          <View className="mb-4">
             <Text className="mb-2 text-sm font-medium text-gray-700">
-              Phone Number
+              Masukkan judul pekerjaan yang akan dilakukan
             </Text>
             <BottomSheetTextInput
               className="rounded-lg border border-gray-200 bg-white px-3 py-2.5"
-              defaultValue={phoneRef.current}
+              defaultValue={titleRef.current}
               onChangeText={(text) => {
-                phoneRef.current = text;
-                validateInputs();
+                titleRef.current = text;
+                validateInput();
               }}
-              placeholder="Enter phone number"
+              placeholder="Contoh: Meeting Project A"
               placeholderTextColor="#9CA3AF"
-              keyboardType="phone-pad"
+              autoCapitalize="words"
+              autoFocus
             />
           </View>
         </View>
@@ -78,7 +59,7 @@ const CustomPICSheet = ({ visible, onClose, onSave, initialData = {} }) => {
               isValid ? "bg-blue-500" : "bg-gray-300"
             }`}
           >
-            <Text className="text-center font-medium text-white">Save</Text>
+            <Text className="text-center font-medium text-white">Simpan</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -86,4 +67,4 @@ const CustomPICSheet = ({ visible, onClose, onSave, initialData = {} }) => {
   );
 };
 
-export default CustomPICSheet;
+export default JobTitleSheet;

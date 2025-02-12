@@ -1,46 +1,29 @@
 import React, { useState, useMemo, useRef } from "react";
 import { View, Text, TouchableOpacity } from "react-native";
-import { ScrollView } from "react-native-gesture-handler";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { BottomSheetTextInput } from "@gorhom/bottom-sheet";
 import BottomSheet from "../BottomSheet";
-import { mockUsers } from "../../constants/mockUsers";
+import { mockMenus } from "../../constants/mockMenus";
 
-// Flatten users array and add department info
-const getAllUsers = (supervisorsOnly = false) => {
-  return Object.entries(mockUsers).flatMap(([department, users]) =>
-    users
-      .filter((user) => !supervisorsOnly || user.isAsman)
-      .map((user) => ({
-        ...user,
-        department,
-      }))
-  );
-};
-
-const UserSelectSheet = ({
-  visible,
-  onClose,
-  onSelect,
-  selected,
-  title,
-  supervisorsOnly = false,
-}) => {
+const MenuSelectSheet = ({ visible, onClose, onSelect, selected }) => {
   const inputRef = useRef(null);
   const inputTextRef = useRef("");
   const [searchText, setSearchText] = useState("");
+  const menuSearchRef = useRef(null);
 
-  const users = useMemo(() => getAllUsers(supervisorsOnly), [supervisorsOnly]);
-
-  const filteredUsers = useMemo(() => {
-    if (!inputTextRef.current) return users;
+  const filteredMenus = useMemo(() => {
+    if (!inputTextRef.current) return mockMenus;
     const searchLower = inputTextRef.current.toLowerCase();
-    return users.filter(
-      (user) =>
-        user.name.toLowerCase().includes(searchLower) ||
-        user.department.toLowerCase().includes(searchLower)
+    return mockMenus.filter((menu) =>
+      menu.name.toLowerCase().includes(searchLower)
     );
-  }, [searchText, users]);
+  }, [searchText]);
+
+  // Menu categories for readability
+  const menuCategories = {
+    HEAVY_MEAL: "Heavy Meal",
+    SNACK: "Snack",
+  };
 
   return (
     <BottomSheet
@@ -49,78 +32,75 @@ const UserSelectSheet = ({
       snapPoints={["65%", "85%"]}
     >
       <View className="flex-1">
-        {/* Fixed Header */}
         <View className="border-b border-gray-100 bg-white px-4 pb-4">
           <Text className="mb-4 text-xl font-semibold text-gray-800">
-            {title || "Select User"}
+            Select Menu
           </Text>
 
-          {/* Search Input */}
           <View className="rounded-lg border border-gray-200 bg-white px-3">
             <BottomSheetTextInput
               ref={inputRef}
-              placeholder="Search by name or department"
+              placeholder="Search menu"
               className="py-2.5 text-base text-gray-900"
               onChangeText={(text) => {
                 inputTextRef.current = text;
                 setSearchText(text);
               }}
-              defaultValue={inputTextRef.current}
+              defaultValue={searchText}
             />
           </View>
         </View>
 
-        {/* Scrollable Content */}
-        <ScrollView
-          className="flex-1"
-          showsVerticalScrollIndicator={false}
-          bounces={false}
-          keyboardShouldPersistTaps="handled"
-        >
-          <View className="space-y-2 p-4">
-            {filteredUsers.map((user) => (
+        <View className="flex-1 p-4">
+          <View className="space-y-2">
+            {filteredMenus.map((menu) => (
               <TouchableOpacity
-                key={user.id}
+                key={menu.id}
                 onPress={() => {
-                  onSelect(user);
+                  onSelect(menu);
                   onClose();
                 }}
                 className={`rounded-lg border p-4 ${
-                  selected?.id === user.id
+                  selected?.id === menu.id
                     ? "border-blue-500 bg-blue-50"
                     : "border-gray-200 bg-white"
                 }`}
+                disabled={!menu.isAvailable}
               >
                 <View className="flex-row items-center justify-between">
-                  <View className="flex-1">
+                  <View>
                     <Text
                       className={`text-base ${
-                        selected?.id === user.id
+                        !menu.isAvailable
+                          ? "text-gray-400"
+                          : selected?.id === menu.id
                           ? "text-blue-600"
                           : "text-gray-800"
                       }`}
                     >
-                      {user.name}
+                      {menu.name}
                     </Text>
                     <Text className="text-sm text-gray-500">
-                      {user.department}
+                      {menuCategories[menu.category]}
                     </Text>
                   </View>
-                  {selected?.id === user.id && (
+                  {selected?.id === menu.id ? (
                     <MaterialCommunityIcons
                       name="check-circle"
                       size={20}
                       color="#2563EB"
                     />
-                  )}
+                  ) : !menu.isAvailable ? (
+                    <Text className="text-sm text-red-500">Not Available</Text>
+                  ) : null}
                 </View>
               </TouchableOpacity>
             ))}
           </View>
-        </ScrollView>
+        </View>
       </View>
     </BottomSheet>
   );
 };
 
-export default UserSelectSheet;
+export default MenuSelectSheet;
