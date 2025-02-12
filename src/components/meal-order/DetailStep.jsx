@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -6,11 +6,14 @@ import {
   TouchableOpacity,
   TextInput,
 } from "react-native";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useMealOrderStore } from "../../store/mealOrderStore";
+import DropPointSheet from "./DropPointSheet";
 
 export const DetailStep = () => {
   const { formData, updateFormData, updatePIC, updateSupervisor } =
     useMealOrderStore();
+  const [dropPointVisible, setDropPointVisible] = useState(false);
   const categories = ["Sarapan", "Makan Siang", "Makan Malam", "Snack"];
 
   return (
@@ -123,14 +126,30 @@ export const DetailStep = () => {
         <Text className="mb-2 text-sm font-medium text-gray-700">
           Drop Point
         </Text>
-        <TextInput
-          className="rounded-lg border border-gray-200 bg-white px-3 py-2.5"
-          value={formData.dropPoint}
-          onChangeText={(text) => updateFormData({ dropPoint: text })}
-          placeholder="Enter drop point location"
-          placeholderTextColor="#9CA3AF"
-        />
+        <TouchableOpacity
+          onPress={() => setDropPointVisible(true)}
+          className="flex-row items-center justify-between rounded-lg border border-gray-200 bg-white px-3 py-2.5"
+        >
+          <Text
+            className={formData.dropPoint ? "text-gray-900" : "text-gray-400"}
+          >
+            {formData.dropPoint || "Select drop point location"}
+          </Text>
+          <MaterialCommunityIcons
+            name="chevron-down"
+            size={20}
+            color="#9CA3AF"
+          />
+        </TouchableOpacity>
       </View>
+
+      {/* Drop Point Bottom Sheet */}
+      <DropPointSheet
+        visible={dropPointVisible}
+        onClose={() => setDropPointVisible(false)}
+        onSelect={(point) => updateFormData({ dropPoint: point })}
+        selected={formData.dropPoint}
+      />
     </View>
   );
 };
