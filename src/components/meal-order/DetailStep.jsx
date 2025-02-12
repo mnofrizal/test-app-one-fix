@@ -5,6 +5,7 @@ import {
   ScrollView,
   TouchableOpacity,
   TextInput,
+  Switch,
 } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useMealOrderStore } from "../../store/mealOrderStore";
@@ -12,6 +13,7 @@ import { mockUsers } from "../../constants/mockUsers";
 import DropPointSheet from "./DropPointSheet";
 import UserSelectSheet from "./UserSelectSheet";
 import DepartmentSheet from "./DepartmentSheet";
+import CustomPICSheet from "./CustomPICSheet";
 
 export const DetailStep = () => {
   const { formData, updateFormData, updatePIC, updateSupervisor } =
@@ -20,6 +22,8 @@ export const DetailStep = () => {
   const [picSheetVisible, setPicSheetVisible] = useState(false);
   const [supervisorSheetVisible, setSupervisorSheetVisible] = useState(false);
   const [departmentSheetVisible, setDepartmentSheetVisible] = useState(false);
+  const [customPicSheetVisible, setCustomPicSheetVisible] = useState(false);
+  const [isCustomPic, setIsCustomPic] = useState(false);
 
   const categories = ["Sarapan", "Makan Siang", "Makan Malam", "Snack"];
 
@@ -78,12 +82,31 @@ export const DetailStep = () => {
 
         {/* PIC Information */}
         <View className="mb-4">
-          <Text className="mb-3 text-sm font-medium text-gray-800">
-            PIC Information
-          </Text>
+          <View className="mb-3 flex-row items-center justify-between">
+            <Text className="text-sm font-medium text-gray-800">
+              PIC Information
+            </Text>
+            <View className="flex-row items-center">
+              <Text className="mr-2 text-sm text-gray-600">Custom</Text>
+              <Switch
+                value={isCustomPic}
+                onValueChange={(value) => {
+                  setIsCustomPic(value);
+                  if (!value) {
+                    // Reset PIC data when switching back to selection mode
+                    updatePIC({ name: "", nomorHp: "" });
+                  }
+                }}
+              />
+            </View>
+          </View>
           <View className="space-y-3">
             <TouchableOpacity
-              onPress={() => setPicSheetVisible(true)}
+              onPress={() =>
+                isCustomPic
+                  ? setCustomPicSheetVisible(true)
+                  : setPicSheetVisible(true)
+              }
               className="flex-row items-center justify-between rounded-lg border border-gray-200 bg-white px-3 py-2.5"
             >
               <Text
@@ -170,6 +193,13 @@ export const DetailStep = () => {
         </View>
 
         {/* Bottom Sheets */}
+        <CustomPICSheet
+          visible={customPicSheetVisible}
+          onClose={() => setCustomPicSheetVisible(false)}
+          onSave={updatePIC}
+          initialData={formData.pic}
+        />
+
         <DropPointSheet
           visible={dropPointVisible}
           onClose={() => setDropPointVisible(false)}
