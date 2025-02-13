@@ -1,26 +1,65 @@
-import React, { useRef, useState, useMemo, useEffect } from "react";
-import { View, Text, TouchableOpacity } from "react-native";
+import React, {
+  useRef,
+  useState,
+  useMemo,
+  useEffect,
+  useCallback,
+} from "react";
+import { View, Text, TouchableOpacity, Keyboard } from "react-native";
 import { BottomSheetTextInput } from "@gorhom/bottom-sheet";
 import BottomSheet from "../BottomSheet";
 
 const JobTitleSheet = ({ visible, onClose, onSave, initialValue = "" }) => {
+  const bottomSheetRef = useRef(null);
   const titleRef = useRef(initialValue);
-  const [isValid, setIsValid] = useState(titleRef.current.trim() !== "");
+  const [isValid, setIsValid] = useState(initialValue.trim() !== "");
 
-  const handleSave = () => {
-    onSave(titleRef.current);
-    onClose();
-  };
+  const handleTextChange = useCallback((text) => {
+    titleRef.current = text;
+    setIsValid(text.trim() !== "");
+  }, []);
 
-  const validateInput = () => {
-    setIsValid(titleRef.current.trim() !== "");
-  };
+  // Reset when sheet becomes invisible
+  useEffect(() => {
+    if (!visible) {
+      titleRef.current = "";
+      setIsValid(false);
+    } else {
+      // Reset to initial value when sheet becomes visible
+      titleRef.current = initialValue;
+      setIsValid(initialValue.trim() !== "");
+    }
+  }, [visible, initialValue]);
+
+  const handleSave = useCallback(() => {
+    if (titleRef.current.trim()) {
+      onSave(titleRef.current);
+      bottomSheetRef.current?.forceClose();
+    }
+  }, [onSave]);
 
   // Provide different snap points for keyboard visible/hidden states
+  const inputRef = useRef(null);
   const snapPoints = useMemo(() => ["55%"], []);
 
+  // Focus input after animation
+  useEffect(() => {
+    if (visible) {
+      // Wait for bottom sheet animation to complete
+      const timer = setTimeout(() => {
+        inputRef.current?.focus();
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [visible]);
+
   return (
-    <BottomSheet visible={visible} onClose={onClose} snapPoints={snapPoints}>
+    <BottomSheet
+      ref={bottomSheetRef}
+      visible={visible}
+      onClose={onClose}
+      snapPoints={snapPoints}
+    >
       <View className="relative flex-1">
         {/* Fixed Header */}
         <View className="border-b border-gray-100 bg-white px-4">
@@ -38,14 +77,11 @@ const JobTitleSheet = ({ visible, onClose, onSave, initialValue = "" }) => {
             <BottomSheetTextInput
               className="rounded-lg border border-gray-200 bg-white px-3 py-2.5"
               defaultValue={titleRef.current}
-              onChangeText={(text) => {
-                titleRef.current = text;
-                validateInput();
-              }}
+              onChangeText={handleTextChange}
               placeholder="Contoh: Meeting Project A"
               placeholderTextColor="#9CA3AF"
               autoCapitalize="words"
-              autoFocus
+              ref={inputRef}
             />
           </View>
         </View>

@@ -51,20 +51,26 @@ const DetailOrderSection = ({ entity, count }) => {
       };
 
       if (formData.sameBulkMenu[entity] && entity !== "PLNIP") {
-        // Keep orders from other entities
         const otherEntityOrders = formData.employeeOrders.filter(
           (o) => o.entity !== entity
         );
-        // Fill all slots with this order for current entity
+
+        const template = {
+          ...order,
+          employeeName: `Pegawai ${entity}`, // Use entity name without number
+          employeeId: `${entity}_0`,
+          items: [{ menuItemId: menu.id, menuName: menu.name }],
+          note: note || "",
+        };
+
         const currentEntityOrders = Array.from({ length: count }).map(
           (_, i) => ({
-            ...order,
+            ...template,
             index: i,
-            employeeName: `Pegawai ${entity} ${i + 1}`,
-            employeeId: `${entity}_${i}`,
+            employeeId: `${entity}_${i}`, // Keep unique IDs for each entry
           })
         );
-        // Combine other entity orders with new orders
+
         updateEmployeeOrders([...otherEntityOrders, ...currentEntityOrders]);
       } else {
         const newOrders = formData.employeeOrders.filter(
@@ -88,7 +94,7 @@ const DetailOrderSection = ({ entity, count }) => {
     : null;
 
   return (
-    <View className="mb-6">
+    <View className="">
       <View className="mb-3 flex-row items-center justify-between">
         <Text className="text-base font-medium text-gray-800">{entity}</Text>
         {showBulkSwitch && (
@@ -110,13 +116,15 @@ const DetailOrderSection = ({ entity, count }) => {
 
       {formData.sameBulkMenu[entity] ? (
         // Show single card with count info for bulk mode
-        <View className="mb-4">
+        <View className="mb-3">
           <EmployeeSelection
             employee={
               bulkModeOrder
                 ? {
-                    id: bulkModeOrder.employeeId,
-                    name: `${count}x Pegawai ${entity}`,
+                    id: `${entity}_0`,
+                    name: `${count}x ${
+                      entity === "PLNIP" ? "Pegawai PLNIP" : `Pegawai ${entity}`
+                    }`,
                     menuName: bulkModeOrder.items[0]?.menuName,
                     note: bulkModeOrder.note,
                   }
@@ -159,7 +167,7 @@ const DetailOrderSection = ({ entity, count }) => {
         Array.from({ length: count }).map((_, index) => {
           const order = getOrder(entity, index);
           return (
-            <View key={`${entity}-${index}`} className="mb-4">
+            <View key={`${entity}-${index}`} className="">
               <EmployeeSelection
                 employee={
                   order

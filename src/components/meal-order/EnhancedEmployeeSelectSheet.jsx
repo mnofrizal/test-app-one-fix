@@ -1,4 +1,10 @@
-import React, { useState, useMemo, useRef, useEffect } from "react";
+import React, {
+  useState,
+  useMemo,
+  useRef,
+  useEffect,
+  useCallback,
+} from "react";
 import { View, Text, TouchableOpacity, Platform } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
@@ -20,7 +26,6 @@ const EnhancedEmployeeSelectSheet = ({
   const [currentStep, setCurrentStep] = useState(0);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [selectedMenu, setSelectedMenu] = useState(null);
-  const [buttonUpdateTrigger, setButtonUpdateTrigger] = useState(0);
   const bottomSheetRef = useRef(null);
   const inputRef = useRef(null);
   const inputTextRef = useRef("");
@@ -28,7 +33,6 @@ const EnhancedEmployeeSelectSheet = ({
   const customNameRef = useRef("");
   const [searchText, setSearchText] = useState("");
 
-  // Get department employees or show empty input for non-PLNIP
   const employees = useMemo(() => {
     if (!isPlnip || !department) return [];
     return mockUsers[department]?.filter((user) => !user.isAsman) || [];
@@ -55,37 +59,48 @@ const EnhancedEmployeeSelectSheet = ({
     }
   }, [visible, isSameBulkMenu, isPlnip, entity]);
 
-  const handleNext = () => {
-    if (currentStep === 0) {
-      if (isPlnip && selectedEmployee) {
-        setCurrentStep(1);
-      } else if (!isPlnip && customNameRef.current.trim()) {
-        setSelectedEmployee({
-          id: Date.now().toString(),
-          name: customNameRef.current.trim(),
-        });
-        setCurrentStep(1);
-      }
-    } else if (currentStep === 1 && selectedMenu) {
-      setCurrentStep(2);
-    } else if (currentStep === 2) {
-      onComplete({
-        employee: selectedEmployee,
-        menu: selectedMenu,
-        note: noteRef.current,
-      });
-      handleClose();
-    }
-  };
-
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     setCurrentStep(0);
     setSelectedEmployee(null);
     setSelectedMenu(null);
     noteRef.current = "";
     customNameRef.current = "";
     onClose();
-  };
+  }, [onClose]);
+
+  const handleComplete = useCallback(() => {
+    onComplete({
+      employee: selectedEmployee,
+      menu: selectedMenu,
+      note: noteRef.current,
+    });
+    handleClose();
+  }, [selectedEmployee, selectedMenu, onComplete, handleClose]);
+
+  // Handle non-PLNIP employee name submit
+  const handleCustomNameSubmit = useCallback(() => {
+    if (customNameRef.current.trim()) {
+      setSelectedEmployee({
+        id: Date.now().toString(),
+        name: customNameRef.current.trim(),
+      });
+      setCurrentStep(1);
+    }
+  }, []);
+
+  // Auto-proceed when employee selected
+  useEffect(() => {
+    if (currentStep === 0 && selectedEmployee) {
+      setCurrentStep(1);
+    }
+  }, [currentStep, selectedEmployee]);
+
+  // Auto-proceed when menu selected
+  useEffect(() => {
+    if (currentStep === 1 && selectedMenu) {
+      setCurrentStep(2);
+    }
+  }, [currentStep, selectedMenu]);
 
   const renderEmployeeSelection = () => (
     <View className="flex-1">
@@ -95,7 +110,6 @@ const EnhancedEmployeeSelectSheet = ({
         </Text>
 
         {isPlnip ? (
-          // Search input for PLNIP employees
           <View className="rounded-lg border border-gray-200 bg-white px-3">
             <BottomSheetTextInput
               ref={inputRef}
@@ -109,7 +123,6 @@ const EnhancedEmployeeSelectSheet = ({
             />
           </View>
         ) : !isSameBulkMenu ? (
-          // Custom name input for non-PLNIP when not in same bulk menu mode
           <View className="rounded-lg border border-gray-200 bg-white px-3">
             <BottomSheetTextInput
               placeholder="Input nama pegawai"
@@ -119,11 +132,9 @@ const EnhancedEmployeeSelectSheet = ({
                   ref.setNativeProps({ text: customNameRef.current });
                 }
               }}
-              onChangeText={(text) => {
-                customNameRef.current = text;
-                // Force button update
-                setButtonUpdateTrigger((prev) => prev + 1);
-              }}
+              onChangeText={(text) => (customNameRef.current = text)}
+              onSubmitEditing={handleCustomNameSubmit}
+              returnKeyType="done"
             />
           </View>
         ) : null}
@@ -223,7 +234,7 @@ const EnhancedEmployeeSelectSheet = ({
 
       <View className="p-4">
         <BottomSheetTextInput
-          className="rounded-lg border border-gray-200 bg-white px-3 py-2.5"
+          className="mb-4 rounded-lg border border-gray-200 bg-white px-3 py-2.5"
           placeholder="Tambah catatan pesanan (opsional)"
           multiline={true}
           numberOfLines={4}
@@ -236,6 +247,14 @@ const EnhancedEmployeeSelectSheet = ({
             noteRef.current = text;
           }}
         />
+        <TouchableOpacity
+          onPress={handleComplete}
+          className="rounded-lg bg-blue-600 py-3"
+        >
+          <Text className="text-center text-base font-medium text-white">
+            Selesai
+          </Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -253,18 +272,6 @@ const EnhancedEmployeeSelectSheet = ({
     }
   };
 
-  const canProceed = () => {
-    if (currentStep === 0) {
-      return isPlnip
-        ? !!selectedEmployee
-        : isSameBulkMenu || !!customNameRef.current?.trim();
-    }
-    if (currentStep === 1) {
-      return !!selectedMenu;
-    }
-    return true;
-  };
-
   return (
     <BottomSheet
       ref={bottomSheetRef}
@@ -274,26 +281,6 @@ const EnhancedEmployeeSelectSheet = ({
       enablePanDownToClose={true}
       enableContentPanningGesture={true}
       enableHandlePanningGesture={true}
-      footerComponent={() => (
-        <View
-          className="border-t border-gray-100 bg-white p-4"
-          style={{
-            paddingBottom: Platform.OS === "ios" ? 34 : 16,
-          }}
-        >
-          <TouchableOpacity
-            onPress={handleNext}
-            disabled={!canProceed()}
-            className={`rounded-lg py-3 ${
-              canProceed() ? "bg-blue-600" : "bg-gray-300"
-            }`}
-          >
-            <Text className="text-center text-base font-medium text-white">
-              {currentStep === 2 ? "Selesai" : "Lanjut"}
-            </Text>
-          </TouchableOpacity>
-        </View>
-      )}
     >
       {renderContent()}
     </BottomSheet>

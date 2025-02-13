@@ -27,7 +27,36 @@ const BottomSheet = React.forwardRef(
     },
     ref
   ) => {
-    const bottomSheetRef = ref || useRef(null);
+    const bottomSheetRef = useRef(null);
+
+    // Smooth close handling
+    const smoothClose = useCallback(
+      (withKeyboard = false) => {
+        const doClose = () => {
+          bottomSheetRef.current?.dismiss();
+          // Give time for dismiss animation before calling onClose
+          setTimeout(() => {
+            onClose?.();
+          }, 200);
+        };
+
+        if (withKeyboard) {
+          Keyboard.dismiss();
+          // Wait for keyboard animation to start
+          setTimeout(doClose, 100);
+        } else {
+          doClose();
+        }
+      },
+      [onClose]
+    );
+
+    // Expose methods via ref
+    React.useImperativeHandle(ref, () => ({
+      forceClose: () => {
+        smoothClose(Keyboard.isVisible());
+      },
+    }));
 
     // Track keyboard visibility for dynamic snap points
     const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
@@ -66,31 +95,29 @@ const BottomSheet = React.forwardRef(
     // Animation configs for smooth transitions
     const animationConfigs = useMemo(
       () => ({
-        damping: 50,
-        mass: 1,
-        stiffness: 350,
+        damping: 30,
+        mass: 0.8,
+        stiffness: 400,
         overshootClamping: true,
-        restDisplacementThreshold: 0.2,
-        restSpeedThreshold: 0.2,
+        restDisplacementThreshold: 0.1,
+        restSpeedThreshold: 0.1,
       }),
       []
     );
 
     // Handle sheet close
     const handleClose = useCallback(() => {
-      // Always dismiss keyboard first
-      Keyboard.dismiss();
-      // Wait briefly for keyboard to start dismissing before closing sheet
-      setTimeout(() => {
-        bottomSheetRef.current?.close();
-      }, 50);
-    }, []);
+      smoothClose(Keyboard.isVisible());
+    }, [smoothClose]);
 
     // Callbacks
     const handleSheetChanges = useCallback(
       (index) => {
         if (index === -1) {
-          onClose();
+          // Sheet is fully closed, wait for animation to complete
+          setTimeout(() => {
+            onClose?.();
+          }, 200);
         }
       },
       [onClose]
@@ -158,7 +185,7 @@ const BottomSheet = React.forwardRef(
                 {...props}
                 appearsOnIndex={0}
                 disappearsOnIndex={-1}
-                pressBehavior="none"
+                pressBehavior="close"
                 onPress={() => handleClose()}
               />
             ),

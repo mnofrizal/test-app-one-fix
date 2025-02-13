@@ -68,37 +68,62 @@ const MealOrderScreen = () => {
   }, [currentStep, setCurrentStep]); // Include dependencies
 
   const handleSubmit = () => {
-    console.log("Submitting order with data:", {
+    // Prepare base payload
+    const basePayload = {
       judulPekerjaan: formData.judulPekerjaan,
       type: formData.type,
+      requestDate: new Date().toISOString(),
+      requiredDate: new Date().toISOString(), // You might want to add a date picker for this
       category: formData.category,
       dropPoint: formData.dropPoint,
       supervisor: formData.supervisor,
       pic: formData.pic,
-      orderType: formData.orderType,
-      orders:
-        formData.orderType === "bulk"
-          ? {
-              type: "bulk",
-              menuItemId: formData.bulkOrder.menuItemId,
-              note: formData.bulkOrder.note,
-              entities: Object.entries(formData.selectedEntities)
-                .filter(([_, isSelected]) => isSelected)
-                .map(([entity]) => ({
-                  entity,
-                  count: formData.entityCounts[entity],
-                })),
-            }
-          : {
-              type: "detail",
-              orders: formData.employeeOrders.sort((a, b) => {
-                if (a.entity !== b.entity) {
-                  return a.entity.localeCompare(b.entity);
-                }
-                return a.index - b.index;
-              }),
-            },
-    });
+    };
+
+    // Prepare employee orders
+    let employeeOrders;
+    if (formData.orderType === "bulk") {
+      // Transform bulk order to individual employee orders
+      employeeOrders = Object.entries(formData.selectedEntities)
+        .filter(([_, isSelected]) => isSelected)
+        .flatMap(([entity]) => {
+          const count = formData.entityCounts[entity];
+          return Array.from({ length: count }).map((_, index) => ({
+            employeeName:
+              entity === "PLNIP" ? "TES USER 1" : `Pegawai ${entity}`,
+            entity,
+            items: [
+              {
+                menuItemId: formData.bulkOrder.menuItemId,
+                quantity: 1,
+              },
+            ],
+          }));
+        });
+    } else {
+      // Transform detail orders
+      employeeOrders = formData.employeeOrders
+        .sort((a, b) => {
+          if (a.entity !== b.entity) return a.entity.localeCompare(b.entity);
+          return a.index - b.index;
+        })
+        .map((order) => ({
+          employeeName: order.employeeName,
+          entity: order.entity,
+          items: order.items.map((item) => ({
+            menuItemId: item.menuItemId,
+            quantity: 1,
+          })),
+        }));
+    }
+
+    // Combine into final payload
+    const finalPayload = {
+      ...basePayload,
+      employeeOrders,
+    };
+
+    console.log("Submitting order with data:", finalPayload);
 
     // Reset form data and navigate to success screen
     resetStep();
