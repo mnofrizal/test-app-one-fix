@@ -1,15 +1,11 @@
 import React, { useState, useEffect } from "react";
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  TextInput,
-  ScrollView,
-} from "react-native";
+import { View, Text, TouchableOpacity, TextInput, Switch } from "react-native";
+import { ScrollView } from "react-native-gesture-handler";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import EmployeeSelectSheet from "./EmployeeSelectSheet";
-import MenuSelectSheet from "./MenuSelectSheet";
 import { useMealOrderStore } from "../../store/mealOrderStore";
+import EmployeeSelection from "./EmployeeSelection";
+import EnhancedEmployeeSelectSheet from "./EnhancedEmployeeSelectSheet";
+import MenuSelectSheet from "./MenuSelectSheet";
 
 const OptionCard = ({ title, isSelected, onSelect }) => (
   <TouchableOpacity
@@ -35,125 +31,181 @@ const OptionCard = ({ title, isSelected, onSelect }) => (
   </TouchableOpacity>
 );
 
-const PersonOrderForm = ({ entity, index }) => {
+const DetailOrderSection = ({ entity, count }) => {
   const { formData, updateEmployeeOrders } = useMealOrderStore();
   const [employeeSheetVisible, setEmployeeSheetVisible] = useState(false);
-  const [menuSheetVisible, setMenuSheetVisible] = useState(false);
-  const orders = formData.employeeOrders.filter((o) => o.entity === entity);
-  const order = orders[index] || {
-    entity,
-    employeeName: "",
-    items: [{ menuItemId: "", quantity: 1 }],
-  };
+  const [currentEntity, setCurrentEntity] = useState(null);
+  const [currentIndex, setCurrentIndex] = useState(null);
+  const [bulkOrder, setBulkOrder] = useState(null);
 
-  const updateOrder = (newData) => {
-    const newOrders = formData.employeeOrders.filter(
-      (o) => !(o.entity === entity && o.index === index)
-    );
-    updateEmployeeOrders([...newOrders, { ...order, ...newData, index }]);
-  };
+  const handleComplete =
+    (entity, index) =>
+    ({ employee, menu, note }) => {
+      const order = {
+        entity,
+        index,
+        employeeName: employee.name,
+        employeeId: employee.id,
+        items: [{ menuItemId: menu.id, menuName: menu.name }],
+        note,
+      };
 
-  return (
-    <View className="mb-4 rounded-lg border border-gray-100 bg-white p-4">
-      {/* Selection sheets */}
-      <EmployeeSelectSheet
-        visible={employeeSheetVisible}
-        onClose={() => setEmployeeSheetVisible(false)}
-        onSelect={(employee) =>
-          updateOrder({ employeeName: employee.name, employeeId: employee.id })
-        }
-        selected={
-          order.employeeName
-            ? { name: order.employeeName, id: order.employeeId }
-            : null
-        }
-        department={formData.supervisor.subBidang}
-        isPlnip={entity === "PLNIP"}
-      />
-
-      <MenuSelectSheet
-        visible={menuSheetVisible}
-        onClose={() => setMenuSheetVisible(false)}
-        onSelect={(menu) =>
-          updateOrder({
-            items: [{ menuItemId: menu.id, menuName: menu.name }],
+      if (formData.sameBulkMenu[entity] && entity !== "PLNIP") {
+        // Keep orders from other entities
+        const otherEntityOrders = formData.employeeOrders.filter(
+          (o) => o.entity !== entity
+        );
+        // Fill all slots with this order for current entity
+        const currentEntityOrders = Array.from({ length: count }).map(
+          (_, i) => ({
+            ...order,
+            index: i,
+            employeeName: `Pegawai ${entity} ${i + 1}`,
+            employeeId: `${entity}_${i}`,
           })
-        }
-        selected={
-          order.items[0]?.menuItemId
-            ? {
-                id: order.items[0].menuItemId,
-                name: order.items[0].menuName,
-              }
-            : null
-        }
-      />
+        );
+        // Combine other entity orders with new orders
+        updateEmployeeOrders([...otherEntityOrders, ...currentEntityOrders]);
+      } else {
+        const newOrders = formData.employeeOrders.filter(
+          (o) => !(o.entity === entity && o.index === index)
+        );
+        updateEmployeeOrders([...newOrders, order]);
+      }
+    };
 
-      <Text className="mb-3 text-sm font-medium text-gray-600">
-        Pegawai {index + 1}
-      </Text>
-      <View className="space-y-3">
-        <TouchableOpacity
-          onPress={() => setEmployeeSheetVisible(true)}
-          className="flex-row items-center justify-between rounded-lg border border-gray-200 bg-white px-3 py-2.5"
-        >
-          <Text
-            className={order.employeeName ? "text-gray-900" : "text-gray-400"}
-          >
-            {order.employeeName || "Select Employee Name"}
-          </Text>
-          <MaterialCommunityIcons
-            name="chevron-down"
-            size={20}
-            color="#9CA3AF"
-          />
-        </TouchableOpacity>
+  const getOrder = (entity, index) => {
+    return formData.employeeOrders.find(
+      (o) => o.entity === entity && o.index === index
+    );
+  };
 
-        <TouchableOpacity
-          onPress={() => setMenuSheetVisible(true)}
-          className="flex-row items-center justify-between rounded-lg border border-gray-200 bg-white px-3 py-2.5"
-        >
-          <Text
-            className={
-              order.items[0]?.menuName ? "text-gray-900" : "text-gray-400"
-            }
-          >
-            {order.items[0]?.menuName || "Select Menu"}
-          </Text>
-          <MaterialCommunityIcons
-            name="chevron-down"
-            size={20}
-            color="#9CA3AF"
-          />
-        </TouchableOpacity>
-        <TextInput
-          ref={(ref) => {
-            if (ref) {
-              ref.setNativeProps({ text: order.note });
-            }
-          }}
-          className="rounded-lg border border-gray-200 bg-white px-3 py-2.5"
-          defaultValue={order.note}
-          onChangeText={(text) => updateOrder({ note: text })}
-          placeholder="Catatan"
-          placeholderTextColor="#9CA3AF"
-        />
-      </View>
-    </View>
-  );
-};
+  const showBulkSwitch = entity !== "PLNIP";
 
-const EntityOrderSection = ({ entity, count }) => {
+  // Get first order for bulk mode card
+  const bulkModeOrder = formData.sameBulkMenu[entity]
+    ? getOrder(entity, 0)
+    : null;
+
   return (
     <View className="mb-6">
-      <Text className="mb-3 text-base font-medium text-gray-800">{entity}</Text>
-      {Array.from({ length: count }).map((_, index) => (
-        <PersonOrderForm
-          key={`${entity}-${index}`}
-          entity={entity}
-          index={index}
-        />
-      ))}
+      <View className="mb-3 flex-row items-center justify-between">
+        <Text className="text-base font-medium text-gray-800">{entity}</Text>
+        {showBulkSwitch && (
+          <View className="flex-row items-center space-x-2">
+            <Text className="text-sm text-gray-600">Samakan Menu</Text>
+            <Switch
+              value={formData.sameBulkMenu[entity] || false}
+              onValueChange={(value) => {
+                const { toggleSameBulkMenu } = useMealOrderStore.getState();
+                toggleSameBulkMenu(entity, value);
+                if (!value) {
+                  setBulkOrder(null);
+                }
+              }}
+            />
+          </View>
+        )}
+      </View>
+
+      {formData.sameBulkMenu[entity] ? (
+        // Show single card with count info for bulk mode
+        <View className="mb-4">
+          <EmployeeSelection
+            employee={
+              bulkModeOrder
+                ? {
+                    id: bulkModeOrder.employeeId,
+                    name: `${count}x Pegawai ${entity}`,
+                    menuName: bulkModeOrder.items[0]?.menuName,
+                    note: bulkModeOrder.note,
+                  }
+                : null
+            }
+            onPress={() => {
+              setCurrentEntity(entity);
+              setCurrentIndex(0);
+              setEmployeeSheetVisible(true);
+            }}
+          />
+          <EnhancedEmployeeSelectSheet
+            visible={
+              employeeSheetVisible &&
+              currentEntity === entity &&
+              currentIndex === 0
+            }
+            onClose={() => {
+              setEmployeeSheetVisible(false);
+              setCurrentEntity(null);
+              setCurrentIndex(null);
+            }}
+            onComplete={handleComplete(entity, 0)}
+            selected={
+              bulkModeOrder
+                ? {
+                    id: bulkModeOrder.employeeId,
+                    name: `Pegawai ${entity}`,
+                  }
+                : null
+            }
+            department={formData.supervisor.subBidang}
+            isPlnip={entity === "PLNIP"}
+            entity={entity}
+            isSameBulkMenu={formData.sameBulkMenu[entity]}
+          />
+        </View>
+      ) : (
+        // Show individual cards when not in bulk mode
+        Array.from({ length: count }).map((_, index) => {
+          const order = getOrder(entity, index);
+          return (
+            <View key={`${entity}-${index}`} className="mb-4">
+              <EmployeeSelection
+                employee={
+                  order
+                    ? {
+                        id: order.employeeId,
+                        name: order.employeeName,
+                        menuName: order.items[0]?.menuName,
+                        note: order.note,
+                      }
+                    : null
+                }
+                onPress={() => {
+                  setCurrentEntity(entity);
+                  setCurrentIndex(index);
+                  setEmployeeSheetVisible(true);
+                }}
+              />
+              <EnhancedEmployeeSelectSheet
+                visible={
+                  employeeSheetVisible &&
+                  currentEntity === entity &&
+                  currentIndex === index
+                }
+                onClose={() => {
+                  setEmployeeSheetVisible(false);
+                  setCurrentEntity(null);
+                  setCurrentIndex(null);
+                }}
+                onComplete={handleComplete(entity, index)}
+                selected={
+                  order
+                    ? {
+                        id: order.employeeId,
+                        name: order.employeeName,
+                      }
+                    : null
+                }
+                department={formData.supervisor.subBidang}
+                isPlnip={entity === "PLNIP"}
+                entity={entity}
+                isSameBulkMenu={formData.sameBulkMenu[entity]}
+              />
+            </View>
+          );
+        })
+      )}
     </View>
   );
 };
@@ -174,7 +226,7 @@ export const MenuStep = () => {
 
   return (
     <View className="flex-1">
-      <ScrollView className="flex-1">
+      <ScrollView className="flex-1" bounces={false}>
         <View className="p-4">
           <Text className="mb-4 text-lg font-semibold text-gray-800">
             Pilih Jenis Pesanan
@@ -225,7 +277,7 @@ export const MenuStep = () => {
                       : "text-gray-400"
                   }
                 >
-                  {formData.bulkOrder.menuName || "Select Menu for All"}
+                  {formData.bulkOrder.menuName || "Pilih menu untuk semua"}
                 </Text>
                 <MaterialCommunityIcons
                   name="chevron-down"
@@ -248,7 +300,7 @@ export const MenuStep = () => {
             </View>
           ) : (
             selectedEntities.map(({ entity, count }) => (
-              <EntityOrderSection key={entity} entity={entity} count={count} />
+              <DetailOrderSection key={entity} entity={entity} count={count} />
             ))
           )}
         </View>

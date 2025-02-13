@@ -14,6 +14,7 @@ const initialFormData = {
     name: "",
     nomorHp: "",
   },
+  sameBulkMenu: {},
   selectedEntities: {
     PLNIP: false,
     IPS: false,
@@ -115,6 +116,20 @@ export const useMealOrderStore = create((set) => ({
       formData: {
         ...state.formData,
         supervisor: { ...state.formData.supervisor, ...data },
+      },
+    })),
+  toggleSameBulkMenu: (entity, value) =>
+    set((state) => ({
+      formData: {
+        ...state.formData,
+        sameBulkMenu: {
+          ...state.formData.sameBulkMenu,
+          [entity]: value,
+        },
+        // Reset employee orders when toggling sameBulkMenu
+        employeeOrders: state.formData.employeeOrders.filter(
+          (order) => order.entity !== entity
+        ),
       },
     })),
 }));
