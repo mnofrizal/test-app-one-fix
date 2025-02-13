@@ -15,8 +15,8 @@ const Tab = createBottomTabNavigator();
 const TabIcon = ({ focused, iconName }) => (
   <MaterialCommunityIcons
     name={iconName}
-    size={24}
-    color={focused ? "#007AFF" : "#8E8E93"}
+    size={29}
+    color={focused ? "#1e3a8a" : "#8E8E93"}
   />
 );
 

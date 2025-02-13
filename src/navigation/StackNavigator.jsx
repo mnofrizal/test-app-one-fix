@@ -32,6 +32,12 @@ const StackNavigator = () => {
         options={{
           title: "Meal Order",
           headerShown: true,
+          headerStyle: {
+            backgroundColor: "#1e3a8a", // Blue 800 color
+          },
+          headerTitleStyle: {
+            color: "#FFFFFF", // White color for text
+          },
         }}
       />
       <Stack.Screen

@@ -10,21 +10,29 @@ import MenuSelectSheet from "./MenuSelectSheet";
 const OptionCard = ({ title, isSelected, onSelect }) => (
   <TouchableOpacity
     onPress={onSelect}
-    className={`mb-3 rounded-lg border p-4 ${
-      isSelected ? "border-blue-500 bg-blue-50" : "border-gray-200 bg-white"
+    className={`mb-4 rounded-xl border p-5 shadow-sm transition-colors ${
+      isSelected
+        ? "border-indigo-500 bg-indigo-50"
+        : "border-slate-200 bg-white"
     }`}
   >
     <View className="flex-row items-center justify-between">
-      <Text className="text-base font-medium text-gray-800">{title}</Text>
+      <Text
+        className={`text-lg font-semibold ${
+          isSelected ? "text-indigo-700" : "text-gray-900"
+        }`}
+      >
+        {title}
+      </Text>
       <View
-        className={`h-6 w-6 items-center justify-center rounded-full border-2 ${
+        className={`h-7 w-7 items-center justify-center rounded-full border-2 ${
           isSelected
-            ? "border-blue-500 bg-blue-500"
-            : "border-gray-300 bg-white"
+            ? "border-indigo-500 bg-indigo-500"
+            : "border-slate-300 bg-white"
         }`}
       >
         {isSelected && (
-          <MaterialCommunityIcons name="check" size={16} color="white" />
+          <MaterialCommunityIcons name="check" size={18} color="white" />
         )}
       </View>
     </View>
@@ -36,7 +44,6 @@ const DetailOrderSection = ({ entity, count }) => {
   const [employeeSheetVisible, setEmployeeSheetVisible] = useState(false);
   const [currentEntity, setCurrentEntity] = useState(null);
   const [currentIndex, setCurrentIndex] = useState(null);
-  const [bulkOrder, setBulkOrder] = useState(null);
 
   const handleComplete =
     (entity, index) =>
@@ -57,7 +64,7 @@ const DetailOrderSection = ({ entity, count }) => {
 
         const template = {
           ...order,
-          employeeName: `Pegawai ${entity}`, // Use entity name without number
+          employeeName: `Pegawai ${entity}`,
           employeeId: `${entity}_0`,
           items: [{ menuItemId: menu.id, menuName: menu.name }],
           note: note || "",
@@ -67,7 +74,7 @@ const DetailOrderSection = ({ entity, count }) => {
           (_, i) => ({
             ...template,
             index: i,
-            employeeId: `${entity}_${i}`, // Keep unique IDs for each entry
+            employeeId: `${entity}_${i}`,
           })
         );
 
@@ -87,27 +94,24 @@ const DetailOrderSection = ({ entity, count }) => {
   };
 
   const showBulkSwitch = entity !== "PLNIP";
-
-  // Get first order for bulk mode card
   const bulkModeOrder = formData.sameBulkMenu[entity]
     ? getOrder(entity, 0)
     : null;
 
   return (
-    <View className="">
-      <View className="mb-3 flex-row items-center justify-between">
-        <Text className="text-base font-medium text-gray-800">{entity}</Text>
+    <View className="mb-8">
+      <View className="mb-4 flex-row items-center justify-between">
+        <Text className="text-lg font-semibold text-gray-900">{entity}</Text>
         {showBulkSwitch && (
-          <View className="flex-row items-center space-x-2">
-            <Text className="text-sm text-gray-600">Samakan Menu</Text>
+          <View className="flex-row items-center space-x-3">
+            <Text className="text-sm font-medium text-slate-600">
+              Samakan Menu
+            </Text>
             <Switch
               value={formData.sameBulkMenu[entity] || false}
               onValueChange={(value) => {
                 const { toggleSameBulkMenu } = useMealOrderStore.getState();
                 toggleSameBulkMenu(entity, value);
-                if (!value) {
-                  setBulkOrder(null);
-                }
               }}
             />
           </View>
@@ -115,7 +119,6 @@ const DetailOrderSection = ({ entity, count }) => {
       </View>
 
       {formData.sameBulkMenu[entity] ? (
-        // Show single card with count info for bulk mode
         <View className="mb-3">
           <EmployeeSelection
             employee={
@@ -163,11 +166,10 @@ const DetailOrderSection = ({ entity, count }) => {
           />
         </View>
       ) : (
-        // Show individual cards when not in bulk mode
         Array.from({ length: count }).map((_, index) => {
           const order = getOrder(entity, index);
           return (
-            <View key={`${entity}-${index}`} className="">
+            <View key={`${entity}-${index}`} className="mb-3">
               <EmployeeSelection
                 employee={
                   order
@@ -226,21 +228,23 @@ export const MenuStep = () => {
     .map(([entity]) => ({ entity, count: formData.entityCounts[entity] }));
 
   useEffect(() => {
-    // Reset form type if not set
     if (!formData.orderType) {
       setOrderType("detail");
     }
   }, []);
 
   return (
-    <View className="flex-1">
+    <View className="flex-1 bg-slate-50">
       <ScrollView className="flex-1" bounces={false}>
-        <View className="p-4">
-          <Text className="mb-4 text-lg font-semibold text-gray-800">
+        <View className="p-6">
+          <Text className="mb-2 text-2xl font-bold tracking-tight text-gray-900">
             Pilih Jenis Pesanan
           </Text>
+          <Text className="mb-6 text-base font-medium text-slate-500">
+            Pilih metode pemesanan yang sesuai dengan kebutuhan Anda
+          </Text>
 
-          <View className="mb-6">
+          <View className="mb-8">
             <OptionCard
               title="1. Isi Detail"
               isSelected={formData.orderType === "detail"}
@@ -254,7 +258,7 @@ export const MenuStep = () => {
           </View>
 
           {formData.orderType === "bulk" ? (
-            <View className="space-y-3">
+            <View className="space-y-4">
               <MenuSelectSheet
                 visible={bulkMenuSheetVisible}
                 onClose={() => setBulkMenuSheetVisible(false)}
@@ -276,34 +280,29 @@ export const MenuStep = () => {
 
               <TouchableOpacity
                 onPress={() => setBulkMenuSheetVisible(true)}
-                className="flex-row items-center justify-between rounded-lg border border-gray-200 bg-white px-3 py-2.5"
+                className="flex-row items-center justify-between rounded-xl border border-slate-200 bg-white px-5 py-4 shadow-sm"
               >
                 <Text
                   className={
                     formData.bulkOrder.menuName
-                      ? "text-gray-900"
-                      : "text-gray-400"
+                      ? "text-base font-medium text-gray-900"
+                      : "text-base text-gray-400"
                   }
                 >
                   {formData.bulkOrder.menuName || "Pilih menu untuk semua"}
                 </Text>
                 <MaterialCommunityIcons
                   name="chevron-down"
-                  size={20}
-                  color="#9CA3AF"
+                  size={22}
+                  color="#64748B"
                 />
               </TouchableOpacity>
               <TextInput
-                ref={(ref) => {
-                  if (ref) {
-                    ref.setNativeProps({ text: formData.bulkOrder.note });
-                  }
-                }}
-                className="rounded-lg border border-gray-200 bg-white px-3 py-2.5"
+                className="rounded-xl border border-slate-200 bg-white px-5 py-4 text-base text-gray-900 shadow-sm"
                 defaultValue={formData.bulkOrder.note}
                 onChangeText={(text) => updateBulkOrder({ note: text })}
                 placeholder="Catatan"
-                placeholderTextColor="#9CA3AF"
+                placeholderTextColor="#94A3B8"
               />
             </View>
           ) : (

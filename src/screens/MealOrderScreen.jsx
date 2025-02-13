@@ -146,8 +146,8 @@ const MealOrderScreen = () => {
   };
 
   return (
-    <View className="flex-1 bg-gray-50">
-      <View className="bg-white px-4 py-6">
+    <View className="flex-1 bg-slate-50">
+      <View className="bg-white px-6 py-8 shadow-sm">
         <StepIndicator
           customStyles={customStyles}
           currentPosition={currentStep}
@@ -156,12 +156,12 @@ const MealOrderScreen = () => {
         />
       </View>
 
-      <ScrollView className="flex-1">{renderStep()}</ScrollView>
+      <ScrollView className="flex-1 px-1">{renderStep()}</ScrollView>
 
-      <View className="bg-white p-4 shadow-sm">
+      <View className="bg-white p-4 px-6 shadow-lg">
         <TouchableOpacity
-          className={`w-full rounded-lg py-4 ${
-            canProceed() ? "bg-blue-500" : "bg-gray-300"
+          className={`w-full rounded-xl py-4 ${
+            canProceed() ? "bg-blue-900 shadow-md" : "bg-slate-300"
           }`}
           disabled={!canProceed()}
           onPress={() => {
@@ -172,7 +172,7 @@ const MealOrderScreen = () => {
             }
           }}
         >
-          <Text className="text-center font-medium text-white">
+          <Text className="text-center text-lg font-semibold text-white">
             {currentStep === 3 ? "Submit Order" : "Next"}
           </Text>
         </TouchableOpacity>

@@ -13,7 +13,7 @@ export default function App() {
         <PortalProvider>
           <BottomSheetModalProvider>
             <StackNavigator />
-            <StatusBar style="auto" />
+            <StatusBar style="light" />
           </BottomSheetModalProvider>
         </PortalProvider>
       </NavigationContainer>
