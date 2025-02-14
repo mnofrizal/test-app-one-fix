@@ -1,4 +1,5 @@
 import React, { useEffect } from "react";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import {
   View,
   ScrollView,
@@ -6,6 +7,7 @@ import {
   Text,
   BackHandler,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import StepIndicator from "react-native-step-indicator";
 
@@ -146,8 +148,23 @@ const MealOrderScreen = () => {
   };
 
   return (
-    <View className="flex-1 bg-slate-50">
-      <View className="bg-white px-6 py-8 shadow-sm">
+    <SafeAreaView className="flex-1 bg-blue-900" edges={["top"]}>
+      <View className="bg-blue-900 shadow-sm">
+        <View className="flex-row items-center justify-between px-4 py-2">
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            className="rounded-full p-2"
+          >
+            <MaterialCommunityIcons name="arrow-left" size={24} color="#ffff" />
+          </TouchableOpacity>
+          <Text className="text-lg font-semibold text-white">
+            Pesan Makanan
+          </Text>
+          <View className="w-10" />
+        </View>
+      </View>
+
+      <View className="bg-white px-6 py-4 shadow-sm">
         <StepIndicator
           customStyles={customStyles}
           currentPosition={currentStep}
@@ -156,28 +173,29 @@ const MealOrderScreen = () => {
         />
       </View>
 
-      <ScrollView className="flex-1 px-1">{renderStep()}</ScrollView>
-
-      <View className="bg-white p-4 px-6 shadow-lg">
-        <TouchableOpacity
-          className={`w-full rounded-xl py-4 ${
-            canProceed() ? "bg-blue-900 shadow-md" : "bg-slate-300"
-          }`}
-          disabled={!canProceed()}
-          onPress={() => {
-            if (currentStep === 3) {
-              handleSubmit();
-            } else {
-              setCurrentStep(Math.min(3, currentStep + 1));
-            }
-          }}
-        >
-          <Text className="text-center text-lg font-semibold text-white">
-            {currentStep === 3 ? "Submit Order" : "Next"}
-          </Text>
-        </TouchableOpacity>
-      </View>
-    </View>
+      <ScrollView className="flex-1">{renderStep()}</ScrollView>
+      {canProceed() && (
+        <View className="bg-white p-4 px-6 shadow-lg">
+          <TouchableOpacity
+            className={`w-full rounded-xl py-3 ${
+              canProceed() ? "bg-blue-900 shadow-md" : "bg-slate-300"
+            }`}
+            disabled={!canProceed()}
+            onPress={() => {
+              if (currentStep === 3) {
+                handleSubmit();
+              } else {
+                setCurrentStep(Math.min(3, currentStep + 1));
+              }
+            }}
+          >
+            <Text className="text-center text-lg font-semibold text-white">
+              {currentStep === 3 ? "Submit Order" : "Next"}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      )}
+    </SafeAreaView>
   );
 };
 

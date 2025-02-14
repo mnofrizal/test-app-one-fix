@@ -46,7 +46,7 @@ export const DetailStep = () => {
   const quickDropPoints = ["Lobby Lantai 1", "Kantin Utama", "Ruang Meeting A"];
 
   return (
-    <ScrollView className="flex-1 rounded-t-3xl bg-slate-50">
+    <ScrollView className="flex-1 bg-slate-50">
       <View className="py-2">
         {/* Category Selection */}
         <View className="p-6">

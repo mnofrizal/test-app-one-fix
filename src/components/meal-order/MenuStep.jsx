@@ -99,7 +99,7 @@ const DetailOrderSection = ({ entity, count }) => {
     : null;
 
   return (
-    <View className="mb-8">
+    <View className="">
       <View className="mb-4 flex-row items-center justify-between">
         <Text className="text-lg font-semibold text-gray-900">{entity}</Text>
         {showBulkSwitch && (
@@ -169,7 +169,7 @@ const DetailOrderSection = ({ entity, count }) => {
         Array.from({ length: count }).map((_, index) => {
           const order = getOrder(entity, index);
           return (
-            <View key={`${entity}-${index}`} className="mb-3">
+            <View key={`${entity}-${index}`} className="mb-1">
               <EmployeeSelection
                 employee={
                   order
@@ -244,7 +244,7 @@ export const MenuStep = () => {
             Pilih metode pemesanan yang sesuai dengan kebutuhan Anda
           </Text>
 
-          <View className="mb-8">
+          <View className="mb-6">
             <OptionCard
               title="1. Isi Detail"
               isSelected={formData.orderType === "detail"}
@@ -258,52 +258,57 @@ export const MenuStep = () => {
           </View>
 
           {formData.orderType === "bulk" ? (
-            <View className="space-y-4">
-              <MenuSelectSheet
-                visible={bulkMenuSheetVisible}
-                onClose={() => setBulkMenuSheetVisible(false)}
-                onSelect={(menu) =>
-                  updateBulkOrder({
-                    menuItemId: menu.id,
-                    menuName: menu.name,
-                  })
-                }
-                selected={
-                  formData.bulkOrder.menuItemId
-                    ? {
-                        id: formData.bulkOrder.menuItemId,
-                        name: formData.bulkOrder.menuName,
-                      }
-                    : null
-                }
-              />
-
-              <TouchableOpacity
-                onPress={() => setBulkMenuSheetVisible(true)}
-                className="flex-row items-center justify-between rounded-xl border border-slate-200 bg-white px-5 py-4 shadow-sm"
-              >
-                <Text
-                  className={
-                    formData.bulkOrder.menuName
-                      ? "text-base font-medium text-gray-900"
-                      : "text-base text-gray-400"
+            <View>
+              <Text className="text-2xl font-bold tracking-tight text-gray-900">
+                Isi Menu
+              </Text>
+              <View className="space-y-4">
+                <MenuSelectSheet
+                  visible={bulkMenuSheetVisible}
+                  onClose={() => setBulkMenuSheetVisible(false)}
+                  onSelect={(menu) =>
+                    updateBulkOrder({
+                      menuItemId: menu.id,
+                      menuName: menu.name,
+                    })
                   }
-                >
-                  {formData.bulkOrder.menuName || "Pilih menu untuk semua"}
-                </Text>
-                <MaterialCommunityIcons
-                  name="chevron-down"
-                  size={22}
-                  color="#64748B"
+                  selected={
+                    formData.bulkOrder.menuItemId
+                      ? {
+                          id: formData.bulkOrder.menuItemId,
+                          name: formData.bulkOrder.menuName,
+                        }
+                      : null
+                  }
                 />
-              </TouchableOpacity>
-              <TextInput
-                className="rounded-xl border border-slate-200 bg-white px-5 py-4 text-base text-gray-900 shadow-sm"
-                defaultValue={formData.bulkOrder.note}
-                onChangeText={(text) => updateBulkOrder({ note: text })}
-                placeholder="Catatan"
-                placeholderTextColor="#94A3B8"
-              />
+
+                <TouchableOpacity
+                  onPress={() => setBulkMenuSheetVisible(true)}
+                  className="flex-row items-center justify-between rounded-xl border border-slate-200 bg-white px-5 py-4 shadow-sm"
+                >
+                  <Text
+                    className={
+                      formData.bulkOrder.menuName
+                        ? "text-base font-medium text-gray-900"
+                        : "text-base text-gray-400"
+                    }
+                  >
+                    {formData.bulkOrder.menuName || "Pilih menu untuk semua"}
+                  </Text>
+                  <MaterialCommunityIcons
+                    name="chevron-down"
+                    size={22}
+                    color="#64748B"
+                  />
+                </TouchableOpacity>
+                <TextInput
+                  className="rounded-xl border border-slate-200 bg-white px-5 py-4 text-base text-gray-900 shadow-sm"
+                  defaultValue={formData.bulkOrder.note}
+                  onChangeText={(text) => updateBulkOrder({ note: text })}
+                  placeholder="Catatan"
+                  placeholderTextColor="#94A3B8"
+                />
+              </View>
             </View>
           ) : (
             selectedEntities.map(({ entity, count }) => (

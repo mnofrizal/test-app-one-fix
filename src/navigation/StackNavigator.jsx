@@ -29,16 +29,7 @@ const StackNavigator = () => {
       <Stack.Screen
         name="MealOrder"
         component={MealOrderScreen}
-        options={{
-          title: "Meal Order",
-          headerShown: true,
-          headerStyle: {
-            backgroundColor: "#1e3a8a", // Blue 800 color
-          },
-          headerTitleStyle: {
-            color: "#FFFFFF", // White color for text
-          },
-        }}
+        options={{ headerShown: false }}
       />
       <Stack.Screen
         name="MealOrderSuccess"
