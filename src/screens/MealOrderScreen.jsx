@@ -6,9 +6,11 @@ import {
   TouchableOpacity,
   Text,
   BackHandler,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
+import { submitOrder } from "../services/orderService";
 import StepIndicator from "react-native-step-indicator";
 
 import { DetailStep } from "../components/meal-order/DetailStep";
@@ -78,67 +80,85 @@ const MealOrderScreen = () => {
     return () => backHandler.remove();
   }, [currentStep, setCurrentStep]); // Include dependencies
 
-  const handleSubmit = () => {
-    // Prepare base payload
-    const basePayload = {
-      judulPekerjaan: formData.judulPekerjaan,
-      type: formData.type,
-      requestDate: new Date().toISOString(),
-      requiredDate: new Date().toISOString(), // You might want to add a date picker for this
-      category: formData.category,
-      dropPoint: formData.dropPoint,
-      supervisor: formData.supervisor,
-      pic: formData.pic,
-    };
+  const handleSubmit = async () => {
+    try {
+      // Prepare base payload
+      const basePayload = {
+        judulPekerjaan: formData.judulPekerjaan,
+        type: formData.type,
+        requestDate: new Date().toISOString(),
+        requiredDate: new Date().toISOString(),
+        category: formData.category,
+        dropPoint: formData.dropPoint,
+        supervisor: formData.supervisor,
+        pic: formData.pic,
+      };
 
-    // Prepare employee orders
-    let employeeOrders;
-    if (formData.orderType === "bulk") {
-      // Transform bulk order to individual employee orders
-      employeeOrders = Object.entries(formData.selectedEntities)
-        .filter(([_, isSelected]) => isSelected)
-        .flatMap(([entity]) => {
-          const count = formData.entityCounts[entity];
-          return Array.from({ length: count }).map((_, index) => ({
-            employeeName:
-              entity === "PLNIP" ? "TES USER 1" : `Pegawai ${entity}`,
-            entity,
-            items: [
-              {
-                menuItemId: formData.bulkOrder.menuItemId,
-                quantity: 1,
-              },
-            ],
+      // Prepare employee orders
+      let employeeOrders;
+      if (formData.orderType === "bulk") {
+        // Transform bulk order to individual employee orders
+        employeeOrders = Object.entries(formData.selectedEntities)
+          .filter(([_, isSelected]) => isSelected)
+          .flatMap(([entity]) => {
+            const count = formData.entityCounts[entity];
+            return Array.from({ length: count }).map((_, index) => ({
+              employeeName:
+                entity === "PLNIP" ? "Pegawai PLNIP" : `Pegawai ${entity}`,
+              entity,
+              items: [
+                {
+                  menuItemId: formData.bulkOrder.menuItemId,
+                  quantity: 1,
+                },
+              ],
+            }));
+          });
+      } else {
+        // Transform detail orders
+        employeeOrders = formData.employeeOrders
+          .sort((a, b) => {
+            if (a.entity !== b.entity) return a.entity.localeCompare(b.entity);
+            return a.index - b.index;
+          })
+          .map((order) => ({
+            employeeName: order.employeeName,
+            entity: order.entity,
+            items: order.items.map((item) => ({
+              menuItemId: item.menuItemId,
+              quantity: 1,
+            })),
           }));
-        });
-    } else {
-      // Transform detail orders
-      employeeOrders = formData.employeeOrders
-        .sort((a, b) => {
-          if (a.entity !== b.entity) return a.entity.localeCompare(b.entity);
-          return a.index - b.index;
-        })
-        .map((order) => ({
-          employeeName: order.employeeName,
-          entity: order.entity,
-          items: order.items.map((item) => ({
-            menuItemId: item.menuItemId,
-            quantity: 1,
-          })),
-        }));
+      }
+
+      // Combine into final payload
+      const finalPayload = {
+        ...basePayload,
+        employeeOrders,
+      };
+
+      // Submit order to backend
+      const response = await submitOrder(finalPayload);
+
+      if (!response.success) {
+        throw new Error(response.message || "Failed to submit order");
+      }
+
+      // Only proceed if submission was successful
+      resetStep();
+      navigation.replace("MealOrderSuccess", {
+        orderData: {
+          ...finalPayload,
+          id: response.data.id,
+        },
+      });
+    } catch (error) {
+      Alert.alert(
+        "Error",
+        error.message || "Failed to submit order. Please try again.",
+        [{ text: "OK" }]
+      );
     }
-
-    // Combine into final payload
-    const finalPayload = {
-      ...basePayload,
-      employeeOrders,
-    };
-
-    console.log("Submitting order with data:", finalPayload);
-
-    // Reset form data and navigate to success screen
-    resetStep();
-    navigation.replace("MealOrderSuccess");
   };
 
   const renderStep = () => {

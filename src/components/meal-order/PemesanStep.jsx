@@ -2,7 +2,7 @@ import React from "react";
 import { View, Text, TouchableOpacity, ScrollView } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useMealOrderStore } from "../../store/mealOrderStore";
-import { mockUsers } from "../../constants/mockUsers";
+import { useEmployeeStore } from "../../store/employeeStore";
 
 const entityDescriptions = {
   PLNIP: "PLN Indonesia Power",
@@ -158,8 +158,11 @@ const EntityCard = ({
 export const PemesanStep = () => {
   const { formData, toggleEntity, updateEntityCount } = useMealOrderStore();
 
+  const { employeesByDepartment, getDepartmentEmployees } = useEmployeeStore();
+
+  // Get count of non-supervisor employees in the selected department
   const departmentMemberCount = formData.supervisor.subBidang
-    ? mockUsers[formData.supervisor.subBidang]?.length || 0
+    ? getDepartmentEmployees(formData.supervisor.subBidang).length
     : 0;
 
   return (

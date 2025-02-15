@@ -143,7 +143,7 @@ const formatTime = (date) => {
 };
 
 const WeatherWidget = ({ currentTime }) => (
-  <View className="mt-2 flex-row items-center justify-between rounded-2xl bg-blue-800 p-3 pb-10 shadow-xl">
+  <View className="z-20 mt-2 flex-row items-center justify-between rounded-2xl bg-blue-800 p-3 pb-10 shadow-xl">
     <View className="flex-row items-center">
       <MaterialCommunityIcons name="weather-sunny" size={24} color="white" />
       <View className="ml-3">
@@ -228,27 +228,81 @@ const EventCard = ({ title, date, time, location }) => (
   </View>
 );
 
-const ServiceMenuItem = ({ title, icon, onPress }) => {
+const ServiceMenuItem = ({ title, icon, onPress, route }) => {
+  const navigation = useNavigation();
   let iconColor = "#4F46E5"; // Default color
   let bgColor = "bg-indigo-100"; // Default background color
+
   if (icon === "food") {
-    iconColor = "#FFD07A"; // Vibrant orange for food
-    bgColor = "bg-orange-50"; // Orange background for food
+    iconColor = "#FFD07A";
+    bgColor = "bg-orange-50";
   } else if (icon === "car") {
-    iconColor = "#00AACC"; // Vibrant blue for transport
-    bgColor = "bg-blue-50"; // Blue background for transport
+    iconColor = "#00AACC";
+    bgColor = "bg-blue-50";
   } else if (icon === "door") {
-    iconColor = "#FF0000"; // Vibrant red for rooms
-    bgColor = "bg-red-50"; // Red background for rooms
+    iconColor = "#FF0000";
+    bgColor = "bg-red-50";
   } else if (icon === "pencil") {
-    iconColor = "#00A0A0"; // Vibrant teal for stationary
-    bgColor = "bg-teal-50"; // Teal background for stationary
+    iconColor = "#00A0A0";
+    bgColor = "bg-teal-50";
   }
+
+  const handlePress = () => {
+    if (route) {
+      navigation.navigate(route);
+    } else if (onPress) {
+      onPress();
+    }
+  };
 
   return (
     <TouchableOpacity
       className="h-24 flex-1 items-center justify-center"
-      onPress={onPress}
+      onPress={handlePress}
+    >
+      <View
+        className={`mb-3 h-16 w-16 items-center justify-center rounded-full ${bgColor} shadow-xl`}
+      >
+        <MaterialCommunityIcons name={icon} size={32} color={iconColor} />
+      </View>
+      <Text className="font-base text-center text-sm text-gray-900">
+        {title}
+      </Text>
+    </TouchableOpacity>
+  );
+};
+
+const ServiceExtraMenuItem = ({ title, icon, onPress, route }) => {
+  const navigation = useNavigation();
+  let iconColor = "#4F46E5"; // Default color
+  let bgColor = "bg-indigo-100"; // Default background color
+
+  if (icon === "food") {
+    iconColor = "#FFD07A";
+    bgColor = "bg-orange-50";
+  } else if (icon === "car") {
+    iconColor = "#00AACC";
+    bgColor = "bg-blue-50";
+  } else if (icon === "door") {
+    iconColor = "#FF0000";
+    bgColor = "bg-red-50";
+  } else if (icon === "pencil") {
+    iconColor = "#00A0A0";
+    bgColor = "bg-teal-50";
+  }
+
+  const handlePress = () => {
+    if (route) {
+      navigation.navigate(route);
+    } else if (onPress) {
+      onPress();
+    }
+  };
+
+  return (
+    <TouchableOpacity
+      className="h-24 flex-1 items-center justify-center"
+      onPress={handlePress}
     >
       <View
         className={`mb-3 h-16 w-16 items-center justify-center rounded-full ${bgColor} shadow-xl`}
@@ -399,7 +453,7 @@ const HomeScreen = () => {
   };
 
   const menuItems = [
-    { title: "Meal Order", key: "meals", icon: "food" },
+    { title: "Meal Order", key: "meals", icon: "food", route: "MealOrder" },
     { title: "Transport", key: "transport", icon: "car" },
     { title: "Rooms", key: "rooms", icon: "door" },
     { title: "Stationary", key: "stationary", icon: "pencil" },
@@ -410,13 +464,25 @@ const HomeScreen = () => {
     { title: "Car Rental", key: "car-rental", icon: "car-estate" },
     { title: "Auditorium", key: "auditorium", icon: "theater" },
     { title: "Office Supply", key: "office", icon: "office-building" },
+    {
+      title: "List Menu",
+      key: "list-menu",
+      icon: "food-fork-drink",
+      route: "ListMenu",
+      description: "View and manage menu items",
+      iconColor: "#FFD07A", // Food-related color
+      bgColor: "bg-orange-50", // Food-related background
+    },
   ];
 
   return (
     <ScrollView className="flex-1 bg-slate-50">
       {/* Header Section */}
-      <View className="bg-blue-900 px-6 pb-8 pt-14 shadow-lg">
-        <View className="absolute -right-2 -top-20 z-0 opacity-20">
+      <View className="bg-white px-6 pb-8 pt-14 shadow-lg">
+        <View className="absolute -left-[339px] -top-[840px] right-0 z-0">
+          <FontAwesome name="circle" size={1250} color="#1c3a8a" />
+        </View>
+        <View className="absolute -right-2 -top-20 z-10 opacity-20">
           <FontAwesome name="bolt" size={400} color="darkblue" />
         </View>
         <View className="z-50 mb-2 flex-row items-center justify-between">
@@ -431,7 +497,7 @@ const HomeScreen = () => {
           <View className="flex-row items-center">
             <TouchableOpacity
               className="mr-4 rounded-full bg-blue-800 p-2"
-              onPress={() => navigation.navigate("Notifications")}
+              onPress={() => navigation.navigate("Notification")}
             >
               <View className="absolute -right-1 -top-1 z-10 h-4 w-4 items-center justify-center rounded-full bg-red-500">
                 <Text className="text-xs font-bold text-white">3</Text>
@@ -463,11 +529,7 @@ const HomeScreen = () => {
                   key={item.key}
                   title={item.title}
                   icon={item.icon}
-                  onPress={() => {
-                    if (item.key === "meals") {
-                      navigation.navigate("MealOrder");
-                    }
-                  }}
+                  route={item.route}
                 />
               ))}
             </View>
@@ -478,15 +540,11 @@ const HomeScreen = () => {
             >
               <View className="mt-4 flex-row justify-between border-t border-gray-100 pt-4">
                 {extraMenuItems.map((item) => (
-                  <ServiceMenuItem
+                  <ServiceExtraMenuItem
                     key={item.key}
                     title={item.title}
                     icon={item.icon}
-                    onPress={() => {
-                      if (item.key === "event-meal") {
-                        navigation.navigate("MealOrder");
-                      }
-                    }}
+                    route={item.route}
                   />
                 ))}
               </View>

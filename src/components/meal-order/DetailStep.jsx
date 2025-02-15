@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   View,
   Text,
@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useMealOrderStore } from "../../store/mealOrderStore";
-import { mockUsers } from "../../constants/mockUsers";
+import { useEmployeeStore } from "../../store/employeeStore";
 import DropPointSheet from "./DropPointSheet";
 import UserSelectSheet from "./UserSelectSheet";
 import DepartmentSheet from "./DepartmentSheet";
@@ -21,6 +21,12 @@ import JobTitleSelection from "./JobTitleSelection";
 export const DetailStep = () => {
   const { formData, updateFormData, updatePIC, updateSupervisor } =
     useMealOrderStore();
+  const { fetchEmployees, employeesByDepartment } = useEmployeeStore();
+
+  // Fetch employees data when component mounts
+  useEffect(() => {
+    fetchEmployees();
+  }, []);
   const [dropPointVisible, setDropPointVisible] = useState(false);
   const [picSheetVisible, setPicSheetVisible] = useState(false);
   const [departmentSheetVisible, setDepartmentSheetVisible] = useState(false);
@@ -400,19 +406,24 @@ export const DetailStep = () => {
           visible={picSheetVisible}
           onClose={() => setPicSheetVisible(false)}
           onSelect={(user) => {
+            // Update PIC info
             updatePIC({
               name: user.name,
               nomorHp: user.nomorHp || "",
             });
 
-            const departmentUsers = mockUsers[user.department];
-            const supervisor = departmentUsers.find((u) => u.isAsman);
-            if (supervisor) {
-              updateSupervisor({
-                name: supervisor.name,
-                nomorHp: supervisor.nomorHp || "",
-                subBidang: user.department,
-              });
+            // Auto-fill department and supervisor if not manually set
+            if (user.department && !formData.supervisor.subBidang) {
+              const supervisor = employeesByDepartment[user.department]?.find(
+                (emp) => emp.isAsman
+              );
+              if (supervisor) {
+                updateSupervisor({
+                  subBidang: user.department,
+                  name: supervisor.name,
+                  nomorHp: supervisor.nomorHp || "",
+                });
+              }
             }
           }}
           selected={formData.pic.name ? { name: formData.pic.name } : null}
@@ -423,14 +434,17 @@ export const DetailStep = () => {
           visible={departmentSheetVisible}
           onClose={() => setDepartmentSheetVisible(false)}
           onSelect={(department) => {
-            const departmentUsers = mockUsers[department];
-            const supervisor = departmentUsers.find((u) => u.isAsman);
-
-            updateSupervisor({
-              subBidang: department,
-              name: supervisor ? supervisor.name : "",
-              nomorHp: supervisor ? supervisor.nomorHp || "" : "",
-            });
+            // Allow manual department selection
+            const supervisor = employeesByDepartment[department]?.find(
+              (emp) => emp.isAsman
+            );
+            if (supervisor) {
+              updateSupervisor({
+                subBidang: department,
+                name: supervisor.name,
+                nomorHp: supervisor.nomorHp || "",
+              });
+            }
           }}
           selected={formData.supervisor.subBidang}
         />

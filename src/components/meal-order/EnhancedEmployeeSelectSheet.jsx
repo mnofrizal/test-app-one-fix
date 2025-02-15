@@ -10,8 +10,8 @@ import { ScrollView } from "react-native-gesture-handler";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { BottomSheetTextInput } from "@gorhom/bottom-sheet";
 import BottomSheet from "../BottomSheet";
-import { mockUsers } from "../../constants/mockUsers";
-import { mockMenus } from "../../constants/mockMenus";
+import { useEmployeeStore } from "../../store/employeeStore";
+import { useMenuStore } from "../../store/menuStore";
 
 const EnhancedEmployeeSelectSheet = ({
   visible,
@@ -33,10 +33,13 @@ const EnhancedEmployeeSelectSheet = ({
   const customNameRef = useRef("");
   const [searchText, setSearchText] = useState("");
 
+  const { getDepartmentEmployees } = useEmployeeStore();
+  const { menus } = useMenuStore();
+
   const employees = useMemo(() => {
     if (!isPlnip || !department) return [];
-    return mockUsers[department]?.filter((user) => !user.isAsman) || [];
-  }, [department, isPlnip]);
+    return getDepartmentEmployees(department) || [];
+  }, [department, isPlnip, getDepartmentEmployees]);
 
   const filteredEmployees = useMemo(() => {
     if (!inputTextRef.current) return employees;
@@ -173,6 +176,12 @@ const EnhancedEmployeeSelectSheet = ({
                 </View>
               </TouchableOpacity>
             ))}
+
+            {filteredEmployees.length === 0 && (
+              <View className="items-center py-8">
+                <Text className="text-gray-500">No employees found</Text>
+              </View>
+            )}
           </View>
         </ScrollView>
       )}
@@ -189,36 +198,49 @@ const EnhancedEmployeeSelectSheet = ({
 
       <ScrollView className="flex-1" bounces={false}>
         <View className="space-y-2 p-4">
-          {mockMenus.map((menu) => (
-            <TouchableOpacity
-              key={menu.id}
-              onPress={() => setSelectedMenu(menu)}
-              className={`rounded-lg border p-4 ${
-                selectedMenu?.id === menu.id
-                  ? "border-blue-500 bg-blue-50"
-                  : "border-gray-200 bg-white"
-              }`}
-            >
-              <View className="flex-row items-center justify-between">
-                <Text
-                  className={`text-base ${
-                    selectedMenu?.id === menu.id
-                      ? "text-blue-600"
-                      : "text-gray-800"
-                  }`}
-                >
-                  {menu.name}
-                </Text>
-                {selectedMenu?.id === menu.id && (
-                  <MaterialCommunityIcons
-                    name="check-circle"
-                    size={20}
-                    color="#2563EB"
-                  />
-                )}
-              </View>
-            </TouchableOpacity>
-          ))}
+          {menus
+            .filter((menu) => menu.isAvailable)
+            .map((menu) => (
+              <TouchableOpacity
+                key={menu.id}
+                onPress={() => setSelectedMenu(menu)}
+                className={`rounded-lg border p-4 ${
+                  selectedMenu?.id === menu.id
+                    ? "border-blue-500 bg-blue-50"
+                    : "border-gray-200 bg-white"
+                }`}
+              >
+                <View className="flex-row items-center justify-between">
+                  <View>
+                    <Text
+                      className={`text-base ${
+                        selectedMenu?.id === menu.id
+                          ? "text-blue-600"
+                          : "text-gray-800"
+                      }`}
+                    >
+                      {menu.name}
+                    </Text>
+                    <Text className="text-sm text-gray-500">
+                      {menu.category.replace("_", " ")}
+                    </Text>
+                  </View>
+                  {selectedMenu?.id === menu.id && (
+                    <MaterialCommunityIcons
+                      name="check-circle"
+                      size={20}
+                      color="#2563EB"
+                    />
+                  )}
+                </View>
+              </TouchableOpacity>
+            ))}
+
+          {menus.length === 0 && (
+            <View className="items-center py-8">
+              <Text className="text-gray-500">No menus available</Text>
+            </View>
+          )}
         </View>
       </ScrollView>
     </View>

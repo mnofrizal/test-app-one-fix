@@ -1,119 +1,127 @@
-import React, { useState, useMemo, useRef } from "react";
-import { View, Text, TouchableOpacity } from "react-native";
-import { ScrollView } from "react-native-gesture-handler";
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  ScrollView,
+  TextInput,
+} from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { BottomSheetTextInput } from "@gorhom/bottom-sheet";
 import BottomSheet from "../BottomSheet";
-import { mockUsers } from "../../constants/mockUsers";
+import { useEmployeeStore } from "../../store/employeeStore";
 
-// Flatten users array and add department info
-const getAllUsers = (supervisorsOnly = false) => {
-  return Object.entries(mockUsers).flatMap(([department, users]) =>
-    users
-      .filter((user) => !supervisorsOnly || user.isAsman)
-      .map((user) => ({
-        ...user,
-        department,
-      }))
-  );
-};
+const UserSelectSheet = ({ visible, onClose, onSelect, selected, title }) => {
+  const [searchQuery, setSearchQuery] = useState("");
+  const { employeesByDepartment } = useEmployeeStore();
 
-const UserSelectSheet = ({
-  visible,
-  onClose,
-  onSelect,
-  selected,
-  title,
-  supervisorsOnly = false,
-}) => {
-  const inputRef = useRef(null);
+  // Get all employees from all departments
+  const getAllEmployees = () => {
+    const allEmployees = [];
+    Object.entries(employeesByDepartment).forEach(([department, employees]) => {
+      employees.forEach((employee) => {
+        if (!employee.isAsman) {
+          // Exclude ASMAN from the list
+          allEmployees.push({
+            ...employee,
+            department, // Add department info to employee
+          });
+        }
+      });
+    });
+    return allEmployees;
+  };
 
-  const snapPoints = useMemo(() => ["65%", "95%"], []);
-  const inputTextRef = useRef("");
-  const [searchText, setSearchText] = useState("");
+  const employees = getAllEmployees();
+  const filteredEmployees = searchQuery
+    ? employees.filter((employee) =>
+        employee.name.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : employees;
 
-  const users = useMemo(() => getAllUsers(supervisorsOnly), [supervisorsOnly]);
-
-  const filteredUsers = useMemo(() => {
-    if (!inputTextRef.current) return users;
-    const searchLower = inputTextRef.current.toLowerCase();
-    return users.filter(
-      (user) =>
-        user.name.toLowerCase().includes(searchLower) ||
-        user.department.toLowerCase().includes(searchLower)
-    );
-  }, [searchText, users]);
+  const handleSelect = (employee) => {
+    onSelect(employee);
+    onClose();
+  };
 
   return (
-    <BottomSheet visible={visible} onClose={onClose} snapPoints={snapPoints}>
+    <BottomSheet visible={visible} onClose={onClose} snapPoints={["75%"]}>
       <View className="flex-1">
-        {/* Fixed Header */}
-        <View className="border-b border-gray-100 bg-white px-4 pb-4">
-          <Text className="mb-4 text-xl font-semibold text-gray-800">
-            {title || "Select User"}
-          </Text>
+        {/* Header */}
+        <View className="border-b border-gray-100 bg-white px-4 pb-4 pt-2">
+          <View className="flex-row items-center justify-between">
+            <TouchableOpacity onPress={onClose} className="rounded-full p-2">
+              <MaterialCommunityIcons name="close" size={20} color="#64748B" />
+            </TouchableOpacity>
+            <Text className="text-lg font-semibold text-gray-900">
+              {title || "Select User"}
+            </Text>
+            <View className="h-8 w-8" />
+          </View>
+        </View>
 
-          {/* Search Input */}
-          <View className="rounded-lg border border-gray-200 bg-white px-3">
-            <BottomSheetTextInput
-              ref={inputRef}
-              placeholder="Search by name or department"
-              className="py-2.5 text-base text-gray-900"
-              onChangeText={(text) => {
-                inputTextRef.current = text;
-                setSearchText(text);
-              }}
-              defaultValue={inputTextRef.current}
+        {/* Search Input */}
+        <View className="border-b border-gray-100 p-4">
+          <View className="flex-row items-center rounded-lg bg-gray-50 px-3 py-2">
+            <MaterialCommunityIcons name="magnify" size={20} color="#64748B" />
+            <TextInput
+              className="ml-2 flex-1 text-base text-gray-900"
+              placeholder="Search users..."
+              placeholderTextColor="#94A3B8"
+              value={searchQuery}
+              onChangeText={setSearchQuery}
             />
           </View>
         </View>
 
-        {/* Scrollable Content */}
-        <ScrollView
-          className="flex-1"
-          showsVerticalScrollIndicator={false}
-          bounces={false}
-          keyboardShouldPersistTaps="handled"
-        >
-          <View className="space-y-2 p-4">
-            {filteredUsers.map((user) => (
-              <TouchableOpacity
-                key={user.id}
-                onPress={() => {
-                  onSelect(user);
-                  onClose();
-                }}
-                className={`rounded-lg border p-4 ${
-                  selected?.id === user.id
-                    ? "border-blue-500 bg-blue-50"
-                    : "border-gray-200 bg-white"
-                }`}
-              >
-                <View className="flex-row items-center justify-between">
+        {/* User List */}
+        <ScrollView className="flex-1">
+          <View className="p-4">
+            <View className="space-y-2">
+              {filteredEmployees.map((employee) => (
+                <TouchableOpacity
+                  key={employee.id}
+                  onPress={() => handleSelect(employee)}
+                  className={`flex-row items-center justify-between rounded-xl border p-4 ${
+                    selected?.name === employee.name
+                      ? "border-indigo-500 bg-indigo-50"
+                      : "border-gray-200 bg-white"
+                  }`}
+                >
                   <View className="flex-1">
                     <Text
-                      className={`text-base ${
-                        selected?.id === user.id
-                          ? "text-blue-600"
-                          : "text-gray-800"
+                      className={`text-base font-medium ${
+                        selected?.name === employee.name
+                          ? "text-indigo-700"
+                          : "text-gray-900"
                       }`}
                     >
-                      {user.name}
+                      {employee.name}
                     </Text>
                     <Text className="text-sm text-gray-500">
-                      {user.department}
+                      {employee.department}
                     </Text>
+                    {employee.nomorHp && (
+                      <Text className="mt-1 text-sm text-gray-500">
+                        {employee.nomorHp}
+                      </Text>
+                    )}
                   </View>
-                  {selected?.id === user.id && (
+                  {selected?.name === employee.name && (
                     <MaterialCommunityIcons
                       name="check-circle"
-                      size={20}
-                      color="#2563EB"
+                      size={24}
+                      color="#4F46E5"
                     />
                   )}
+                </TouchableOpacity>
+              ))}
+
+              {filteredEmployees.length === 0 && searchQuery && (
+                <View className="items-center py-8">
+                  <Text className="text-gray-500">No users found</Text>
                 </View>
-              </TouchableOpacity>
-            ))}
+              )}
+            </View>
           </View>
         </ScrollView>
       </View>

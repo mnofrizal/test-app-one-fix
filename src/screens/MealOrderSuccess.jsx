@@ -1,177 +1,175 @@
-import React, { useEffect } from "react";
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  ScrollView,
-  Dimensions,
-} from "react-native";
+import React from "react";
+import { View, Text, TouchableOpacity, Share } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { useNavigation } from "@react-navigation/native";
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withTiming,
-  withDelay,
-  Easing,
-  FadeInDown,
-  runOnJS,
-} from "react-native-reanimated";
-import { useMealOrderStore } from "../store/mealOrderStore";
-
-const { height: SCREEN_HEIGHT } = Dimensions.get("window");
-const CENTER_POSITION = SCREEN_HEIGHT / 2 - 100;
-const TOP_POSITION = 80;
-
-const OrderDetail = ({ label, value, icon }) => (
-  <View className="mb-4 flex-row items-center justify-between rounded-xl bg-white p-4 shadow-sm">
-    <View className="flex-row items-center">
-      <View className="rounded-lg bg-indigo-50 p-2">
-        <MaterialCommunityIcons name={icon} size={20} color="#4F46E5" />
-      </View>
-      <Text className="ml-3 text-base font-medium text-gray-600">{label}</Text>
-    </View>
-    <Text className="text-base font-semibold text-gray-900">{value}</Text>
-  </View>
-);
+import { useRoute, useNavigation } from "@react-navigation/native";
 
 const MealOrderSuccess = () => {
   const navigation = useNavigation();
-  const formData = useMealOrderStore((state) => state.formData);
-  const [showContent, setShowContent] = React.useState(false);
+  const route = useRoute();
+  const { orderData } = route.params || {};
 
-  // Animation values
-  const scale = useSharedValue(0);
-  const opacity = useSharedValue(0);
-  const translateY = useSharedValue(0);
-
-  useEffect(() => {
-    // Initial animation: Show check in center
-    scale.value = withTiming(1, {
-      duration: 400,
-      easing: Easing.bezier(0.25, 0.1, 0.25, 1),
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleString("id-ID", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
-    opacity.value = withTiming(1, {
-      duration: 400,
-      easing: Easing.bezier(0.25, 0.1, 0.25, 1),
-    });
-
-    // After check appears, move it up and show content
-    setTimeout(() => {
-      translateY.value = withTiming(-CENTER_POSITION + TOP_POSITION, {
-        duration: 600,
-        easing: Easing.bezier(0.25, 0.1, 0.25, 1),
-      });
-      runOnJS(setShowContent)(true);
-    }, 800);
-  }, []);
-
-  const checkmarkStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }, { translateY: translateY.value }],
-    opacity: opacity.value,
-  }));
-
-  const handleShare = () => {
-    console.log("Share order details");
   };
 
-  const totalCount = Object.values(formData.entityCounts).reduce(
-    (sum, count) => sum + count,
-    0
-  );
+  const generateOrderSummary = () => {
+    let summary = `🍽️ Order Makanan\n\n`;
+    summary += `📋 ${orderData.judulPekerjaan}\n`;
+    summary += `📅 ${formatDate(orderData.requestDate)}\n`;
+    summary += `📍 ${orderData.dropPoint}\n\n`;
+
+    summary += `👤 PIC: ${orderData.pic.name}\n`;
+    summary += `📱 HP: ${orderData.pic.nomorHp || "-"}\n`;
+    summary += `🏢 Departemen: ${orderData.supervisor.subBidang}\n`;
+    summary += `👨‍💼 ASMAN: ${orderData.supervisor.name}\n\n`;
+
+    // Group orders by entity
+    const ordersByEntity = {};
+    orderData.employeeOrders.forEach((order) => {
+      if (!ordersByEntity[order.entity]) {
+        ordersByEntity[order.entity] = [];
+      }
+      ordersByEntity[order.entity].push(order);
+    });
+
+    // Add orders to summary
+    Object.entries(ordersByEntity).forEach(([entity, orders]) => {
+      summary += `${entity} (${orders.length})\n`;
+      orders.forEach((order) => {
+        summary += `- ${order.employeeName}: ${
+          order.items.map((item) => item.menuName).join(", ") || "Unknown Menu"
+        }\n`;
+      });
+      summary += "\n";
+    });
+
+    return summary;
+  };
+
+  const handleShare = async () => {
+    try {
+      const summary = generateOrderSummary();
+      await Share.share({
+        message: summary,
+      });
+    } catch (error) {
+      console.error("Error sharing:", error);
+    }
+  };
 
   return (
-    <View className="flex-1 bg-gray-50">
-      {/* Centered check mark that moves up */}
-      <Animated.View
-        className="absolute left-0 right-0 top-1/2 -mt-24 items-center justify-center"
-        style={checkmarkStyle}
-      >
-        <View className="absolute h-32 w-32 rounded-full bg-green-100" />
-        <MaterialCommunityIcons name="check-circle" size={80} color="#22C55E" />
-      </Animated.View>
+    <SafeAreaView className="flex-1 bg-white">
+      <View className="flex-1 px-6">
+        {/* Success Icon */}
+        <View className="items-center py-12">
+          <View className="rounded-full bg-green-100 p-4">
+            <MaterialCommunityIcons
+              name="check-circle"
+              size={64}
+              color="#22C55E"
+            />
+          </View>
+          <Text className="mt-6 text-2xl font-bold text-gray-900">
+            Order Submitted!
+          </Text>
+          <Text className="mt-2 text-center text-base text-gray-600">
+            Your order has been successfully submitted and will be processed
+            shortly.
+          </Text>
+        </View>
 
-      {showContent && (
-        <>
-          {/* Content */}
-          <View className="flex-1 px-6" style={{ marginTop: 190 }}>
-            <Animated.View entering={FadeInDown.duration(600)} className="mb-6">
-              <Text className="mb-2 text-center text-2xl font-bold text-gray-800">
-                Order Successful!
+        {/* Order Summary */}
+        <View className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
+          <Text className="mb-4 text-lg font-semibold text-gray-900">
+            Order Summary
+          </Text>
+
+          {/* Basic Info */}
+          <View className="space-y-2">
+            <View className="flex-row justify-between">
+              <Text className="text-gray-600">Order ID</Text>
+              <Text className="font-medium text-gray-900">
+                #{orderData.id || "N/A"}
               </Text>
-              <Text className="text-center text-base text-gray-600">
-                Your meal order has been successfully submitted.
+            </View>
+            <View className="flex-row justify-between">
+              <Text className="text-gray-600">Date</Text>
+              <Text className="font-medium text-gray-900">
+                {formatDate(orderData.requestDate)}
               </Text>
-            </Animated.View>
-            <ScrollView showsVerticalScrollIndicator={false}>
-              <Animated.View
-                className="rounded-2xl bg-white p-6 shadow-md"
-                entering={FadeInDown.duration(600).delay(200)}
-              >
-                <Text className="mb-4 text-lg font-semibold text-gray-900">
-                  Order Summary
-                </Text>
-                <OrderDetail label="Order ID" value="#ORD123456" icon="pound" />
-                <OrderDetail
-                  label="Total Orders"
-                  value={totalCount}
-                  icon="account-group"
-                />
-                <OrderDetail
-                  label="Job Title"
-                  value={formData.judulPekerjaan}
-                  icon="briefcase"
-                />
-                <OrderDetail
-                  label="Drop Point"
-                  value={formData.dropPoint}
-                  icon="map-marker"
-                />
-                <OrderDetail
-                  label="Time"
-                  value={new Date().toLocaleTimeString()}
-                  icon="clock"
-                />
-              </Animated.View>
-            </ScrollView>
+            </View>
+            <View className="flex-row justify-between">
+              <Text className="text-gray-600">Drop Point</Text>
+              <Text className="font-medium text-gray-900">
+                {orderData.dropPoint}
+              </Text>
+            </View>
           </View>
 
-          {/* Action Buttons */}
-          <Animated.View
-            className="bg-white p-6 shadow-lg"
-            entering={FadeInDown.duration(600).delay(400)}
-          >
-            <TouchableOpacity
-              className="mb-4 w-full flex-row items-center justify-center rounded-xl bg-indigo-600 p-4 shadow-sm"
-              onPress={handleShare}
-            >
-              <MaterialCommunityIcons
-                name="share-variant"
-                size={20}
-                color="white"
-                style={{ marginRight: 8 }}
-              />
-              <Text className="font-medium text-white">
-                Share Order Details
-              </Text>
-            </TouchableOpacity>
+          <View className="my-4 border-t border-gray-200" />
 
-            <TouchableOpacity
-              className="w-full flex-row items-center justify-center rounded-xl border-2 border-indigo-600 bg-white p-4"
-              onPress={() => navigation.navigate("MainTabs")}
-            >
-              <MaterialCommunityIcons
-                name="home"
-                size={20}
-                color="#4F46E5"
-                style={{ marginRight: 8 }}
-              />
-              <Text className="font-medium text-indigo-600">Back to Home</Text>
-            </TouchableOpacity>
-          </Animated.View>
-        </>
-      )}
-    </View>
+          {/* PIC Info */}
+          <View className="space-y-2">
+            <View className="flex-row justify-between">
+              <Text className="text-gray-600">PIC</Text>
+              <Text className="font-medium text-gray-900">
+                {orderData.pic.name}
+              </Text>
+            </View>
+            <View className="flex-row justify-between">
+              <Text className="text-gray-600">Department</Text>
+              <Text className="font-medium text-gray-900">
+                {orderData.supervisor.subBidang}
+              </Text>
+            </View>
+          </View>
+
+          <View className="my-4 border-t border-gray-200" />
+
+          {/* Order Count */}
+          <View className="flex-row justify-between">
+            <Text className="text-gray-600">Total Orders</Text>
+            <Text className="font-medium text-gray-900">
+              {orderData.employeeOrders.length} items
+            </Text>
+          </View>
+        </View>
+      </View>
+
+      {/* Bottom Actions */}
+      <View className="border-t border-gray-100 bg-white p-6 py-5">
+        <View className="space-y-4">
+          <TouchableOpacity
+            onPress={handleShare}
+            className="flex-row items-center justify-center rounded-xl border border-blue-600 py-4"
+          >
+            <MaterialCommunityIcons
+              name="share-variant"
+              size={20}
+              color="#2563EB"
+            />
+            <Text className="ml-2 font-semibold text-blue-600">
+              Share Order
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => navigation.navigate("MainTabs")}
+            className="flex-row items-center justify-center rounded-xl bg-blue-600 py-4"
+          >
+            <MaterialCommunityIcons name="home" size={20} color="#FFFFFF" />
+            <Text className="ml-2 font-semibold text-white">Back to Home</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </SafeAreaView>
   );
 };
 
