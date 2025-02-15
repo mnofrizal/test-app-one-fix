@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -8,34 +8,32 @@ import {
   Platform,
   ScrollView,
 } from "react-native";
+import ErrorAlert from "../components/ErrorAlert";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
-
 import { useAuthStore } from "../store/authStore";
 
 const LoginScreen = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
 
-  const setUser = useAuthStore((state) => state.setUser);
+  const { login, isLoading, error, errors } = useAuthStore();
+  const [errorVisible, setErrorVisible] = useState(false);
 
   const handleLogin = async () => {
     if (!username || !password) return;
+    const success = await login(username, password);
+    if (!success) {
+      setErrorVisible(true);
+    }
+  };
 
-    setIsLoading(true);
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false);
-      // Set mock user data
-      setUser({
-        id: "1",
-        username,
-        name: "John Doe",
-        role: "Employee",
-      });
-    }, 1500);
+  const getErrorMessage = () => {
+    if (errors?.length > 0) {
+      return errors[0].message;
+    }
+    return error || "An unknown error occurred";
   };
 
   return (
@@ -71,21 +69,22 @@ const LoginScreen = () => {
               {/* Username Input */}
               <View className="rounded-xl bg-white/10 px-4 py-3">
                 <Text className="mb-1 text-sm font-medium text-blue-200">
-                  Username
+                  Email
                 </Text>
                 <View className="flex-row items-center">
                   <MaterialCommunityIcons
-                    name="account"
+                    name="email"
                     size={20}
                     color="#BFDBFE"
                   />
                   <TextInput
                     className="ml-2 flex-1 text-base text-white"
-                    placeholder="Enter your username"
+                    placeholder="Enter your email"
                     placeholderTextColor="#93C5FD"
                     value={username}
                     onChangeText={setUsername}
                     autoCapitalize="none"
+                    keyboardType="email-address"
                   />
                 </View>
               </View>
@@ -132,18 +131,24 @@ const LoginScreen = () => {
               {/* Login Button */}
               <TouchableOpacity
                 className={`mt-6 rounded-xl bg-white py-4 ${
-                  (!username || !password) && "opacity-50"
+                  (!username || !password || isLoading) && "opacity-50"
                 }`}
                 onPress={handleLogin}
                 disabled={!username || !password || isLoading}
               >
                 <View className="flex-row items-center justify-center">
                   {isLoading ? (
-                    <MaterialCommunityIcons
-                      name="loading"
-                      size={24}
-                      color="#1E40AF"
-                    />
+                    <View className="flex-row items-center">
+                      <MaterialCommunityIcons
+                        name="loading"
+                        size={24}
+                        color="#1E40AF"
+                        className="animate-spin"
+                      />
+                      <Text className="ml-2 text-base font-semibold text-blue-900">
+                        Signing In...
+                      </Text>
+                    </View>
                   ) : (
                     <>
                       <MaterialCommunityIcons
@@ -162,6 +167,12 @@ const LoginScreen = () => {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      <ErrorAlert
+        visible={errorVisible}
+        message={getErrorMessage()}
+        onClose={() => setErrorVisible(false)}
+      />
     </SafeAreaView>
   );
 };
