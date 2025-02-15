@@ -22,8 +22,8 @@ const CustomPICSheet = ({ visible, onClose, onSave, initialData = {} }) => {
     setIsValid(nameRef.current.trim() !== "" && phoneRef.current.trim() !== "");
   };
 
-  // Provide different snap points for keyboard visible/hidden states
-  const snapPoints = useMemo(() => ["50%", "85%"], []);
+  // Provide different snap points for normal, keyboard, and full screen states
+  const snapPoints = useMemo(() => ["50%", "85%", "95%"], []);
 
   return (
     <BottomSheet visible={visible} onClose={onClose} snapPoints={snapPoints}>

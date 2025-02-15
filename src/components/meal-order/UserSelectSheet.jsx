@@ -27,6 +27,8 @@ const UserSelectSheet = ({
   supervisorsOnly = false,
 }) => {
   const inputRef = useRef(null);
+
+  const snapPoints = useMemo(() => ["65%", "95%"], []);
   const inputTextRef = useRef("");
   const [searchText, setSearchText] = useState("");
 
@@ -43,11 +45,7 @@ const UserSelectSheet = ({
   }, [searchText, users]);
 
   return (
-    <BottomSheet
-      visible={visible}
-      onClose={onClose}
-      snapPoints={["65%", "85%"]}
-    >
+    <BottomSheet visible={visible} onClose={onClose} snapPoints={snapPoints}>
       <View className="flex-1">
         {/* Fixed Header */}
         <View className="border-b border-gray-100 bg-white px-4 pb-4">

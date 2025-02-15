@@ -37,7 +37,9 @@ const EntityCard = ({
 
   return (
     <View
-      className={`mb-4 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm`}
+      className={`mb-4 overflow-hidden rounded-2xl border  ${
+        isSelected ? "border-indigo-200" : "border-slate-200"
+      } bg-white shadow-sm`}
     >
       <TouchableOpacity
         onPress={onSelect}
@@ -46,26 +48,34 @@ const EntityCard = ({
         }`}
       >
         <View className="flex-row items-center justify-center">
-          <MaterialCommunityIcons
-            name={entityIcons[entity]}
-            size={24}
-            color={isSelected ? "#4F46E5" : "#64748B"}
-          />
-          <Text
-            className={`ml-3 text-lg font-semibold ${
-              isSelected ? "text-indigo-600" : "text-gray-900"
+          <View
+            className={`rounded-lg p-2 ${
+              isSelected ? "bg-indigo-100" : "bg-slate-50"
             }`}
           >
-            {entity}
-          </Text>
+            <MaterialCommunityIcons
+              name={entityIcons[entity]}
+              size={24}
+              color={isSelected ? "#4F46E5" : "#64748B"}
+            />
+          </View>
+          <View className="ml-3">
+            <Text
+              className={`text-lg font-semibold ${
+                isSelected ? "text-indigo-600" : "text-gray-900"
+              }`}
+            >
+              {entity}
+            </Text>
+            {!isSelected && (
+              <Text className="text-sm text-slate-500">
+                {entityDescriptions[entity]}
+              </Text>
+            )}
+          </View>
         </View>
-        {!isSelected && (
-          <Text className="text-sm font-medium text-slate-500">
-            {entityDescriptions[entity]}
-          </Text>
-        )}
 
-        {isSelected && (
+        {isSelected ? (
           <View className="mt-2 flex-row items-center justify-center">
             <TouchableOpacity
               onPress={() => count > 0 && onCountChange(count - 1)}
@@ -99,14 +109,31 @@ const EntityCard = ({
               />
             </TouchableOpacity>
           </View>
+        ) : (
+          <MaterialCommunityIcons
+            name="chevron-right"
+            size={24}
+            color="#64748B"
+          />
         )}
       </TouchableOpacity>
       {isSelected && (
         <View className="bg-slate-50 px-5 py-4">
           <View className="flex-row items-center justify-between">
-            <Text className="text-base font-medium text-gray-700">
-              Jumlah Orang
-            </Text>
+            <View className="flex-row items-center">
+              <MaterialCommunityIcons
+                name="account-group"
+                size={20}
+                color={showWarning ? "#DC2626" : "#4F46E5"}
+              />
+              <Text
+                className={`ml-2 text-base font-medium ${
+                  showWarning ? "text-red-700" : "text-gray-700"
+                }`}
+              >
+                Jumlah Orang
+              </Text>
+            </View>
             {maxCount && (
               <Text
                 className={`text-sm font-medium ${

@@ -34,17 +34,35 @@ const DropPointSheet = ({ visible, onClose, onSelect, selected }) => {
     <BottomSheet
       visible={visible}
       onClose={onClose}
-      snapPoints={["50%", "85%"]}
+      snapPoints={["50%", "85%", "95%"]}
     >
       <View className="flex-1">
-        {/* Fixed Header */}
-        <View className="border-b border-gray-100 bg-white px-4 pb-4">
-          <Text className="mb-4 text-xl font-semibold text-gray-800">
-            Select Drop Point
-          </Text>
-
+        {/* Header */}
+        <View className="border-b border-gray-100 bg-white px-4 pb-4 pt-2">
+          <View className="flex-row items-center justify-between">
+            <TouchableOpacity
+              onPress={() => bottomSheetRef.current?.dismiss()}
+              className="rounded-full p-2"
+            >
+              <View className="flex-row items-center">
+                <MaterialCommunityIcons
+                  name="close"
+                  size={20}
+                  color="#64748B"
+                />
+              </View>
+            </TouchableOpacity>
+            <Text className="text-lg font-semibold text-gray-800">
+              Judul Pekerjaan
+            </Text>
+            <TouchableOpacity className={`rounded-lgpx-3 py-2`}>
+              <Text className={`text-sm font-medium text-indigo-600`}>
+                Simpan
+              </Text>
+            </TouchableOpacity>
+          </View>
           {/* Search Input */}
-          <View className="rounded-lg border border-gray-200 bg-white px-3">
+          <View className="mt-3 rounded-lg border border-gray-200 bg-white px-3">
             <BottomSheetTextInput
               ref={inputRef}
               placeholder="Search drop point"

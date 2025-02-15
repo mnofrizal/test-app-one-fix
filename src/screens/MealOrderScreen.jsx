@@ -46,6 +46,15 @@ const MealOrderScreen = () => {
     }
   };
 
+  // Calculate total count for Pemesan step
+  const totalCount = React.useMemo(() => {
+    if (currentStep !== 1) return 0;
+    return Object.values(formData.entityCounts).reduce(
+      (sum, count) => sum + count,
+      0
+    );
+  }, [currentStep, formData.entityCounts]);
+
   // Split useEffect for initialization and back handler
   useEffect(() => {
     // Reset form data when component mounts
@@ -170,29 +179,80 @@ const MealOrderScreen = () => {
           currentPosition={currentStep}
           labels={labels}
           stepCount={4}
+          renderStepIndicator={({ position, stepStatus }) => {
+            const iconNames = [
+              "clipboard-text-outline",
+              "account-multiple",
+              "food",
+              "check-circle",
+            ];
+            const iconSize = stepStatus === "current" ? 24 : 20;
+            const iconColor =
+              stepStatus === "unfinished"
+                ? "#94A3B8"
+                : stepStatus === "current"
+                ? "#1c40af"
+                : "#ffffff";
+
+            return (
+              <MaterialCommunityIcons
+                name={iconNames[position]}
+                size={iconSize}
+                color={iconColor}
+              />
+            );
+          }}
         />
       </View>
 
       <ScrollView className="flex-1">{renderStep()}</ScrollView>
       {canProceed() && (
-        <View className="bg-white p-4 px-6 shadow-lg">
-          <TouchableOpacity
-            className={`w-full rounded-xl py-3 ${
-              canProceed() ? "bg-blue-900 shadow-md" : "bg-slate-300"
-            }`}
-            disabled={!canProceed()}
-            onPress={() => {
-              if (currentStep === 3) {
-                handleSubmit();
-              } else {
-                setCurrentStep(Math.min(3, currentStep + 1));
-              }
-            }}
-          >
-            <Text className="text-center text-lg font-semibold text-white">
-              {currentStep === 3 ? "Submit Order" : "Next"}
-            </Text>
-          </TouchableOpacity>
+        <View className="bg-white shadow-lg">
+          {currentStep === 1 && totalCount > 0 && (
+            <View className="flex-row items-center justify-between border-b border-t border-gray-100 p-3">
+              <View className="flex-row items-center">
+                <View className="rounded-xl bg-indigo-100 p-2">
+                  <MaterialCommunityIcons
+                    name="account-group"
+                    size={24}
+                    color="#4F46E5"
+                  />
+                </View>
+                <View className="ml-3">
+                  <Text className="text-base font-semibold text-gray-900">
+                    Total Pemesanan
+                  </Text>
+                  <Text className="text-sm font-medium text-slate-500">
+                    Jumlah Pesanan
+                  </Text>
+                </View>
+              </View>
+              <View className="rounded-full bg-indigo-100 px-4 py-2">
+                <Text className="text-base font-bold text-indigo-600">
+                  {totalCount}
+                </Text>
+              </View>
+            </View>
+          )}
+          <View className="p-4">
+            <TouchableOpacity
+              className={`w-full rounded-xl py-3 ${
+                canProceed() ? "bg-blue-900 shadow-md" : "bg-slate-300"
+              }`}
+              disabled={!canProceed()}
+              onPress={() => {
+                if (currentStep === 3) {
+                  handleSubmit();
+                } else {
+                  setCurrentStep(Math.min(3, currentStep + 1));
+                }
+              }}
+            >
+              <Text className="text-center text-lg font-semibold text-white">
+                {currentStep === 3 ? "Submit Order" : "Next"}
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
       )}
     </SafeAreaView>

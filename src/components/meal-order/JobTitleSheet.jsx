@@ -5,9 +5,16 @@ import React, {
   useEffect,
   useCallback,
 } from "react";
-import { View, Text, TouchableOpacity, Keyboard } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  Keyboard,
+  ScrollView,
+} from "react-native";
 import { BottomSheetTextInput } from "@gorhom/bottom-sheet";
 import BottomSheet from "../BottomSheet";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 const JobTitleSheet = ({ visible, onClose, onSave, initialValue = "" }) => {
   const bottomSheetRef = useRef(null);
@@ -34,13 +41,13 @@ const JobTitleSheet = ({ visible, onClose, onSave, initialValue = "" }) => {
   const handleSave = useCallback(() => {
     if (titleRef.current.trim()) {
       onSave(titleRef.current);
-      bottomSheetRef.current?.forceClose();
+      bottomSheetRef.current?.dismiss();
     }
   }, [onSave]);
 
   // Provide different snap points for keyboard visible/hidden states
   const inputRef = useRef(null);
-  const snapPoints = useMemo(() => ["55%"], []);
+  const snapPoints = useMemo(() => ["65%", "95%"], []);
 
   // Focus input after animation
   useEffect(() => {
@@ -61,42 +68,90 @@ const JobTitleSheet = ({ visible, onClose, onSave, initialValue = "" }) => {
       snapPoints={snapPoints}
     >
       <View className="relative flex-1">
-        {/* Fixed Header */}
-        <View className="border-b border-gray-100 bg-white px-4">
-          <Text className="mb-4 text-xl font-semibold text-gray-800">
-            Judul Pekerjaan
-          </Text>
-        </View>
-
-        {/* Form - Added bottom padding to prevent content being hidden behind fixed button */}
-        <View className="p-4 pb-20">
-          <View className="mb-4">
-            <Text className="mb-2 text-sm font-medium text-gray-700">
-              Masukkan judul pekerjaan yang akan dilakukan
+        {/* Header */}
+        <View className="border-b border-gray-100 bg-white px-4 pb-4 pt-2">
+          <View className="flex-row items-center justify-between">
+            <TouchableOpacity
+              onPress={() => bottomSheetRef.current?.dismiss()}
+              className="rounded-full p-2"
+            >
+              <View className="flex-row items-center">
+                <MaterialCommunityIcons
+                  name="close"
+                  size={20}
+                  color="#64748B"
+                />
+              </View>
+            </TouchableOpacity>
+            <Text className="text-lg font-semibold text-gray-800">
+              Judul Pekerjaan
             </Text>
-            <BottomSheetTextInput
-              className="rounded-lg border border-gray-200 bg-white px-3 py-2.5"
-              defaultValue={titleRef.current}
-              onChangeText={handleTextChange}
-              placeholder="Contoh: Meeting Project A"
-              placeholderTextColor="#9CA3AF"
-              autoCapitalize="words"
-              ref={inputRef}
-            />
+            <TouchableOpacity
+              onPress={handleSave}
+              disabled={!isValid}
+              className={`rounded-lg px-3 py-2 ${
+                isValid ? "bg-indigo-50" : "opacity-50"
+              }`}
+            >
+              <Text
+                className={`text-sm font-medium ${
+                  isValid ? "text-indigo-600" : "text-gray-400"
+                }`}
+              >
+                Simpan
+              </Text>
+            </TouchableOpacity>
           </View>
         </View>
 
-        {/* Save Button - Fixed at bottom */}
-        <View className="absolute bottom-0 left-0 right-0 border-t border-gray-100 bg-white px-4 py-4">
-          <TouchableOpacity
-            onPress={handleSave}
-            disabled={!isValid}
-            className={`w-full rounded-lg py-3 ${
-              isValid ? "bg-blue-500" : "bg-gray-300"
-            }`}
-          >
-            <Text className="text-center font-medium text-white">Simpan</Text>
-          </TouchableOpacity>
+        {/* Form Content */}
+        <View className="p-4 pb-20">
+          <View className="space-y-6">
+            <View className="space-y-4">
+              <View className="space-y-2">
+                <Text className="text-sm text-gray-500">
+                  Masukkan judul atau pilih saran di bawah
+                </Text>
+              </View>
+
+              <View className="rounded-xl bg-gray-100 p-3">
+                <BottomSheetTextInput
+                  className="rounded-lg bg-white px-4 py-2.5 text-lg shadow-lg"
+                  defaultValue={titleRef.current}
+                  onChangeText={handleTextChange}
+                  placeholder="Masukkan judul pekerjaan..."
+                  placeholderTextColor="#9CA3AF"
+                  autoCapitalize="words"
+                  ref={inputRef}
+                />
+              </View>
+
+              <View className="mt-4">
+                <View className="flex-row flex-wrap gap-2">
+                  {["Pemeliharaan", "Pekerjaan", "OH", "Lembur"].map(
+                    (title) => (
+                      <TouchableOpacity
+                        key={title}
+                        onPress={() => {
+                          titleRef.current = title;
+                          handleTextChange(`${title} `);
+                          inputRef.current?.setNativeProps({ text: title });
+                        }}
+                        className="rounded-full border border-gray-200 bg-white px-4 py-2 shadow-sm"
+                        style={{
+                          elevation: 1,
+                        }}
+                      >
+                        <Text className="text-sm font-medium text-gray-700">
+                          {title}
+                        </Text>
+                      </TouchableOpacity>
+                    )
+                  )}
+                </View>
+              </View>
+            </View>
+          </View>
         </View>
       </View>
     </BottomSheet>

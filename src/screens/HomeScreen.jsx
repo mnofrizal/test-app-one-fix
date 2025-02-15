@@ -14,7 +14,12 @@ import Animated, {
   useSharedValue,
 } from "react-native-reanimated";
 import { useNavigation } from "@react-navigation/native";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { useAuthStore } from "../store/authStore";
+import {
+  FontAwesome,
+  FontAwesome5,
+  MaterialCommunityIcons,
+} from "@expo/vector-icons";
 import useStore from "../store/useStore";
 
 const { width } = Dimensions.get("window");
@@ -138,7 +143,7 @@ const formatTime = (date) => {
 };
 
 const WeatherWidget = ({ currentTime }) => (
-  <View className="mt-2 flex-row items-center justify-between rounded-xl bg-blue-700/30 p-3 pb-10 shadow-xl">
+  <View className="mt-2 flex-row items-center justify-between rounded-2xl bg-blue-800 p-3 pb-10 shadow-xl">
     <View className="flex-row items-center">
       <MaterialCommunityIcons name="weather-sunny" size={24} color="white" />
       <View className="ml-3">
@@ -347,6 +352,7 @@ const ActivityItem = ({ title, time, status, icon }) => (
 const HomeScreen = () => {
   const navigation = useNavigation();
   const requestSummary = useStore((state) => state.requestSummary);
+  const user = useAuthStore((state) => state.user);
   const [currentTime, setCurrentTime] = React.useState(new Date());
   const [isExpanded, setIsExpanded] = React.useState(false);
   const heightValue = useSharedValue(0);
@@ -410,13 +416,16 @@ const HomeScreen = () => {
     <ScrollView className="flex-1 bg-slate-50">
       {/* Header Section */}
       <View className="bg-blue-900 px-6 pb-8 pt-14 shadow-lg">
-        <View className="mb-2 flex-row items-center justify-between">
+        <View className="absolute -right-2 -top-20 z-0 opacity-20">
+          <FontAwesome name="bolt" size={400} color="darkblue" />
+        </View>
+        <View className="z-50 mb-2 flex-row items-center justify-between">
           <View>
             <Text className="text-lg font-medium text-blue-100">
               {formatGreeting()}
             </Text>
             <Text className="text-3xl font-extrabold tracking-tight text-white">
-              John Doe
+              {user?.name || "User"}
             </Text>
           </View>
           <View className="flex-row items-center">
@@ -446,7 +455,7 @@ const HomeScreen = () => {
 
       <View className="w-full">
         {/* Services Section */}
-        <View className="mx-3 -mt-14 shadow-xl">
+        <View className="mx-4 -mt-14 shadow-xl">
           <View className="rounded-3xl border border-slate-200 bg-white p-4 shadow-lg">
             <View className="flex-row justify-between">
               {menuItems.map((item) => (
@@ -499,7 +508,7 @@ const HomeScreen = () => {
         </View>
 
         {/* Search Bar */}
-        <View className="mt-2 px-3 py-2">
+        <View className="mt-2 px-4 py-2">
           <View className="mb-4 overflow-hidden rounded-full border border-slate-200 bg-white shadow-sm">
             <View className="flex-row items-center px-4">
               <MaterialCommunityIcons

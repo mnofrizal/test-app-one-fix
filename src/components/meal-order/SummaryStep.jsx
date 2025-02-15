@@ -1,22 +1,70 @@
 import React from "react";
 import { View, Text, ScrollView } from "react-native";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useMealOrderStore } from "../../store/mealOrderStore";
 
-const SectionCard = ({ title, children }) => (
+const sectionIcons = {
+  basic: "clipboard-text",
+  pic: "account-tie",
+  supervisor: "account-supervisor",
+  order: "food",
+};
+
+const SectionCard = ({ title, icon, children }) => (
   <View className="mb-6 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
     {title && (
-      <View className="border-b border-slate-100 bg-slate-50 px-5 py-4">
-        <Text className="text-lg font-semibold text-gray-900">{title}</Text>
+      <View className="border-b border-slate-100 bg-gradient-to-r from-indigo-50 to-white px-5 py-4">
+        <View className="flex-row items-center">
+          <MaterialCommunityIcons name={icon} size={24} color="#4F46E5" />
+          <Text className="ml-3 text-lg font-semibold text-gray-900">
+            {title}
+          </Text>
+        </View>
       </View>
     )}
     <View className="p-5">{children}</View>
   </View>
 );
 
-const InfoRow = ({ label, value }) => (
-  <View className="mb-3 last:mb-0">
-    <Text className="mb-1 text-sm font-medium text-slate-500">{label}</Text>
-    <Text className="text-base font-medium text-gray-900">{value}</Text>
+const InfoRow = ({ label, value, icon }) => (
+  <View className="mb-4 last:mb-0">
+    <View className="mb-2 flex-row items-center">
+      {icon && (
+        <MaterialCommunityIcons
+          name={icon}
+          size={18}
+          color="#64748B"
+          style={{ marginRight: 8 }}
+        />
+      )}
+      <Text className="text-sm font-medium text-slate-500">{label}</Text>
+    </View>
+    <Text className="pl-7 text-base font-medium text-gray-900">{value}</Text>
+  </View>
+);
+
+const OrderItemCard = ({ title, items, note }) => (
+  <View className="mb-3 rounded-xl bg-slate-50 p-4 last:mb-0">
+    <View className="mb-3 flex-row items-center justify-between border-b border-slate-200 pb-2">
+      <View className="flex-row items-center">
+        <MaterialCommunityIcons name="account" size={20} color="#4F46E5" />
+        <Text className="ml-2 text-base font-semibold text-gray-900">
+          {title}
+        </Text>
+      </View>
+    </View>
+    {items.map((item, index) => (
+      <View key={index} className="mb-2 flex-row items-center">
+        <MaterialCommunityIcons name="food" size={18} color="#64748B" />
+        <Text className="ml-2 text-base text-gray-700">{item}</Text>
+      </View>
+    ))}
+    {note && (
+      <View className="mt-2 flex-row items-center">
+        <MaterialCommunityIcons name="note-text" size={18} color="#64748B" />
+        <Text className="ml-2 text-sm text-slate-500">{note}</Text>
+      </View>
+    )}
   </View>
 );
 
@@ -29,41 +77,65 @@ export const SummaryStep = () => {
   return (
     <ScrollView className="flex-1 bg-slate-50">
       <View className="p-6">
-        <Text className="mb-2 text-2xl font-bold tracking-tight text-gray-900">
-          Order Summary
-        </Text>
-        <Text className="mb-6 text-base font-medium text-slate-500">
-          Review your order details before submitting
-        </Text>
+        <View className="mb-6">
+          <Text className="mb-2 text-2xl font-bold tracking-tight text-gray-900">
+            Order Summary
+          </Text>
+          <Text className="text-base font-medium text-slate-500">
+            Review your order details before submitting
+          </Text>
+        </View>
 
         {/* Basic Details */}
-        <SectionCard title="Basic Information">
-          <InfoRow label="Judul Pekerjaan" value={formData.judulPekerjaan} />
-          <InfoRow label="Tipe Pesanan" value={formData.category} />
-          <InfoRow label="Drop Point" value={formData.dropPoint} />
+        <SectionCard title="Basic Information" icon="clipboard-text">
+          <InfoRow
+            label="Judul Pekerjaan"
+            value={formData.judulPekerjaan}
+            icon="file-document-outline"
+          />
+          <InfoRow
+            label="Tipe Pesanan"
+            value={formData.category}
+            icon="clock-outline"
+          />
+          <InfoRow
+            label="Drop Point"
+            value={formData.dropPoint}
+            icon="map-marker"
+          />
         </SectionCard>
 
         {/* PIC Details */}
-        <SectionCard title="PIC Information">
-          <InfoRow label="Name" value={formData.pic.name} />
+        <SectionCard title="PIC Information" icon="account-tie">
+          <InfoRow label="Name" value={formData.pic.name} icon="account" />
           <InfoRow
             label="Phone"
             value={formData.pic.nomorHp || "Not provided"}
+            icon="phone"
           />
         </SectionCard>
 
         {/* Supervisor Details */}
-        <SectionCard title="Supervisor Information">
-          <InfoRow label="Name" value={formData.supervisor.name} />
+        <SectionCard title="Supervisor Information" icon="account-supervisor">
+          <InfoRow
+            label="Name"
+            value={formData.supervisor.name}
+            icon="account-tie"
+          />
           <InfoRow
             label="Phone"
             value={formData.supervisor.nomorHp || "Not provided"}
+            icon="phone"
           />
-          <InfoRow label="Sub Bidang" value={formData.supervisor.subBidang} />
+          <InfoRow
+            label="Sub Bidang"
+            value={formData.supervisor.subBidang}
+            icon="office-building"
+          />
         </SectionCard>
 
         {/* Order Details */}
-        <SectionCard title="Order Details">
+        <SectionCard title="Order Details" icon="food">
           {formData.orderType === "bulk" ? (
             <View>
               <InfoRow
@@ -71,9 +143,14 @@ export const SummaryStep = () => {
                 value={
                   formData.bulkOrder.menuName || formData.bulkOrder.menuItemId
                 }
+                icon="food-variant"
               />
               {formData.bulkOrder.note && (
-                <InfoRow label="Catatan" value={formData.bulkOrder.note} />
+                <InfoRow
+                  label="Catatan"
+                  value={formData.bulkOrder.note}
+                  icon="note-text"
+                />
               )}
               <View className="mt-4 rounded-xl bg-slate-50 p-4">
                 <Text className="mb-2 text-sm font-semibold text-slate-600">

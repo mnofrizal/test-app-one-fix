@@ -1,153 +1,156 @@
 import React from "react";
-import { View, Text, ScrollView, TouchableOpacity, Image } from "react-native";
+import { View, Text, TouchableOpacity, ScrollView, Alert } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { useAuthStore } from "../store/authStore";
+import { SafeAreaView } from "react-native-safe-area-context";
 
-const ProfileSection = ({ title, children }) => (
-  <View className="mb-8">
-    <Text className="mb-4 text-xl font-bold tracking-tight text-gray-900">
-      {title}
-    </Text>
-    <View className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
-      {children}
-    </View>
-  </View>
-);
-
-const ProfileItem = ({ icon, title, value, action, showBorder = true }) => (
+const ProfileOption = ({
+  icon,
+  title,
+  subtitle,
+  onPress,
+  color = "#4F46E5",
+}) => (
   <TouchableOpacity
-    className={`flex-row items-center justify-between p-4 ${
-      showBorder ? "border-b border-slate-100" : ""
-    }`}
-    onPress={action}
+    onPress={onPress}
+    className="mb-4 flex-row items-center rounded-xl border border-gray-100 bg-white p-4 shadow-sm"
   >
-    <View className="flex-row items-center">
-      <View className="mr-4 rounded-xl bg-slate-50 p-3">
-        <MaterialCommunityIcons name={icon} size={22} color="#4F46E5" />
-      </View>
-      <View>
-        <Text className="text-base font-medium text-gray-900">{title}</Text>
-        {value && (
-          <Text className="text-sm font-medium text-slate-500">{value}</Text>
-        )}
-      </View>
+    <View className={`rounded-xl bg-${color}/10 p-3`}>
+      <MaterialCommunityIcons name={icon} size={24} color={color} />
     </View>
-    <MaterialCommunityIcons name="chevron-right" size={24} color="#64748B" />
+    <View className="ml-4 flex-1">
+      <Text className="text-base font-semibold text-gray-900">{title}</Text>
+      {subtitle && <Text className="text-sm text-gray-500">{subtitle}</Text>}
+    </View>
+    <MaterialCommunityIcons name="chevron-right" size={24} color="#9CA3AF" />
   </TouchableOpacity>
 );
 
 const ProfileScreen = () => {
-  // Mock user data - replace with real data
-  const user = {
-    name: "John Doe",
-    email: "john.doe@company.com",
-    department: "IT Department",
-    role: "Software Engineer",
-    avatar: "https://i.pravatar.cc/300",
+  const { user, logout } = useAuthStore();
+
+  const handleLogout = () => {
+    Alert.alert(
+      "Logout",
+      "Are you sure you want to logout?",
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Logout",
+          onPress: logout,
+          style: "destructive",
+        },
+      ],
+      { cancelable: true }
+    );
   };
 
   return (
-    <ScrollView className="flex-1 bg-slate-50">
-      {/* Header Section */}
-      <View className="bg-white px-6 pb-8 pt-10 shadow-sm">
-        <View className="items-center">
-          <View className="mb-4 h-24 w-24 overflow-hidden rounded-full border-4 border-indigo-100 shadow-sm">
-            <Image
-              source={{ uri: user.avatar }}
-              className="h-full w-full"
-              resizeMode="cover"
-            />
+    <SafeAreaView className="flex-1 bg-slate-50">
+      <ScrollView className="flex-1">
+        {/* Header */}
+        <View className="bg-blue-900 px-6 pb-8 pt-4">
+          <View className="items-center">
+            <View className="mb-4 h-24 w-24 items-center justify-center rounded-full bg-blue-800">
+              <MaterialCommunityIcons name="account" size={64} color="white" />
+            </View>
+            <Text className="text-2xl font-bold text-white">{user?.name}</Text>
+            <Text className="mt-1 text-blue-200">{user?.role}</Text>
           </View>
-          <Text className="mb-1 text-2xl font-bold tracking-tight text-gray-900">
-            {user.name}
-          </Text>
-          <Text className="text-base font-medium text-slate-500">
-            {user.department}
-          </Text>
         </View>
-      </View>
 
-      <View className="p-6">
-        {/* Profile Info Section */}
-        <ProfileSection title="Profile Information">
-          <ProfileItem
-            icon="email"
-            title="Email"
-            value={user.email}
-            action={() => {}}
-          />
-          <ProfileItem
-            icon="briefcase"
-            title="Department"
-            value={user.department}
-            action={() => {}}
-          />
-          <ProfileItem
-            icon="badge-account"
-            title="Role"
-            value={user.role}
-            action={() => {}}
-            showBorder={false}
-          />
-        </ProfileSection>
+        {/* Quick Stats */}
+        <View className="-mt-4 flex-row px-4">
+          <View className="flex-1 rounded-xl bg-white p-4 shadow-sm">
+            <View className="items-center">
+              <Text className="text-2xl font-bold text-gray-900">24</Text>
+              <Text className="text-sm text-gray-500">Orders</Text>
+            </View>
+          </View>
+          <View className="mx-2" />
+          <View className="flex-1 rounded-xl bg-white p-4 shadow-sm">
+            <View className="items-center">
+              <Text className="text-2xl font-bold text-gray-900">12</Text>
+              <Text className="text-sm text-gray-500">Active</Text>
+            </View>
+          </View>
+          <View className="mx-2" />
+          <View className="flex-1 rounded-xl bg-white p-4 shadow-sm">
+            <View className="items-center">
+              <Text className="text-2xl font-bold text-gray-900">8</Text>
+              <Text className="text-sm text-gray-500">Pending</Text>
+            </View>
+          </View>
+        </View>
 
-        {/* Preferences Section */}
-        <ProfileSection title="Preferences">
-          <ProfileItem
-            icon="bell"
+        {/* Options */}
+        <View className="p-4">
+          <Text className="mb-4 text-base font-semibold text-gray-900">
+            Account Settings
+          </Text>
+
+          <ProfileOption
+            icon="account-edit"
+            title="Edit Profile"
+            subtitle="Update your information"
+          />
+
+          <ProfileOption
+            icon="bell-outline"
             title="Notifications"
-            value="Enabled"
-            action={() => {}}
+            subtitle="Manage your notifications"
           />
-          <ProfileItem
-            icon="translate"
-            title="Language"
-            value="English"
-            action={() => {}}
-          />
-          <ProfileItem
-            icon="theme-light-dark"
-            title="Theme"
-            value="Light"
-            action={() => {}}
-            showBorder={false}
-          />
-        </ProfileSection>
 
-        {/* Support Section */}
-        <ProfileSection title="Support">
-          <ProfileItem
+          <ProfileOption
+            icon="shield-check"
+            title="Privacy"
+            subtitle="Manage your privacy settings"
+          />
+
+          <Text className="mb-4 mt-6 text-base font-semibold text-gray-900">
+            Support
+          </Text>
+
+          <ProfileOption
             icon="help-circle"
             title="Help Center"
-            action={() => {}}
+            subtitle="Get help with your orders"
+            color="#059669"
           />
-          <ProfileItem icon="information" title="About" action={() => {}} />
-          <ProfileItem
-            icon="book"
-            title="Terms & Privacy"
-            action={() => {}}
-            showBorder={false}
-          />
-        </ProfileSection>
 
-        {/* Account Actions */}
-        <View className="mt-4">
+          <ProfileOption
+            icon="information"
+            title="About"
+            subtitle="Learn more about our service"
+            color="#059669"
+          />
+
+          <Text className="mb-4 mt-6 text-base font-semibold text-gray-900">
+            Account
+          </Text>
+
           <TouchableOpacity
-            className="flex-row items-center justify-center rounded-xl bg-red-50 p-4"
-            onPress={() => {}}
+            onPress={handleLogout}
+            className="flex-row items-center rounded-xl border border-gray-100 bg-white p-4 shadow-sm"
           >
-            <MaterialCommunityIcons
-              name="logout"
-              size={22}
-              color="#DC2626"
-              style={{ marginRight: 8 }}
-            />
-            <Text className="text-base font-semibold text-red-600">
-              Sign Out
-            </Text>
+            <View className="rounded-xl bg-red-50 p-3">
+              <MaterialCommunityIcons name="logout" size={24} color="#DC2626" />
+            </View>
+            <View className="ml-4 flex-1">
+              <Text className="text-base font-semibold text-red-600">
+                Logout
+              </Text>
+              <Text className="text-sm text-gray-500">
+                Sign out of your account
+              </Text>
+            </View>
           </TouchableOpacity>
         </View>
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 

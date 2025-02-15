@@ -284,30 +284,45 @@ export const MenuStep = () => {
 
                 <TouchableOpacity
                   onPress={() => setBulkMenuSheetVisible(true)}
-                  className="flex-row items-center justify-between rounded-xl border border-slate-200 bg-white px-5 py-4 shadow-sm"
+                  className="flex-row items-center justify-between rounded-xl border border-slate-200 bg-white px-5 py-5 shadow-sm"
                 >
-                  <Text
-                    className={
-                      formData.bulkOrder.menuName
-                        ? "text-base font-medium text-gray-900"
-                        : "text-base text-gray-400"
-                    }
-                  >
-                    {formData.bulkOrder.menuName || "Pilih menu untuk semua"}
-                  </Text>
+                  <View className="flex-row items-center">
+                    <MaterialCommunityIcons
+                      name="food"
+                      size={22}
+                      color="#4F46E5"
+                    />
+                    <Text
+                      className={`ml-3 ${
+                        formData.bulkOrder.menuName
+                          ? "text-base font-medium text-gray-900"
+                          : "text-base text-gray-400"
+                      }`}
+                    >
+                      {formData.bulkOrder.menuName || "Pilih menu untuk semua"}
+                    </Text>
+                  </View>
                   <MaterialCommunityIcons
                     name="chevron-down"
                     size={22}
                     color="#64748B"
                   />
                 </TouchableOpacity>
-                <TextInput
-                  className="rounded-xl border border-slate-200 bg-white px-5 py-4 text-base text-gray-900 shadow-sm"
-                  defaultValue={formData.bulkOrder.note}
-                  onChangeText={(text) => updateBulkOrder({ note: text })}
-                  placeholder="Catatan"
-                  placeholderTextColor="#94A3B8"
-                />
+
+                <View className="flex-row items-center rounded-xl border border-slate-200 bg-white px-5 py-2 shadow-sm">
+                  <MaterialCommunityIcons
+                    name="note-text-outline"
+                    size={22}
+                    color="#4F46E5"
+                  />
+                  <TextInput
+                    className="ml-3 flex-1 text-base text-gray-900"
+                    defaultValue={formData.bulkOrder.note}
+                    onChangeText={(text) => updateBulkOrder({ note: text })}
+                    placeholder="Tambahkan catatan pesanan..."
+                    placeholderTextColor="#94A3B8"
+                  />
+                </View>
               </View>
             </View>
           ) : (
