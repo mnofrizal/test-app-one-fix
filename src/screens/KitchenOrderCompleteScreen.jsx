@@ -13,33 +13,46 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { CameraView, useCameraPermissions } from "expo-camera";
 
 const ConfirmationDialog = ({ visible, onClose, onConfirm }) => (
-  <Modal transparent visible={visible} animationType="fade">
-    <View className="flex-1 items-center justify-center bg-black/50 px-4">
-      <View className="w-full max-w-sm rounded-2xl bg-white p-6">
-        <Text className="mb-2 text-xl font-semibold text-gray-900">
-          Konfirmasi Selesai
-        </Text>
-        <Text className="mb-6 text-base text-gray-600">
-          Apakah Anda yakin ingin menyelesaikan pesanan ini?
-        </Text>
-        <View className="flex-row space-x-3">
-          <TouchableOpacity
-            className="flex-1 rounded-xl border border-gray-300 bg-white py-3"
-            onPress={onClose}
-          >
-            <Text className="text-center font-medium text-gray-700">Batal</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            className="flex-1 rounded-xl bg-green-600 py-3"
-            onPress={onConfirm}
-          >
-            <Text className="text-center font-medium text-white">
-              Ya, Selesai
-            </Text>
-          </TouchableOpacity>
+  <Modal
+    transparent
+    visible={visible}
+    animationType="fade"
+    onRequestClose={onClose}
+  >
+    <TouchableOpacity
+      className="flex-1 items-center justify-center bg-black/50 px-4"
+      activeOpacity={1}
+      onPress={onClose}
+    >
+      <TouchableOpacity activeOpacity={1} onPress={(e) => e.stopPropagation()}>
+        <View className="w-full max-w-sm rounded-2xl bg-white p-6">
+          <Text className="mb-2 text-xl font-semibold text-gray-900">
+            Konfirmasi Selesai
+          </Text>
+          <Text className="mb-6 text-base text-gray-600">
+            Apakah Anda yakin ingin menyelesaikan pesanan ini?
+          </Text>
+          <View className="flex-row space-x-3">
+            <TouchableOpacity
+              className="flex-1 rounded-xl border border-gray-300 bg-white py-3"
+              onPress={onClose}
+            >
+              <Text className="text-center font-medium text-gray-700">
+                Batal
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              className="flex-1 rounded-xl bg-green-600 py-3"
+              onPress={onConfirm}
+            >
+              <Text className="text-center font-medium text-white">
+                Ya, Selesai
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
-    </View>
+      </TouchableOpacity>
+    </TouchableOpacity>
   </Modal>
 );
 
@@ -53,30 +66,8 @@ const KitchenOrderCompleteScreen = ({ route, navigation }) => {
   const [cameraType, setCameraType] = useState("back");
   const cameraRef = useRef(null);
 
-  React.useEffect(() => {
-    const backAction = () => {
-      if (!showCamera && photo) {
-        setShowCamera(true);
-        return true;
-      }
-      return false;
-    };
-
-    const backHandler = navigation.addListener("beforeRemove", (e) => {
-      if (backAction()) {
-        e.preventDefault();
-      }
-    });
-
-    return () => backHandler();
-  }, [navigation, showCamera, photo]);
-
   const handleBack = () => {
-    if (!showCamera && photo) {
-      setShowCamera(true);
-    } else {
-      navigation.goBack();
-    }
+    navigation.goBack();
   };
 
   const handleComplete = () => {

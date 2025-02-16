@@ -3,20 +3,27 @@ import { View, Text, ScrollView, TouchableOpacity, Modal } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-const MenuItemCard = ({ item }) => (
+const MenuItemCard = ({ item, employeeName, entity }) => (
   <View className="mb-3 rounded-xl border border-gray-200 bg-white p-4">
     <View className="flex-row items-start justify-between">
       <View className="flex-1">
-        <Text className="text-base font-medium text-gray-900">{item.name}</Text>
+        <Text className="text-base font-medium text-gray-900">
+          {item.menuItem.name}
+        </Text>
         <Text className="mt-1 text-sm text-gray-600">
           Jumlah: {item.quantity}
         </Text>
         <Text className="text-sm text-gray-600">
           Catatan: {item.notes || "-"}
         </Text>
+        <Text className="mt-1 text-sm font-medium text-gray-700">
+          {employeeName} - {entity}
+        </Text>
       </View>
       <View className="rounded-full bg-blue-100 px-3 py-1">
-        <Text className="text-sm font-medium text-blue-800">#{item.id}</Text>
+        <Text className="text-sm font-medium text-blue-800">
+          {item.menuItem.category}
+        </Text>
       </View>
     </View>
   </View>
@@ -57,12 +64,36 @@ const KitchenOrderDetailScreen = ({ route, navigation }) => {
   const { order } = route.params;
   const [showConfirmation, setShowConfirmation] = useState(false);
 
-  // Dummy menu items
-  const menuItems = [
-    { id: "1", name: "Nasi Goreng Spesial", quantity: 3, notes: "Pedas" },
-    { id: "2", name: "Ayam Bakar", quantity: 2, notes: "Tidak pedas" },
-    { id: "3", name: "Es Teh Manis", quantity: 5, notes: "" },
-  ];
+  const formatDate = (dateString) => {
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return "-";
+      return `${date.getHours().toString().padStart(2, "0")}:${date
+        .getMinutes()
+        .toString()
+        .padStart(2, "0")}`;
+    } catch (error) {
+      return "-";
+    }
+  };
+
+  const getTotalItems = (orders) => {
+    try {
+      return (
+        orders?.reduce(
+          (total, employee) =>
+            total +
+            (employee.orderItems?.reduce(
+              (sum, item) => sum + (item.quantity || 0),
+              0
+            ) || 0),
+          0
+        ) || 0
+      );
+    } catch (error) {
+      return 0;
+    }
+  };
 
   const handleProcessOrder = () => {
     setShowConfirmation(true);
@@ -98,36 +129,94 @@ const KitchenOrderDetailScreen = ({ route, navigation }) => {
             <Text className="text-2xl font-bold text-gray-900">
               Detail Pesanan
             </Text>
-            <Text className="text-base text-gray-600">Order #{order.id}</Text>
+            <Text className="text-base text-gray-600">
+              Order #{order.id || "-"}
+            </Text>
           </View>
+        </View>
+        <View
+          className={`rounded-full px-3 py-1 ${
+            order.status === "PENDING_KITCHEN"
+              ? "bg-blue-100"
+              : order.status === "IN_PROGRESS"
+              ? "bg-yellow-100"
+              : order.status === "COMPLETED"
+              ? "bg-green-100"
+              : order.status === "CANCELED"
+              ? "bg-red-100"
+              : "bg-gray-100"
+          }`}
+        >
+          <Text
+            className={`text-sm font-medium ${
+              order.status === "PENDING_KITCHEN"
+                ? "text-blue-800"
+                : order.status === "IN_PROGRESS"
+                ? "text-yellow-800"
+                : order.status === "COMPLETED"
+                ? "text-green-800"
+                : order.status === "CANCELED"
+                ? "text-red-800"
+                : "text-gray-800"
+            }`}
+          >
+            {order.status === "PENDING_KITCHEN"
+              ? "Menunggu"
+              : order.status === "IN_PROGRESS"
+              ? "Diproses"
+              : order.status === "COMPLETED"
+              ? "Selesai"
+              : order.status === "CANCELED"
+              ? "Dibatalkan"
+              : "Unknown"}
+          </Text>
         </View>
       </View>
 
       {/* Order Info */}
-      <View className="bg-white p-4">
-        <View className="flex-row items-center justify-between">
-          <View>
-            <Text className="text-base text-gray-600">Departemen</Text>
+      <View className="bg-white p-4 shadow-sm">
+        <Text className="mb-4 text-lg font-semibold text-gray-900">
+          {order.judulPekerjaan}
+        </Text>
+        <View className="flex-row flex-wrap">
+          <View className="mb-4 w-1/2 pr-2">
+            <Text className="text-base text-gray-600">Jenis</Text>
             <Text className="text-lg font-semibold text-gray-900">
-              {order.department}
+              {order.type}
             </Text>
           </View>
-          <View>
+          <View className="mb-4 w-1/2 pl-2">
+            <Text className="text-base text-gray-600">Kategori</Text>
+            <Text className="text-lg font-semibold text-gray-900">
+              {order.category}
+            </Text>
+          </View>
+          <View className="mb-4 w-1/2 pr-2">
+            <Text className="text-base text-gray-600">Lokasi</Text>
+            <Text className="text-lg font-semibold text-gray-900">
+              {order.dropPoint}
+            </Text>
+          </View>
+          <View className="mb-4 w-1/2 pl-2">
+            <Text className="text-base text-gray-600">Waktu Request</Text>
+            <Text className="text-lg font-semibold text-gray-900">
+              Jam {formatDate(order.requestDate)}
+            </Text>
+          </View>
+          <View className="mb-4 w-1/2 pr-2">
             <Text className="text-base text-gray-600">PIC</Text>
             <Text className="text-lg font-semibold text-gray-900">
-              {order.picName}
+              {order.pic.name}
             </Text>
+            <Text className="text-sm text-gray-600">{order.pic.nomorHp}</Text>
           </View>
-          <View>
-            <Text className="text-base text-gray-600">Waktu</Text>
+          <View className="mb-4 w-1/2 pl-2">
+            <Text className="text-base text-gray-600">Supervisor</Text>
             <Text className="text-lg font-semibold text-gray-900">
-              {order.time}
+              {order.supervisor.name}
             </Text>
-          </View>
-          <View>
-            <Text className="text-base text-gray-600">Status</Text>
-            <Text className="text-lg font-semibold text-gray-900">
-              {order.status}
+            <Text className="text-sm text-gray-600">
+              {order.supervisor.subBidang}
             </Text>
           </View>
         </View>
@@ -135,16 +224,55 @@ const KitchenOrderDetailScreen = ({ route, navigation }) => {
 
       {/* Menu Items */}
       <ScrollView className="flex-1 p-4">
-        <Text className="mb-4 text-lg font-semibold text-gray-900">
-          Daftar Menu
-        </Text>
-        {menuItems.map((item) => (
-          <MenuItemCard key={item.id} item={item} />
-        ))}
+        <View className="mb-4 flex-row items-center justify-between">
+          <Text className="text-lg font-semibold text-gray-900">
+            Daftar Menu
+          </Text>
+          <Text className="text-base text-gray-600">
+            Total Item: {getTotalItems(order.employeeOrders)}
+          </Text>
+        </View>
+        {order.employeeOrders?.length === 0 ? (
+          <View className="rounded-xl border border-gray-200 bg-white p-6">
+            <Text className="text-center text-gray-600">
+              Tidak ada item pesanan
+            </Text>
+          </View>
+        ) : (
+          order.employeeOrders?.map((employee) => (
+            <View key={employee.id} className="mb-6">
+              <View className="mb-2 flex-row items-center justify-between">
+                <View>
+                  <Text className="font-medium text-gray-900">
+                    {employee.employeeName}
+                  </Text>
+                  <Text className="text-sm text-gray-600">
+                    {employee.entity}
+                  </Text>
+                </View>
+                <Text className="text-sm text-gray-600">
+                  {employee.orderItems?.reduce(
+                    (sum, item) => sum + (item.quantity || 0),
+                    0
+                  )}{" "}
+                  item
+                </Text>
+              </View>
+              {employee.orderItems?.map((item) => (
+                <MenuItemCard
+                  key={item.id}
+                  item={item}
+                  employeeName={employee.employeeName}
+                  entity={employee.entity}
+                />
+              ))}
+            </View>
+          ))
+        )}
       </ScrollView>
 
       {/* Bottom Button */}
-      {order.status === "masuk" ? (
+      {order.status === "PENDING_KITCHEN" ? (
         <View className="border-t border-gray-200 bg-white p-4">
           <TouchableOpacity
             className="rounded-xl bg-blue-600 py-4"
@@ -155,16 +283,16 @@ const KitchenOrderDetailScreen = ({ route, navigation }) => {
             </Text>
           </TouchableOpacity>
         </View>
-      ) : (
+      ) : order.status === "IN_PROGRESS" ? (
         <View className="border-t border-gray-200 bg-white p-4">
           <TouchableOpacity
-            className={`flex-row items-center justify-center rounded-xl bg-green-600 py-4`}
+            className="flex-row items-center justify-center rounded-xl bg-green-600 py-4"
             onPress={() => handleCompletePress(order)}
           >
             <Text className="font-semibold text-white">Selesaikan Pesanan</Text>
           </TouchableOpacity>
         </View>
-      )}
+      ) : null}
 
       {/* Confirmation Dialog */}
       <ConfirmationDialog
