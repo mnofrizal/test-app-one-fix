@@ -11,6 +11,7 @@ import {
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuthStore } from "../store/authStore";
+import { useKitchenStore } from "../store/kitchenStore";
 
 const OrderCard = ({ order, onPress }) => {
   const getStatusColor = (status) => {
@@ -107,9 +108,57 @@ const OrderCard = ({ order, onPress }) => {
 
 const KitchenHomeScreen = ({ navigation }) => {
   const { user } = useAuthStore();
-  const [activeTab, setActiveTab] = React.useState("PENDING_KITCHEN"); // PENDING_KITCHEN, IN_PROGRESS, COMPLETED
+  const {
+    pendingOrders,
+    inProgressOrders,
+    completedOrders,
+    stats,
+    isLoading,
+    error,
+    fetchPendingOrders,
+    fetchInProgressOrders,
+    fetchCompletedOrders,
+    fetchKitchenStats,
+    clearError,
+  } = useKitchenStore();
+
+  const [activeTab, setActiveTab] = React.useState("PENDING_KITCHEN");
   const [exitApp, setExitApp] = React.useState(false);
 
+  // Fetch initial data
+  React.useEffect(() => {
+    const loadData = async () => {
+      await Promise.all([
+        fetchPendingOrders(),
+        fetchInProgressOrders(),
+        fetchCompletedOrders(),
+        fetchKitchenStats(),
+      ]);
+    };
+
+    loadData();
+  }, []);
+
+  // Fetch data when tab changes
+  React.useEffect(() => {
+    const fetchData = async () => {
+      switch (activeTab) {
+        case "PENDING_KITCHEN":
+          await fetchPendingOrders();
+          break;
+        case "IN_PROGRESS":
+          await fetchInProgressOrders();
+          break;
+        case "COMPLETED":
+          await fetchCompletedOrders();
+          break;
+      }
+    };
+
+    fetchData();
+  }, [activeTab]);
+
+  // Back handler effect
   React.useEffect(() => {
     const backAction = () => {
       // Only handle back press if this is the focused screen
@@ -140,134 +189,27 @@ const KitchenHomeScreen = ({ navigation }) => {
     return () => backHandler.remove();
   }, [exitApp, navigation]);
 
-  // Dummy data based on new structure
-  const stats = {
-    PENDING_KITCHEN: 2,
-    IN_PROGRESS: 1,
+  // Map active tab to corresponding orders
+  const getActiveOrders = () => {
+    switch (activeTab) {
+      case "PENDING_KITCHEN":
+        return pendingOrders;
+      case "IN_PROGRESS":
+        return inProgressOrders;
+      case "COMPLETED":
+        return completedOrders;
+      default:
+        return [];
+    }
   };
 
-  const orders = {
-    PENDING_KITCHEN: [
-      {
-        id: "30I5VK",
-        judulPekerjaan: "Lembur Project A",
-        type: "MEAL",
-        status: "PENDING_KITCHEN",
-        requestDate: "2025-02-16T03:19:07.647Z",
-        requiredDate: "2025-02-16T03:19:07.647Z",
-        category: "Makan Siang",
-        dropPoint: "Kantor Pusat Lt. 1",
-        supervisor: {
-          name: "ABDUL KADIR",
-          nomorHp: "087733760363",
-          subBidang: "Fasilitas dan Sarana",
-        },
-        pic: {
-          name: "MUHAMMAD NAUFAL",
-          nomorHp: "087733760363",
-        },
-        employeeOrders: [
-          {
-            id: "emp1",
-            employeeName: "Pegawai PLNIP",
-            entity: "PLNIP",
-            orderItems: [
-              {
-                id: "item1",
-                quantity: 2,
-                notes: null,
-                menuItem: {
-                  id: "menu1",
-                  name: "Nasi Goreng",
-                  category: "MEAL",
-                },
-              },
-            ],
-          },
-        ],
-      },
-    ],
-    IN_PROGRESS: [
-      {
-        id: "30I5VL",
-        judulPekerjaan: "Meeting Project B",
-        type: "MEAL",
-        status: "IN_PROGRESS",
-        requestDate: "2025-02-16T02:19:07.647Z",
-        requiredDate: "2025-02-16T02:19:07.647Z",
-        category: "Snack",
-        dropPoint: "Kantor Pusat Lt. 2",
-        supervisor: {
-          name: "BUDI SANTOSO",
-          nomorHp: "087733760364",
-          subBidang: "IT",
-        },
-        pic: {
-          name: "AHMAD RIZKI",
-          nomorHp: "087733760364",
-        },
-        employeeOrders: [
-          {
-            id: "emp2",
-            employeeName: "Pegawai IT",
-            entity: "IPS",
-            orderItems: [
-              {
-                id: "item2",
-                quantity: 3,
-                notes: null,
-                menuItem: {
-                  id: "menu2",
-                  name: "Roti",
-                  category: "SNACK",
-                },
-              },
-            ],
-          },
-        ],
-      },
-    ],
-    COMPLETED: [
-      {
-        id: "30I5VM",
-        judulPekerjaan: "Training Project C",
-        type: "MEAL",
-        status: "COMPLETED",
-        requestDate: "2025-02-16T01:19:07.647Z",
-        requiredDate: "2025-02-16T01:19:07.647Z",
-        category: "Makan Malam",
-        dropPoint: "Kantor Pusat Lt. 3",
-        supervisor: {
-          name: "CITRA DEWI",
-          nomorHp: "087733760365",
-          subBidang: "HR",
-        },
-        pic: {
-          name: "DEWI PUTRI",
-          nomorHp: "087733760365",
-        },
-        employeeOrders: [
-          {
-            id: "emp3",
-            employeeName: "Pegawai HR",
-            entity: "HR",
-            orderItems: [
-              {
-                id: "item3",
-                quantity: 1,
-                notes: null,
-                menuItem: {
-                  id: "menu3",
-                  name: "Ayam Goreng",
-                  category: "MEAL",
-                },
-              },
-            ],
-          },
-        ],
-      },
-    ],
-  };
+  // Error handling with toast
+  React.useEffect(() => {
+    if (error) {
+      ToastAndroid.show(error, ToastAndroid.SHORT);
+      clearError();
+    }
+  }, [error]);
 
   const handleOrderPress = (order) => {
     navigation.navigate("KitchenOrderDetail", { order });
@@ -340,7 +282,7 @@ const KitchenHomeScreen = ({ navigation }) => {
               </Text>
             </View>
             <Text className="mt-2 text-4xl font-bold text-blue-900">
-              {stats.PENDING_KITCHEN}
+              {Number(stats.PENDING_KITCHEN || 0)}
             </Text>
           </View>
         </View>
@@ -358,7 +300,7 @@ const KitchenHomeScreen = ({ navigation }) => {
               </Text>
             </View>
             <Text className="mt-2 text-4xl font-bold text-yellow-900">
-              {stats.IN_PROGRESS}
+              {Number(stats.IN_PROGRESS || 0)}
             </Text>
           </View>
         </View>
@@ -373,9 +315,23 @@ const KitchenHomeScreen = ({ navigation }) => {
 
       {/* Order List */}
       <ScrollView className="flex-1 p-4">
-        {orders[activeTab].map((order) => (
-          <OrderCard key={order.id} order={order} onPress={handleOrderPress} />
-        ))}
+        {isLoading ? (
+          <View className="items-center justify-center p-4">
+            <Text className="text-gray-600">Memuat data...</Text>
+          </View>
+        ) : getActiveOrders().length === 0 ? (
+          <View className="items-center justify-center p-4">
+            <Text className="text-gray-600">Tidak ada pesanan</Text>
+          </View>
+        ) : (
+          getActiveOrders().map((order) => (
+            <OrderCard
+              key={order.id}
+              order={order}
+              onPress={handleOrderPress}
+            />
+          ))
+        )}
       </ScrollView>
     </SafeAreaView>
   );

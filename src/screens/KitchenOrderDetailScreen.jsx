@@ -1,7 +1,16 @@
 import React, { useState } from "react";
-import { View, Text, ScrollView, TouchableOpacity, Modal } from "react-native";
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  Modal,
+  ToastAndroid,
+  ActivityIndicator,
+} from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useKitchenStore } from "../store/kitchenStore";
 
 const MenuItemCard = ({ item, employeeName, entity }) => (
   <View className="mb-3 rounded-xl border border-gray-200 bg-white p-4">
@@ -29,7 +38,7 @@ const MenuItemCard = ({ item, employeeName, entity }) => (
   </View>
 );
 
-const ConfirmationDialog = ({ visible, onClose, onConfirm }) => (
+const ConfirmationDialog = ({ visible, onClose, onConfirm, isLoading }) => (
   <Modal transparent visible={visible} animationType="fade">
     <View className="flex-1 items-center justify-center bg-black/50 px-4">
       <View className="w-full max-w-sm rounded-2xl bg-white p-6">
@@ -43,16 +52,22 @@ const ConfirmationDialog = ({ visible, onClose, onConfirm }) => (
           <TouchableOpacity
             className="flex-1 rounded-xl border border-gray-300 bg-white py-3"
             onPress={onClose}
+            disabled={isLoading}
           >
             <Text className="text-center font-medium text-gray-700">Batal</Text>
           </TouchableOpacity>
           <TouchableOpacity
             className="flex-1 rounded-xl bg-blue-600 py-3"
             onPress={onConfirm}
+            disabled={isLoading}
           >
-            <Text className="text-center font-medium text-white">
-              Ya, Proses
-            </Text>
+            {isLoading ? (
+              <ActivityIndicator color="white" />
+            ) : (
+              <Text className="text-center font-medium text-white">
+                Ya, Proses
+              </Text>
+            )}
           </TouchableOpacity>
         </View>
       </View>
@@ -63,6 +78,16 @@ const ConfirmationDialog = ({ visible, onClose, onConfirm }) => (
 const KitchenOrderDetailScreen = ({ route, navigation }) => {
   const { order } = route.params;
   const [showConfirmation, setShowConfirmation] = useState(false);
+  const [localIsLoading, setLocalIsLoading] = useState(false);
+  const { startOrder, isLoading, error, clearError } = useKitchenStore();
+
+  // Handle errors with toast
+  React.useEffect(() => {
+    if (error) {
+      ToastAndroid.show(error, ToastAndroid.SHORT);
+      clearError();
+    }
+  }, [error]);
 
   const formatDate = (dateString) => {
     try {
@@ -99,15 +124,22 @@ const KitchenOrderDetailScreen = ({ route, navigation }) => {
     setShowConfirmation(true);
   };
 
-  const handleCompletePress = (order) => {
+  const handleCompletePress = () => {
     navigation.navigate("KitchenOrderComplete", { order });
   };
 
-  const handleConfirmProcess = () => {
-    setShowConfirmation(false);
-    // Handle order processing here
-    // Then navigate back or to next screen
-    navigation.goBack();
+  const handleConfirmProcess = async () => {
+    setLocalIsLoading(true);
+    try {
+      const result = await startOrder(order.id);
+      if (result.success) {
+        ToastAndroid.show("Pesanan sedang diproses", ToastAndroid.SHORT);
+        navigation.goBack();
+      }
+    } finally {
+      setShowConfirmation(false);
+      setLocalIsLoading(false);
+    }
   };
 
   return (
@@ -277,19 +309,31 @@ const KitchenOrderDetailScreen = ({ route, navigation }) => {
           <TouchableOpacity
             className="rounded-xl bg-blue-600 py-4"
             onPress={handleProcessOrder}
+            disabled={isLoading || localIsLoading}
           >
-            <Text className="text-center font-semibold text-white">
-              Mulai Proses Pesanan
-            </Text>
+            {isLoading || localIsLoading ? (
+              <ActivityIndicator color="white" />
+            ) : (
+              <Text className="text-center font-semibold text-white">
+                Mulai Proses Pesanan
+              </Text>
+            )}
           </TouchableOpacity>
         </View>
       ) : order.status === "IN_PROGRESS" ? (
         <View className="border-t border-gray-200 bg-white p-4">
           <TouchableOpacity
             className="flex-row items-center justify-center rounded-xl bg-green-600 py-4"
-            onPress={() => handleCompletePress(order)}
+            onPress={handleCompletePress}
+            disabled={isLoading || localIsLoading}
           >
-            <Text className="font-semibold text-white">Selesaikan Pesanan</Text>
+            {isLoading || localIsLoading ? (
+              <ActivityIndicator color="white" />
+            ) : (
+              <Text className="font-semibold text-white">
+                Selesaikan Pesanan
+              </Text>
+            )}
           </TouchableOpacity>
         </View>
       ) : null}
@@ -299,6 +343,7 @@ const KitchenOrderDetailScreen = ({ route, navigation }) => {
         visible={showConfirmation}
         onClose={() => setShowConfirmation(false)}
         onConfirm={handleConfirmProcess}
+        isLoading={isLoading || localIsLoading}
       />
     </SafeAreaView>
   );

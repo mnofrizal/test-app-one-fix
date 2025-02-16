@@ -118,7 +118,7 @@ const StackNavigator = () => {
                 component={KitchenOrderDetailScreen}
                 options={{
                   headerShown: false,
-                  animation: "slide_from_right",
+                  animation: "fade_from_bottom",
                 }}
               />
               <Stack.Screen
