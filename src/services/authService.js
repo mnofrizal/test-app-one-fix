@@ -1,4 +1,4 @@
-import api from "../services/interceptors";
+import api from "./interceptors";
 import { setToken, setUser } from "./storage";
 import { logger } from "../utils/logger";
 
@@ -16,6 +16,8 @@ export const login = async (username, password) => {
       await setToken(accessToken);
       await setUser(user);
 
+      logger.debug("Login successful", { user });
+
       return {
         success: true,
         data: {
@@ -27,6 +29,7 @@ export const login = async (username, password) => {
 
     return response.data; // Return the full error response structure
   } catch (error) {
+    logger.error("Login error", error);
     return error; // Error is already formatted by interceptor
   }
 };

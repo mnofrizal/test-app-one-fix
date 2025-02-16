@@ -1,48 +1,48 @@
 import React from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import TabNavigator from "./TabNavigator";
 import MealOrderScreen from "../screens/MealOrderScreen";
 import MealOrderSuccess from "../screens/MealOrderSuccess";
 import ListMenuScreen from "../screens/ListMenuScreen";
 import LoginScreen from "../screens/LoginScreen";
-import KitchenHomeScreen from "../screens/KitchenHomeScreen";
-import DriverHomeScreen from "../screens/DriverHomeScreen";
-import PoolHomeScreen from "../screens/PoolHomeScreen";
-import PMHomeScreen from "../screens/PMHomeScreen";
-import SecretaryHomeScreen from "../screens/SecretaryHomeScreen";
+import KitchenOrderDetailScreen from "../screens/KitchenOrderDetailScreen";
+import KitchenOrderCompleteScreen from "../screens/KitchenOrderCompleteScreen";
+import KitchenOrderSuccessScreen from "../screens/KitchenOrderSuccessScreen";
 import { useAuthStore } from "../store/authStore";
+import {
+  AdminTabNavigator,
+  KitchenTabNavigator,
+  DriverTabNavigator,
+  PoolTabNavigator,
+  PMTabNavigator,
+  SecretaryTabNavigator,
+} from "./RoleTabNavigators";
 
 const Stack = createNativeStackNavigator();
 
-// Component to render appropriate home screen based on role
-const RoleHomeScreen = () => {
-  const { user } = useAuthStore();
-  const role = user?.role;
-
-  if (!role) return <TabNavigator />;
+// Component to render appropriate tab navigator based on role
+const getRoleNavigator = (role) => {
+  if (!role) return AdminTabNavigator;
 
   switch (role) {
     case "KITCHEN":
-      return <KitchenHomeScreen />;
+      return KitchenTabNavigator;
     case "DRIVER":
-      return <DriverHomeScreen />;
+      return DriverTabNavigator;
     case "POOL_DRIVER":
-      return <PoolHomeScreen />;
+      return PoolTabNavigator;
     case "PM":
-      return <PMHomeScreen />;
+      return PMTabNavigator;
     case "SECRETARY":
-      return <SecretaryHomeScreen />;
+      return SecretaryTabNavigator;
     case "ADMIN":
-      return <TabNavigator />;
+      return AdminTabNavigator;
     default:
-      return <TabNavigator />;
+      return AdminTabNavigator;
   }
 };
 
 const StackNavigator = () => {
   const { isAuthenticated, user } = useAuthStore();
-
-  console.log("Current user role:", user?.role); // Add logging to debug role-based routing
 
   // Helper function to check if user has access to screens
   const canAccessMenuScreen = (role) => {
@@ -80,7 +80,7 @@ const StackNavigator = () => {
         <Stack.Group>
           <Stack.Screen
             name="MainTabs"
-            component={RoleHomeScreen}
+            component={getRoleNavigator(user?.role)}
             options={{ headerShown: false }}
           />
           {/* Common screens accessible by all roles */}
@@ -109,6 +109,36 @@ const StackNavigator = () => {
               component={MealOrderScreen}
               options={{ headerShown: false }}
             />
+          )}
+          {/* Kitchen-specific screens */}
+          {user?.role === "KITCHEN" && (
+            <>
+              <Stack.Screen
+                name="KitchenOrderDetail"
+                component={KitchenOrderDetailScreen}
+                options={{
+                  headerShown: false,
+                  animation: "slide_from_right",
+                }}
+              />
+              <Stack.Screen
+                name="KitchenOrderComplete"
+                component={KitchenOrderCompleteScreen}
+                options={{
+                  headerShown: false,
+                  animation: "slide_from_right",
+                }}
+              />
+              <Stack.Screen
+                name="KitchenOrderSuccess"
+                component={KitchenOrderSuccessScreen}
+                options={{
+                  headerShown: false,
+                  animation: "slide_from_bottom",
+                  gestureEnabled: false,
+                }}
+              />
+            </>
           )}
         </Stack.Group>
       )}

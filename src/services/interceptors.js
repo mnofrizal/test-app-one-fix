@@ -1,10 +1,26 @@
 import { logger } from "../utils/logger";
 import { api } from "../config/api";
+import { getToken } from "./storage";
+import { authEvents } from "./authEvents";
+
+// Request interceptor to add token
+api.interceptors.request.use(
+  async (config) => {
+    const token = await getToken();
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
 
 // Response interceptor for handling errors
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
+  async (error) => {
     // Log error only in development
     logger.error("API Error:", {
       url: error.config?.url,
@@ -23,13 +39,20 @@ api.interceptors.response.use(
       // Server responded with error
       switch (error.response.status) {
         case 401:
+          // Force logout on unauthorized (invalid/expired token)
+          if (!error.config.url.includes("/auth/login")) {
+            // Don't logout on login failure
+            await authEvents.triggerLogout();
+          }
           errorResponse = {
             success: false,
-            message: "Invalid credentials",
+            message:
+              error.response.data?.message ||
+              "Session expired. Please login again.",
             errors: [
               {
-                field: "credentials",
-                message: "Invalid email or password",
+                field: "authorization",
+                message: "Invalid or expired session",
               },
             ],
           };
