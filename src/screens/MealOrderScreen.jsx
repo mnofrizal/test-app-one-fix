@@ -177,7 +177,7 @@ const MealOrderScreen = () => {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-blue-900" edges={["top"]}>
+    <View className="flex-1 bg-blue-900 pt-8" edges={["top"]}>
       <View className="bg-blue-900 shadow-sm">
         <View className="flex-row items-center justify-between px-4 py-2">
           <TouchableOpacity
@@ -275,7 +275,7 @@ const MealOrderScreen = () => {
           </View>
         </View>
       )}
-    </SafeAreaView>
+    </View>
   );
 };
 

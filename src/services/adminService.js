@@ -18,7 +18,7 @@ export const getAllOrders = async ({
     if (status) params.append("status", status);
     if (type) params.append("type", type);
 
-    const response = await api.get(`/secretary/orders?${params.toString()}`);
+    const response = await api.get(`/service-requests?${params.toString()}`);
 
     if (response.data.success) {
       return {
@@ -42,7 +42,7 @@ export const getAllOrders = async ({
 export const getNewestOrders = async () => {
   try {
     const response = await api.get(
-      `/secretary/orders?page=1&limit=7&sort=requestDate:desc`
+      `/service-requests?page=1&limit=7&sort=requestDate:desc`
     );
 
     if (response.data.success) {
@@ -66,7 +66,7 @@ export const getNewestOrders = async () => {
 
 export const getOrderById = async (orderId) => {
   try {
-    const response = await api.get(`/secretary/orders/${orderId}`);
+    const response = await api.get(`/service-requests/${orderId}`);
 
     if (response.data.success) {
       return {
@@ -88,7 +88,7 @@ export const getOrderById = async (orderId) => {
 
 export const createOrder = async (orderData) => {
   try {
-    const response = await api.post("/secretary/orders", orderData);
+    const response = await api.post("/service-requests", orderData);
 
     if (response.data.success) {
       return {
@@ -108,7 +108,7 @@ export const createOrder = async (orderData) => {
 
 export const updateOrder = async (orderId, updateData) => {
   try {
-    const response = await api.put(`/secretary/orders/${orderId}`, updateData);
+    const response = await api.put(`/service-requests/${orderId}`, updateData);
 
     if (response.data.success) {
       return {
@@ -128,7 +128,7 @@ export const updateOrder = async (orderId, updateData) => {
 
 export const cancelOrder = async (orderId) => {
   try {
-    const response = await api.delete(`/secretary/orders/${orderId}`);
+    const response = await api.delete(`/service-requests/${orderId}`);
 
     if (response.data.success) {
       return {
@@ -149,7 +149,7 @@ export const cancelOrder = async (orderId) => {
 // Quick Access
 export const getRecentActiveOrders = async () => {
   try {
-    const response = await api.get("/secretary/orders/recent-active");
+    const response = await api.get("/service-requests/recent-active");
 
     if (response.data.success) {
       return {
@@ -173,7 +173,7 @@ export const getRecentActiveOrders = async () => {
 
 export const getRecentActivities = async () => {
   try {
-    const response = await api.get("/secretary/orders/recent-activities");
+    const response = await api.get("/service-requests/recent-activities");
 
     if (response.data.success) {
       return {
@@ -198,7 +198,7 @@ export const getRecentActivities = async () => {
 // Statistics & Reports
 export const getStatusStats = async () => {
   try {
-    const response = await api.get("/secretary/orders/stats/status");
+    const response = await api.get("/service-requests/stats/status");
 
     if (response.data.success) {
       return {
@@ -222,7 +222,7 @@ export const getStatusStats = async () => {
 
 export const getTypeStats = async () => {
   try {
-    const response = await api.get("/secretary/orders/stats/type");
+    const response = await api.get("/service-requests/stats/type");
 
     if (response.data.success) {
       return {

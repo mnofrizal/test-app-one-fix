@@ -1,7 +1,7 @@
 import { create } from "zustand";
-import * as secretaryService from "../services/secretaryService";
+import * as adminService from "../services/adminService";
 
-export const useSecretaryStore = create((set, get) => ({
+export const useAdminStore = create((set, get) => ({
   // Orders state
   orders: [],
   totalOrders: 0,
@@ -49,7 +49,7 @@ export const useSecretaryStore = create((set, get) => ({
     set({ loading: true, error: null });
     try {
       const { filters } = get();
-      const response = await secretaryService.getAllOrders({
+      const response = await adminService.getAllOrders({
         page,
         ...filters,
       });
@@ -69,7 +69,7 @@ export const useSecretaryStore = create((set, get) => ({
   fetchOrderDetails: async (orderId) => {
     set({ loading: true, error: null });
     try {
-      const response = await secretaryService.getOrderById(orderId);
+      const response = await adminService.getOrderById(orderId);
       set({
         selectedOrder: response.data,
         loading: false,
@@ -83,7 +83,7 @@ export const useSecretaryStore = create((set, get) => ({
   createOrder: async (orderData) => {
     set({ loading: true, error: null });
     try {
-      const response = await secretaryService.createOrder(orderData);
+      const response = await adminService.createOrder(orderData);
       set((state) => ({
         orders: [response.data, ...state.orders],
         loading: false,
@@ -99,7 +99,7 @@ export const useSecretaryStore = create((set, get) => ({
   updateOrder: async (orderId, updateData) => {
     set({ loading: true, error: null });
     try {
-      const response = await secretaryService.updateOrder(orderId, updateData);
+      const response = await adminService.updateOrder(orderId, updateData);
       set((state) => ({
         orders: state.orders.map((order) =>
           order.id === orderId ? response.data : order
@@ -118,7 +118,7 @@ export const useSecretaryStore = create((set, get) => ({
   cancelOrder: async (orderId) => {
     set({ loading: true, error: null });
     try {
-      await secretaryService.cancelOrder(orderId);
+      await adminService.cancelOrder(orderId);
       set((state) => ({
         orders: state.orders.filter((order) => order.id !== orderId),
         loading: false,
@@ -132,7 +132,7 @@ export const useSecretaryStore = create((set, get) => ({
   // Recent activities and stats
   fetchRecentActiveOrders: async () => {
     try {
-      const response = await secretaryService.getRecentActiveOrders();
+      const response = await adminService.getRecentActiveOrders();
       set({ recentActiveOrders: response.data });
     } catch (error) {
       set((state) => ({ error: error.message }));
@@ -141,7 +141,7 @@ export const useSecretaryStore = create((set, get) => ({
 
   fetchRecentActivities: async () => {
     try {
-      const response = await secretaryService.getRecentActivities();
+      const response = await adminService.getRecentActivities();
       set({ recentActivities: response.data });
     } catch (error) {
       set((state) => ({ error: error.message }));
@@ -151,7 +151,7 @@ export const useSecretaryStore = create((set, get) => ({
   // Statistics
   fetchStatusStats: async () => {
     try {
-      const response = await secretaryService.getStatusStats();
+      const response = await adminService.getStatusStats();
       set({ statusStats: response.data });
     } catch (error) {
       set((state) => ({ error: error.message }));
@@ -160,7 +160,7 @@ export const useSecretaryStore = create((set, get) => ({
 
   fetchTypeStats: async () => {
     try {
-      const response = await secretaryService.getTypeStats();
+      const response = await adminService.getTypeStats();
       set({ typeStats: response.data });
     } catch (error) {
       set((state) => ({ error: error.message }));
@@ -171,7 +171,7 @@ export const useSecretaryStore = create((set, get) => ({
   fetchNewestOrders: async () => {
     set({ loading: true });
     try {
-      const response = await secretaryService.getNewestOrders();
+      const response = await adminService.getNewestOrders();
       if (response.success) {
         set({
           newestOrders: response.data.requests || [],

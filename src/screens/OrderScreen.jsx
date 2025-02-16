@@ -1,38 +1,59 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
   ScrollView,
   TouchableOpacity,
   TextInput,
+  ActivityIndicator,
 } from "react-native";
+import { useNavigation } from "@react-navigation/native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import Animated, { FadeIn, Layout } from "react-native-reanimated";
 import BottomSheet from "../components/BottomSheet";
+import { useSecretaryStore } from "../store/secretaryStore";
+import { useAdminStore } from "../store/adminStore";
+import { useAuthStore } from "../store/authStore";
+import { StatusBar } from "expo-status-bar";
 
 const OrderCard = ({ type, title, date, time, status, details }) => {
   const getStatusColor = (status) => {
-    switch (status.toLowerCase()) {
-      case "completed":
+    switch (status) {
+      case "COMPLETED":
         return {
           bg: "bg-green-50",
           text: "text-green-700",
           icon: "check-circle",
           label: "Completed",
         };
-      case "pending":
+      case "PENDING_SUPERVISOR":
         return {
           bg: "bg-yellow-50",
           text: "text-yellow-700",
           icon: "clock-outline",
-          label: "Pending Approval",
+          label: "Pending ASMAN",
         };
-      case "processing":
+      case "PENDING_GA":
+        return {
+          bg: "bg-orange-50",
+          text: "text-orange-700",
+          icon: "clock-outline",
+          label: "Pending GA",
+        };
+      case "PENDING_KITCHEN":
+      case "IN_PROGRESS":
         return {
           bg: "bg-blue-50",
           text: "text-blue-700",
           icon: "progress-clock",
           label: "In Progress",
+        };
+      case "CANCELLED":
+        return {
+          bg: "bg-red-50",
+          text: "text-red-700",
+          icon: "close-circle",
+          label: "Cancelled",
         };
       default:
         return {
@@ -45,7 +66,7 @@ const OrderCard = ({ type, title, date, time, status, details }) => {
   };
 
   const getServiceInfo = (type) => {
-    switch (type.toLowerCase()) {
+    switch (type?.toLowerCase()) {
       case "meal":
         return {
           icon: "food",
@@ -109,11 +130,13 @@ const OrderCard = ({ type, title, date, time, status, details }) => {
                 color={serviceInfo.color}
               />
             </View>
-            <View>
-              <View className="flex-row items-center">
-                <Text className="mr-2 text-lg font-semibold text-gray-900">
-                  {title}
-                </Text>
+            <View className="flex-1">
+              <View className="flex-row flex-wrap items-center justify-between">
+                <View className="max-w-[70%] flex-shrink">
+                  <Text className="mr-2 text-lg font-semibold text-gray-900">
+                    {title.length > 10 ? `${title.substring(0, 12)}...` : title}
+                  </Text>
+                </View>
                 <View className={`rounded-full ${statusInfo.bg} px-3 py-1`}>
                   <Text className={`text-xs font-semibold ${statusInfo.text}`}>
                     {statusInfo.label}
@@ -247,7 +270,7 @@ const DateFilterSheet = ({
           </Text>
         </View>
 
-        {dateGroups.map((group, index) => (
+        {dateGroups.map((group) => (
           <View key={group.title} className="mb-6">
             <Text className="mb-3 text-sm font-medium text-gray-500">
               {group.title}
@@ -309,104 +332,94 @@ const dateFilterGroups = [
 ];
 
 const OrderScreen = () => {
+  const navigation = useNavigation();
   const [activeTab, setActiveTab] = useState("approval");
   const [selectedTypes, setSelectedTypes] = useState([]);
   const [selectedDate, setSelectedDate] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [dateFilterVisible, setDateFilterVisible] = useState(false);
 
-  // Mock data for orders
-  const allOrders = {
-    approval: [
-      {
-        type: "meal",
-        title: "Lunch Order",
-        date: "Today",
-        dateGroup: "today",
-        time: "12:30 PM",
-        status: "Pending",
-        details: {
-          time: "Awaiting approval",
-          assignee: "John Manager",
-        },
-      },
-      {
-        type: "transport",
-        title: "Airport Transfer",
-        date: "Tomorrow",
-        dateGroup: "week",
-        time: "09:00 AM",
-        status: "Pending",
-        details: {
-          time: "Requested 30 mins ago",
-          assignee: "Sarah Admin",
-        },
-      },
-    ],
-    inprogress: [
-      {
-        type: "room",
-        title: "Meeting Room Booking",
-        date: "Today",
-        dateGroup: "today",
-        time: "14:00 PM",
-        status: "Processing",
-        details: {
-          time: "Started 1 hour ago",
-          progress: 75,
-          assignee: "Room Service",
-        },
-      },
-      {
-        type: "stationary",
-        title: "Office Supplies",
-        date: "Today",
-        dateGroup: "today",
-        time: "15:30 PM",
-        status: "Processing",
-        details: {
-          time: "Started 45 mins ago",
-          progress: 30,
-          assignee: "Supply Team",
-        },
-      },
-    ],
-    done: [
-      {
-        type: "meal",
-        title: "Dinner Order",
-        date: "Yesterday",
-        dateGroup: "week",
-        time: "19:00 PM",
-        status: "Completed",
-        details: {
-          time: "Completed in 1.5 hours",
-          assignee: "Kitchen Staff",
-        },
-      },
-      {
-        type: "room",
-        title: "Meeting Room A",
-        date: "Jan 12, 2024",
-        dateGroup: "month",
-        time: "Jan 12, 2024",
-        status: "Completed",
-        details: {
-          time: "Used for 2 hours",
-          assignee: "Facility Team",
-        },
-      },
-    ],
+  const { user } = useAuthStore();
+  const secretaryStore = useSecretaryStore();
+  const adminStore = useAdminStore();
+
+  // Use appropriate store based on user role
+  const store = user?.role === "ADMIN" ? adminStore : secretaryStore;
+
+  const {
+    orders,
+    loading,
+    error,
+    filters,
+    setFilters,
+    resetFilters,
+    fetchOrders,
+    totalOrders,
+  } = store;
+
+  // Fetch orders on mount and when filters change
+  useEffect(() => {
+    const dateFilter = selectedDate
+      ? {
+          startDate: (() => {
+            const now = new Date();
+            switch (selectedDate) {
+              case "today":
+                return new Date(now.setHours(0, 0, 0, 0)).toISOString();
+              case "week":
+                now.setDate(now.getDate() - 7);
+                return now.toISOString();
+              case "month":
+                now.setMonth(now.getMonth() - 1);
+                return now.toISOString();
+              case "last7":
+                now.setDate(now.getDate() - 7);
+                return now.toISOString();
+              case "last30":
+                now.setDate(now.getDate() - 30);
+                return now.toISOString();
+              case "last90":
+                now.setDate(now.getDate() - 90);
+                return now.toISOString();
+              default:
+                return null;
+            }
+          })(),
+          endDate: new Date().toISOString(),
+        }
+      : {};
+
+    setFilters({
+      ...dateFilter,
+      type: selectedTypes.length > 0 ? selectedTypes[0].toUpperCase() : null,
+    });
+
+    fetchOrders(1);
+  }, [selectedTypes, selectedDate, activeTab]);
+
+  // Map orders based on status
+  const mappedOrders = {
+    approval: orders.filter(
+      (order) =>
+        order.status === "PENDING_SUPERVISOR" || order.status === "PENDING_GA"
+    ),
+    inprogress: orders.filter(
+      (order) =>
+        order.status === "PENDING_KITCHEN" || order.status === "IN_PROGRESS"
+    ),
+    done: orders.filter(
+      (order) => order.status === "COMPLETED" || order.status === "CANCELLED"
+    ),
   };
 
   const tabs = [
-    { label: "Approval", key: "approval", count: allOrders.approval.length },
+    { label: "Approval", key: "approval", count: mappedOrders.approval.length },
     {
       label: "In Progress",
       key: "inprogress",
-      count: allOrders.inprogress.length,
+      count: mappedOrders.inprogress.length,
     },
-    { label: "Done", key: "done", count: allOrders.done.length },
+    { label: "Done", key: "done", count: mappedOrders.done.length },
   ];
 
   const filterTypes = [
@@ -416,32 +429,27 @@ const OrderScreen = () => {
     { label: "Stationary", icon: "pencil", value: "stationary" },
   ];
 
-  // Filter orders by search, type and date
-  const filteredOrders = allOrders[activeTab].filter((order) => {
+  // Filter orders by search
+  const filteredOrders = mappedOrders[activeTab].filter((order) => {
     const matchesSearch = searchQuery
-      ? order.title.toLowerCase().includes(searchQuery.toLowerCase())
+      ? order.judulPekerjaan.toLowerCase().includes(searchQuery.toLowerCase())
       : true;
-    // Show order if it matches any of the selected types, or show all if no types selected
-    const matchesType =
-      selectedTypes.length === 0 ||
-      selectedTypes.some(
-        (type) => order.type.toLowerCase() === type.toLowerCase()
-      );
-    const matchesDate = selectedDate ? order.dateGroup === selectedDate : true;
-
-    return matchesSearch && matchesType && matchesDate;
+    return matchesSearch;
   });
 
+  // Group orders by date
   const groupedOrders = filteredOrders.reduce((groups, order) => {
-    if (!groups[order.date]) {
-      groups[order.date] = [];
+    const date = new Date(order.requestDate).toLocaleDateString();
+    if (!groups[date]) {
+      groups[date] = [];
     }
-    groups[order.date].push(order);
+    groups[date].push(order);
     return groups;
   }, {});
 
   return (
     <View className="flex-1 bg-gray-50 pt-3">
+      {/* <StatusBar barStyle="light-content" bakgroundColor="#1E40AF" /> */}
       <View className="bg-white shadow-sm">
         <View className="px-4 pb-2 pt-10">
           <View className="flex-row items-center justify-center space-x-3">
@@ -476,7 +484,10 @@ const OrderScreen = () => {
                 ) : null}
               </View>
             </View>
-            <TouchableOpacity className="rounded-full bg-blue-900 p-2">
+            <TouchableOpacity
+              className="rounded-full bg-blue-900 p-2"
+              onPress={() => navigation.navigate("MealOrder")}
+            >
               <MaterialCommunityIcons name="plus" size={24} color="white" />
             </TouchableOpacity>
           </View>
@@ -518,12 +529,49 @@ const OrderScreen = () => {
         </View>
 
         <View className="p-4 py-2">
-          {Object.entries(groupedOrders).length > 0 ? (
+          {loading ? (
+            <View className="mt-4 items-center">
+              <ActivityIndicator size="large" color="#4F46E5" />
+              <Text className="mt-2 text-base font-medium text-gray-500">
+                Loading orders...
+              </Text>
+            </View>
+          ) : error ? (
+            <View className="mt-4 items-center">
+              <MaterialCommunityIcons
+                name="alert-circle"
+                size={48}
+                color="#EF4444"
+              />
+              <Text className="mt-2 text-base font-medium text-red-500">
+                {error}
+              </Text>
+            </View>
+          ) : Object.entries(groupedOrders).length > 0 ? (
             Object.entries(groupedOrders).map(([date, orders]) => (
               <View key={date}>
                 <DateLabel date={date} />
-                {orders.map((order, index) => (
-                  <OrderCard key={index} {...order} />
+                {orders.map((order) => (
+                  <TouchableOpacity
+                    key={order.id}
+                    onPress={() =>
+                      navigation.navigate("OrderDetail", { orderId: order.id })
+                    }
+                  >
+                    <OrderCard
+                      type={order.type}
+                      title={order.judulPekerjaan}
+                      date={new Date(order.requestDate).toLocaleDateString()}
+                      time={new Date(order.requestDate).toLocaleTimeString()}
+                      status={order.status}
+                      details={{
+                        assignee: order.pic?.name,
+                        time: `Required by: ${new Date(
+                          order.requiredDate
+                        ).toLocaleString()}`,
+                      }}
+                    />
+                  </TouchableOpacity>
                 ))}
               </View>
             ))

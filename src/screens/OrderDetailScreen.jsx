@@ -9,6 +9,8 @@ import {
 import { TabView, TabBar } from "react-native-tab-view";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useSecretaryStore } from "../store/secretaryStore";
+import { useAdminStore } from "../store/adminStore";
+import { useAuthStore } from "../store/authStore";
 
 const formatOrderStatus = (status) => {
   switch (status) {
@@ -412,7 +414,13 @@ const OrderDetailScreen = ({ route }) => {
     { key: "approval", title: "Approval" },
   ]);
 
-  const { selectedOrder, fetchOrderDetails, loading } = useSecretaryStore();
+  const { user } = useAuthStore();
+  const secretaryStore = useSecretaryStore();
+  const adminStore = useAdminStore();
+
+  // Use appropriate store based on user role
+  const store = user?.role === "ADMIN" ? adminStore : secretaryStore;
+  const { selectedOrder, fetchOrderDetails, loading } = store;
   const orderId = route.params?.orderId;
 
   useEffect(() => {
