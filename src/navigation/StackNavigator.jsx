@@ -7,6 +7,7 @@ import LoginScreen from "../screens/LoginScreen";
 import KitchenOrderDetailScreen from "../screens/KitchenOrderDetailScreen";
 import KitchenOrderCompleteScreen from "../screens/KitchenOrderCompleteScreen";
 import KitchenOrderSuccessScreen from "../screens/KitchenOrderSuccessScreen";
+import OrderDetailScreen from "../screens/OrderDetailScreen";
 import { useAuthStore } from "../store/authStore";
 import {
   AdminTabNavigator,
@@ -92,6 +93,20 @@ const StackNavigator = () => {
               animation: "slide_from_right",
             }}
           />
+
+          <Stack.Screen
+            name="OrderDetail"
+            component={OrderDetailScreen}
+            options={{
+              title: "Order Detail",
+              headerTitleStyle: {
+                fontWeight: "600",
+              },
+              headerShown: false,
+              animation: "slide_from_right",
+            }}
+          />
+
           {/* Role-specific screens */}
           {user?.role && canAccessMenuScreen(user.role) && (
             <Stack.Screen

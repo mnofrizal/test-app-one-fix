@@ -5,6 +5,7 @@ import {
   ScrollView,
   TouchableOpacity,
   Dimensions,
+  RefreshControl,
 } from "react-native";
 import Animated, {
   useAnimatedStyle,
@@ -15,23 +16,68 @@ import Animated, {
 import { useNavigation } from "@react-navigation/native";
 import { useAuthStore } from "../store/authStore";
 import { FontAwesome, MaterialCommunityIcons } from "@expo/vector-icons";
+import { useSecretaryStore } from "../store/secretaryStore";
 import useStore from "../store/useStore";
+import { ActivityIndicator } from "react-native";
 
 const { width } = Dimensions.get("window");
 
-const ActiveOrderCard = ({ title, orderNo, status, eta, icon, time }) => {
-  let statusColor = "bg-yellow-50 text-yellow-700";
-  let statusBg = "bg-yellow-50";
-  if (status === "In Progress") {
-    statusColor = "text-blue-700";
-    statusBg = "bg-blue-50";
-  } else if (status === "Ready") {
-    statusColor = "text-green-700";
-    statusBg = "bg-green-50";
-  }
+const LoadingIndicator = () => (
+  <View className="flex-1 items-center justify-center py-4">
+    <ActivityIndicator size="large" color="#4F46E5" />
+  </View>
+);
+
+const ErrorMessage = ({ message, onRetry }) => (
+  <View className="items-center justify-center py-4">
+    <Text className="mb-2 text-sm text-red-600">{message}</Text>
+    {onRetry && (
+      <TouchableOpacity
+        className="rounded-md bg-indigo-600 px-4 py-2"
+        onPress={onRetry}
+      >
+        <Text className="text-sm font-medium text-white">Retry</Text>
+      </TouchableOpacity>
+    )}
+  </View>
+);
+
+const ActiveOrderCard = ({
+  title,
+  orderNo,
+  status,
+  eta,
+  icon,
+  time,
+  onPress,
+}) => {
+  const getStatusStyles = (color) => {
+    switch (color) {
+      case "yellow":
+        return { bg: "bg-yellow-50", text: "text-yellow-700" };
+      case "orange":
+        return { bg: "bg-orange-50", text: "text-orange-700" };
+      case "purple":
+        return { bg: "bg-purple-50", text: "text-purple-700" };
+      case "blue":
+        return { bg: "bg-blue-50", text: "text-blue-700" };
+      case "green":
+        return { bg: "bg-green-50", text: "text-green-700" };
+      case "red":
+        return { bg: "bg-red-50", text: "text-red-700" };
+      default:
+        return { bg: "bg-gray-50", text: "text-gray-700" };
+    }
+  };
+
+  const statusInfo = formatOrderStatus(status);
+  const { bg: statusBg, text: statusColor } = getStatusStyles(statusInfo.color);
 
   return (
-    <View className="mr-4 w-72 rounded-xl border border-gray-100 bg-white p-4 shadow-sm">
+    <TouchableOpacity
+      className="mr-4 w-72 rounded-xl border border-gray-300 bg-white p-4 shadow-sm"
+      onPress={onPress}
+    >
       <View className="mb-3 flex-row items-center justify-between">
         <View className="flex-row items-center">
           <View className="rounded-full bg-indigo-50 p-2">
@@ -39,11 +85,8 @@ const ActiveOrderCard = ({ title, orderNo, status, eta, icon, time }) => {
           </View>
           <View className="ml-3">
             <Text className="text-sm font-medium text-gray-900">{title}</Text>
-            <Text className="text-xs text-gray-500">#{orderNo}</Text>
+            <Text className="text-xs text-gray-500">{orderNo}</Text>
           </View>
-        </View>
-        <View className={`rounded-full ${statusBg} px-3 py-1`}>
-          <Text className={`text-xs font-medium ${statusColor}`}>{status}</Text>
         </View>
       </View>
       <View className="flex-row items-center justify-between border-t border-gray-100 pt-3">
@@ -56,15 +99,14 @@ const ActiveOrderCard = ({ title, orderNo, status, eta, icon, time }) => {
           <Text className="ml-1 text-xs text-gray-500">{time}</Text>
         </View>
         <View className="flex-row items-center">
-          <MaterialCommunityIcons
-            name="timer-outline"
-            size={16}
-            color="#6B7280"
-          />
-          <Text className="ml-1 text-xs text-gray-500">ETA: {eta}</Text>
+          <View className={`rounded-full ${statusBg} px-3 py-1`}>
+            <Text className={`text-xs font-medium ${statusColor}`}>
+              {statusInfo.text}
+            </Text>
+          </View>
         </View>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 };
 
@@ -82,7 +124,7 @@ const WeatherWidget = ({ currentTime }) => (
       <MaterialCommunityIcons name="weather-sunny" size={24} color="white" />
       <View className="ml-3">
         <Text className="text-lg font-bold text-white">28°C</Text>
-        <Text className="text-sm text-blue-100">Cilegon, Clear Sky</Text>
+        <Text className="text-sm text-blue-100">Cilegon, Cerah</Text>
       </View>
     </View>
     <Text className="text-3xl font-medium text-white">
@@ -93,8 +135,8 @@ const WeatherWidget = ({ currentTime }) => (
 
 const ServiceMenuItem = ({ title, icon, onPress, route }) => {
   const navigation = useNavigation();
-  let iconColor = "#4F46E5"; // Default color
-  let bgColor = "bg-indigo-100"; // Default background color
+  let iconColor = "#4F46E5";
+  let bgColor = "bg-indigo-100";
 
   if (icon === "food") {
     iconColor = "#FFD07A";
@@ -137,8 +179,8 @@ const ServiceMenuItem = ({ title, icon, onPress, route }) => {
 
 const ServiceExtraMenuItem = ({ title, icon, onPress, route }) => {
   const navigation = useNavigation();
-  let iconColor = "#4F46E5"; // Default color
-  let bgColor = "bg-indigo-100"; // Default background color
+  let iconColor = "#4F46E5";
+  let bgColor = "bg-indigo-100";
 
   if (icon === "food") {
     iconColor = "#FFD07A";
@@ -179,66 +221,21 @@ const ServiceExtraMenuItem = ({ title, icon, onPress, route }) => {
   );
 };
 
-const SummaryCard = ({ title, icon, count }) => {
-  let iconColor = "#4F46E5"; // Default color
-  let bgColor = "bg-indigo-50"; // Default background color
-  let countBgColor = "bg-indigo-100"; // Default count background color
-  let countTextColor = "text-indigo-600"; // Default count text color
-
-  if (icon === "food") {
-    iconColor = "#FFD07A";
-    bgColor = "bg-orange-50";
-    countBgColor = "bg-orange-100";
-    countTextColor = "text-orange-600";
-  } else if (icon === "car") {
-    iconColor = "#00AACC";
-    bgColor = "bg-blue-50";
-    countBgColor = "bg-blue-100";
-    countTextColor = "text-blue-600";
-  } else if (icon === "door") {
-    iconColor = "#FF0000";
-    bgColor = "bg-red-50";
-    countBgColor = "bg-red-100";
-    countTextColor = "text-red-600";
-  } else if (icon === "pencil") {
-    iconColor = "#00A0A0";
-    bgColor = "bg-teal-50";
-    countBgColor = "bg-teal-100";
-    countTextColor = "text-teal-600";
-  }
-
-  return (
-    <View className="mb-4 overflow-hidden rounded-2xl bg-white p-5 shadow-sm">
-      <View className="flex-row items-center justify-between">
-        <View className="flex-row items-center">
-          <View className={`mr-4 rounded-xl ${bgColor} p-3`}>
-            <MaterialCommunityIcons name={icon} size={26} color={iconColor} />
-          </View>
-          <View>
-            <Text className="mb-1 text-base font-semibold text-gray-900">
-              {title}
-            </Text>
-            <Text className="text-sm font-medium text-slate-500">
-              Total Requests
-            </Text>
-          </View>
-        </View>
-        <View className={`rounded-full ${countBgColor} px-4 py-2`}>
-          <Text className={`text-base font-bold ${countTextColor}`}>
-            {count}
+const SectionHeader = ({ title, more, pillCount, navigation }) => (
+  <View className="mb-4 w-full flex-row items-center justify-between">
+    <View className="flex-row items-center">
+      <Text className="text-lg font-medium tracking-tight text-zinc-800">
+        {title}
+      </Text>
+      {pillCount && (
+        <View className="ml-2 rounded-full bg-indigo-50 px-3 py-1">
+          <Text className="text-xs font-medium text-indigo-700">
+            {pillCount}
           </Text>
         </View>
-      </View>
+      )}
     </View>
-  );
-};
-
-const SectionHeader = ({ title, more }) => (
-  <View className="mb-4 w-full flex-row items-center justify-between">
-    <Text className="text-xl font-bold tracking-tight text-gray-900">
-      {title}
-    </Text>
-    <TouchableOpacity>
+    <TouchableOpacity onPress={() => navigation.navigate("Order")}>
       <Text className="text-sm font-medium text-indigo-600">{more}</Text>
     </TouchableOpacity>
   </View>
@@ -246,7 +243,7 @@ const SectionHeader = ({ title, more }) => (
 
 const QuickAction = ({ title, icon, onPress }) => (
   <TouchableOpacity
-    className="mr-3 flex-row items-center rounded-full bg-white px-4 py-2 shadow-sm"
+    className="mr-3 flex-row items-center rounded-full border border-slate-200 bg-white px-4 py-2 shadow-sm"
     onPress={onPress}
   >
     <MaterialCommunityIcons name={icon} size={18} color="#4F46E5" />
@@ -254,22 +251,116 @@ const QuickAction = ({ title, icon, onPress }) => (
   </TouchableOpacity>
 );
 
-const ActivityItem = ({ title, time, status, icon }) => (
-  <View className="mb-3 flex-row items-center justify-between rounded-xl bg-white p-4 shadow-sm">
-    <View className="flex-row items-center">
-      <View className="mr-3 rounded-full bg-blue-50 p-2">
-        <MaterialCommunityIcons name={icon} size={20} color="#4F46E5" />
-      </View>
-      <View>
-        <Text className="text-sm font-medium text-gray-900">{title}</Text>
-        <Text className="text-xs text-gray-500">{time}</Text>
-      </View>
-    </View>
-    <View className="rounded-full bg-green-50 px-3 py-1">
-      <Text className="text-xs font-medium text-green-700">{status}</Text>
-    </View>
+const getIconForOrderType = (type) => {
+  switch (type) {
+    case "MEAL":
+      return "food";
+    case "TRANSPORT":
+      return "car";
+    case "ROOM":
+      return "door";
+    case "STATIONARY":
+      return "pencil";
+    default:
+      return "file-document-outline";
+  }
+};
+
+const formatOrderStatus = (status) => {
+  switch (status) {
+    case "PENDING_SUPERVISOR":
+      return { text: "ASMAN", color: "yellow" };
+    case "PENDING_GA":
+      return { text: "ADMIN", color: "orange" };
+    case "PENDING_KITCHEN":
+      return { text: "KITCHEN", color: "purple" };
+    case "IN_PROGRESS":
+      return { text: "PROSES", color: "blue" };
+    case "COMPLETED":
+      return { text: "SELESAI", color: "green" };
+    case "CANCELLED":
+      return { text: "CANCEL", color: "red" };
+    default:
+      return { text: status, color: "gray" };
+  }
+};
+
+const formatRelativeTime = (dateString) => {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffInMinutes = Math.floor((now - date) / 60000);
+
+  if (diffInMinutes < 1) return "Baru saja";
+  if (diffInMinutes < 60) return `${diffInMinutes} menit yang lalu`;
+
+  const diffInHours = Math.floor(diffInMinutes / 60);
+  if (diffInHours < 24) return `${diffInHours} jam yang lalu`;
+
+  const diffInDays = Math.floor(diffInHours / 24);
+  if (diffInDays === 1) return "Kemarin";
+  if (diffInDays < 7) return `${diffInDays} hari yang lalu`;
+
+  return date.toLocaleDateString();
+};
+
+const EmptyState = () => (
+  <View className="items-center justify-center py-8">
+    <MaterialCommunityIcons
+      name="clipboard-text-outline"
+      size={50}
+      color="#9CA3AF"
+    />
+    <Text className="mt-2 text-base font-medium text-gray-600">
+      Belum Ada Aktivitas
+    </Text>
+    <Text className="text-sm text-gray-500">
+      Aktivitas terbaru Anda akan muncul di sini
+    </Text>
   </View>
 );
+
+const ActivityItem = ({ title, time, status, icon, statusColor, onPress }) => {
+  const getStatusStyles = (color) => {
+    switch (color) {
+      case "yellow":
+        return { bg: "bg-yellow-50", text: "text-yellow-700" };
+      case "orange":
+        return { bg: "bg-orange-50", text: "text-orange-700" };
+      case "purple":
+        return { bg: "bg-purple-50", text: "text-purple-700" };
+      case "blue":
+        return { bg: "bg-blue-50", text: "text-blue-700" };
+      case "green":
+        return { bg: "bg-green-50", text: "text-green-700" };
+      case "red":
+        return { bg: "bg-red-50", text: "text-red-700" };
+      default:
+        return { bg: "bg-gray-50", text: "text-gray-700" };
+    }
+  };
+
+  const { bg: bgColor, text: textColor } = getStatusStyles(statusColor);
+
+  return (
+    <TouchableOpacity
+      className="mb-3 flex-row items-center justify-between rounded-xl border border-gray-200 bg-white p-4 shadow-sm"
+      onPress={onPress}
+    >
+      <View className="flex-row items-center">
+        <View className="mr-3 rounded-full bg-blue-50 p-2">
+          <MaterialCommunityIcons name={icon} size={20} color="#4F46E5" />
+        </View>
+        <View>
+          <Text className="text-sm font-medium text-gray-900">{title}</Text>
+          <Text className="text-xs text-gray-500">{time}</Text>
+        </View>
+      </View>
+      <View className={`rounded-full ${bgColor} px-3 py-1`}>
+        <Text className={`text-xs font-medium ${textColor}`}>{status}</Text>
+      </View>
+    </TouchableOpacity>
+  );
+};
 
 const HomeScreen = () => {
   const navigation = useNavigation();
@@ -277,9 +368,37 @@ const HomeScreen = () => {
   const user = useAuthStore((state) => state.user);
   const [currentTime, setCurrentTime] = React.useState(new Date());
   const [isExpanded, setIsExpanded] = React.useState(false);
+  const [refreshing, setRefreshing] = React.useState(false);
   const heightValue = useSharedValue(0);
   const rotateValue = useSharedValue(0);
   const opacityValue = useSharedValue(0);
+
+  const {
+    orders,
+    recentActiveOrders,
+    newestOrders,
+    loading,
+    error,
+    fetchOrders,
+    fetchRecentActiveOrders,
+    fetchRecentActivities,
+    fetchStatusStats,
+    fetchNewestOrders,
+    statusStats,
+  } = useSecretaryStore();
+
+  React.useEffect(() => {
+    const loadData = async () => {
+      await Promise.all([
+        fetchOrders(1),
+        fetchRecentActiveOrders(),
+        fetchRecentActivities(),
+        fetchStatusStats(),
+        fetchNewestOrders(),
+      ]);
+    };
+    loadData();
+  }, []);
 
   React.useEffect(() => {
     const timer = setInterval(() => {
@@ -323,16 +442,49 @@ const HomeScreen = () => {
   const menuItems = [
     { title: "Meal Order", key: "meals", icon: "food", route: "MealOrder" },
     { title: "Transport", key: "transport", icon: "car" },
-    { title: "Rooms", key: "rooms", icon: "door" },
-    { title: "Stationary", key: "stationary", icon: "pencil" },
+    { title: "Ruangan", key: "rooms", icon: "door" },
+    { title: "ATK", key: "stationary", icon: "pencil" },
   ];
 
   const extraMenuItems = [
     { title: "Event Meal", key: "event-meal", icon: "food-variant" },
   ];
 
+  const onRefresh = React.useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await Promise.all([
+        fetchOrders(1),
+        fetchRecentActiveOrders(),
+        fetchRecentActivities(),
+        fetchStatusStats(),
+        fetchNewestOrders(),
+      ]);
+    } catch (error) {
+      console.error("Refresh error:", error);
+    }
+    setRefreshing(false);
+  }, [
+    fetchOrders,
+    fetchRecentActiveOrders,
+    fetchRecentActivities,
+    fetchStatusStats,
+    fetchNewestOrders,
+  ]);
+
   return (
-    <ScrollView className="flex-1 bg-slate-50">
+    <ScrollView
+      className="flex-1 bg-slate-50"
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          colors={["#4F46E5"]}
+          tintColor="#4F46E5"
+          title="Pull to refresh"
+        />
+      }
+    >
       {/* Header Section */}
       <View className="bg-white px-6 pb-8 pt-14 shadow-lg">
         <View className="absolute -left-[339px] -top-[840px] right-0 z-0">
@@ -422,7 +574,7 @@ const HomeScreen = () => {
         </View>
 
         {/* Search Bar */}
-        <View className="mt-2 px-4 py-2">
+        <View className="mb-2 mt-2 px-4 py-2">
           {/* Quick Actions */}
           <ScrollView
             horizontal
@@ -430,23 +582,15 @@ const HomeScreen = () => {
             className="mb-2"
           >
             <QuickAction
-              title="Schedule Meeting"
-              icon="calendar"
+              title="Event Meal"
+              icon="food-variant"
               onPress={() => {}}
             />
+            <QuickAction title="Pesan Mobil" icon="car" onPress={() => {}} />
+            <QuickAction title="Pesan Ruangan" icon="door" onPress={() => {}} />
             <QuickAction
-              title="Book Event"
-              icon="calendar-star"
-              onPress={() => {}}
-            />
-            <QuickAction
-              title="File Request"
-              icon="file-document"
-              onPress={() => {}}
-            />
-            <QuickAction
-              title="Contact Support"
-              icon="headphones"
+              title="Permintaan ATK"
+              icon="pencil"
               onPress={() => {}}
             />
           </ScrollView>
@@ -455,74 +599,85 @@ const HomeScreen = () => {
         {/* Main Content */}
         <View className="px-4 pb-4">
           {/* Active Orders */}
+          {recentActiveOrders.length > 0 && (
+            <View className="mb-8">
+              <View className="flex-row items-center justify-between">
+                <SectionHeader
+                  title={`Pesanan Aktif`}
+                  pillCount={recentActiveOrders.length}
+                  more="Lihat Semua"
+                  navigation={navigation}
+                />
+              </View>
+              {loading && !recentActiveOrders.length ? (
+                <LoadingIndicator />
+              ) : error ? (
+                <ErrorMessage
+                  message={error}
+                  onRetry={fetchRecentActiveOrders}
+                />
+              ) : recentActiveOrders.length > 0 ? (
+                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                  {recentActiveOrders.map((order) => (
+                    <ActiveOrderCard
+                      key={order.id}
+                      title={order.judulPekerjaan}
+                      orderNo={`#${order.id}`}
+                      status={order.status}
+                      eta={
+                        order.requiredDate
+                          ? formatRelativeTime(order.requiredDate)
+                          : "-"
+                      }
+                      icon={getIconForOrderType(order.type)}
+                      time={formatRelativeTime(order.createdAt)}
+                      onPress={() =>
+                        navigation.navigate("OrderDetail", {
+                          orderId: order.id,
+                        })
+                      }
+                    />
+                  ))}
+                </ScrollView>
+              ) : (
+                <EmptyState />
+              )}
+            </View>
+          )}
+
+          {/* Newest Orders Section */}
           <View className="mb-6">
             <View className="flex-row items-center justify-between">
-              <SectionHeader title="Active Orders" more="View All" />
+              <SectionHeader
+                title="Semua Pesanan"
+                more="Lihat Semua"
+                navigation={navigation}
+              />
             </View>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              <ActiveOrderCard
-                title="Lunch Order"
-                orderNo="ORD-1234"
-                status="In Preparation"
-                eta="15 mins"
-                icon="food"
-                time="Ordered 10 mins ago"
-              />
-              <ActiveOrderCard
-                title="Airport Pickup"
-                orderNo="TRN-5678"
-                status="In Progress"
-                eta="25 mins"
-                icon="car"
-                time="Ordered 30 mins ago"
-              />
-              <ActiveOrderCard
-                title="Meeting Room"
-                orderNo="ROM-9012"
-                status="Ready"
-                eta="Available"
-                icon="door"
-                time="Booked for 2:00 PM"
-              />
-            </ScrollView>
-          </View>
-
-          {/* Request Summary Section */}
-          <View className="mb-6">
-            <SectionHeader title="Request Summary" />
-            {menuItems.map((item) => (
-              <SummaryCard
-                key={item.key}
-                title={item.title}
-                icon={item.icon}
-                count={requestSummary[item.key]}
-              />
-            ))}
-          </View>
-
-          {/* Recent Activity Section */}
-          <View className="mb-6">
-            <View className="flex-row items-center justify-between">
-              <SectionHeader title="Recent Activity" more="View All" />
-            </View>
-            <ActivityItem
-              title="Meal Order #1234"
-              time="10 minutes ago"
-              status="Approved"
-              icon="food"
-            />
-            <ActivityItem
-              title="Transport Request #5678"
-              time="2 hours ago"
-              status="Pending"
-              icon="car"
-            />
-            <ActivityItem
-              title="Room Booking #9012"
-              time="Yesterday"
-              status="Completed"
-              icon="door"
-            />
+            {loading ? (
+              <LoadingIndicator />
+            ) : error ? (
+              <ErrorMessage message={error} onRetry={fetchNewestOrders} />
+            ) : newestOrders && newestOrders.length > 0 ? (
+              newestOrders.map((order) => {
+                const statusInfo = formatOrderStatus(order.status);
+                return (
+                  <ActivityItem
+                    key={order.id}
+                    title={`${order.judulPekerjaan} (${order.category})`}
+                    time={formatRelativeTime(order.createdAt)}
+                    status={statusInfo.text}
+                    icon={getIconForOrderType(order.type)}
+                    statusColor={statusInfo.color}
+                    onPress={() =>
+                      navigation.navigate("OrderDetail", { orderId: order.id })
+                    }
+                  />
+                );
+              })
+            ) : (
+              <EmptyState />
+            )}
           </View>
         </View>
       </View>
