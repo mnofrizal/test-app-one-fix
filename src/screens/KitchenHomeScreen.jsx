@@ -72,7 +72,7 @@ const OrderCard = ({ order, onPress }) => {
       <View className="flex-row items-start justify-between">
         <View className="mr-3 flex-1">
           <Text className="text-base font-medium text-gray-900">
-            Order #{order.id || "-"}
+            #{order.id || "-"}
           </Text>
           <Text className="mt-1 text-sm text-gray-600">
             {truncateText(order.judulPekerjaan)}
