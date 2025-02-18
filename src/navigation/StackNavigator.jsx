@@ -17,6 +17,8 @@ import {
   PMTabNavigator,
   SecretaryTabNavigator,
 } from "./RoleTabNavigators";
+import TestScreen from "../screens/TestScreen";
+import { Platform } from "react-native";
 
 const Stack = createNativeStackNavigator();
 
@@ -66,7 +68,6 @@ const StackNavigator = () => {
         },
         headerShadowVisible: true,
         animation: "fade_from_bottom",
-        presentation: "transparentModal",
       }}
     >
       {!isAuthenticated ? (
@@ -91,6 +92,15 @@ const StackNavigator = () => {
             options={{
               headerShown: false,
               animation: "slide_from_right",
+            }}
+          />
+          <Stack.Screen
+            name="TestPage"
+            component={TestScreen}
+            options={{
+              // presentation: "transparentModal",
+              animation: "slide_from_right",
+              animationDuration: 100,
             }}
           />
 

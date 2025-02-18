@@ -467,6 +467,12 @@ const HomeScreen = () => {
 
   const extraMenuItems = [
     { title: "Event Meal", key: "event-meal", icon: "food-variant" },
+    {
+      title: "Test Page",
+      key: "test-page",
+      icon: "shield-account",
+      route: "TestPage",
+    },
   ];
 
   const onRefresh = React.useCallback(async () => {
