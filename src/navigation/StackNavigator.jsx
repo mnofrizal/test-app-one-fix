@@ -19,6 +19,7 @@ import {
 } from "./RoleTabNavigators";
 import TestScreen from "../screens/TestScreen";
 import { Platform } from "react-native";
+import TestScreen2 from "../screens/TestScreen2";
 
 const Stack = createNativeStackNavigator();
 
@@ -97,6 +98,15 @@ const StackNavigator = () => {
           <Stack.Screen
             name="TestPage"
             component={TestScreen}
+            options={{
+              // presentation: "transparentModal",
+              animation: "slide_from_right",
+              animationDuration: 100,
+            }}
+          />
+          <Stack.Screen
+            name="TestPage2"
+            component={TestScreen2}
             options={{
               // presentation: "transparentModal",
               animation: "slide_from_right",

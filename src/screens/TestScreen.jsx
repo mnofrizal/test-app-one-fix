@@ -5,16 +5,22 @@ import React, {
   useState,
   forwardRef,
   useImperativeHandle,
+  useLayoutEffect,
+  useEffect,
 } from "react";
 import {
   View,
   Text,
   TextInput,
   Pressable,
-  StyleSheet,
   Keyboard,
+  BackHandler,
 } from "react-native";
-import { BottomSheetModal, BottomSheetFlatList } from "@gorhom/bottom-sheet";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+import BottomSheet, {
+  BottomSheetFlashList,
+  BottomSheetBackdrop,
+} from "@gorhom/bottom-sheet";
 
 // Mock data remains the same
 const mockEmployees = [
@@ -84,9 +90,9 @@ const SearchInput = forwardRef(({ onSearch }, ref) => {
   );
 
   return (
-    <View style={styles.searchContainer}>
+    <View className="border-b border-gray-200 bg-white p-3">
       <TextInput
-        style={styles.searchInput}
+        className="rounded-lg bg-gray-100 p-3 text-base"
         placeholder="Search by name or department..."
         value={localValue}
         onChangeText={handleChangeText}
@@ -101,27 +107,21 @@ const SearchInput = forwardRef(({ onSearch }, ref) => {
 // Memoized employee item to prevent re-renders
 const EmployeeItem = React.memo(({ item, onPress }) => (
   <Pressable
-    style={styles.employeeItem}
-    onPress={() => {
-      Keyboard.dismiss();
-      // Small delay to ensure keyboard is dismissed before selection
-      setTimeout(() => {
-        onPress(item);
-      }, 50);
-    }}
+    className="mx-3 my-1 rounded-lg bg-white p-3"
+    onPress={() => onPress(item)}
   >
-    <View style={styles.employeeContent}>
-      <View style={styles.avatarCircle}>
-        <Text style={styles.avatarText}>
+    <View className="flex-row items-center">
+      <View className="h-[45px] w-[45px] items-center justify-center rounded-full bg-blue-100">
+        <Text className="text-base font-semibold text-blue-600">
           {item.name
             .split(" ")
             .map((n) => n[0])
             .join("")}
         </Text>
       </View>
-      <View style={styles.employeeInfo}>
-        <Text style={styles.employeeName}>{item.name}</Text>
-        <Text style={styles.employeeDetails}>
+      <View className="ml-3 flex-1">
+        <Text className="text-base font-medium text-black">{item.name}</Text>
+        <Text className="mt-0.5 text-sm text-gray-600">
           {item.department} • {item.role}
         </Text>
       </View>
@@ -130,16 +130,38 @@ const EmployeeItem = React.memo(({ item, onPress }) => (
 ));
 
 // Wrap component with forwardRef
-const EmployeeSelector = forwardRef(({ onSelect }, ref) => {
-  // Move search state outside of component to prevent re-renders
+const EmployeeSelector = forwardRef(({ onSelect, isVisible, onClose }, ref) => {
   const [filteredData, setFilteredData] = useState(mockEmployees);
   const searchInputRef = useRef(null);
+  const snapPoints = useMemo(() => ["50%", "80%"], []);
 
   // Reset search and data when sheet is dismissed
   const handleDismiss = useCallback(() => {
     setFilteredData(mockEmployees);
     searchInputRef.current?.reset();
-  }, []);
+    onClose();
+
+    ref.current?.close();
+  }, [onClose, ref]);
+
+  // Handle back press
+  useEffect(() => {
+    if (!isVisible) return;
+
+    const backHandler = BackHandler.addEventListener(
+      "hardwareBackPress",
+      () => {
+        onClose();
+        handleDismiss();
+        // setTimeout(() => {
+        //   ref.current?.close();
+        // }, 0);
+        return true;
+      }
+    );
+
+    return () => backHandler.remove();
+  }, [isVisible, onClose, ref]);
 
   // Memoize search handler
   const handleSearch = useCallback((text) => {
@@ -156,10 +178,21 @@ const EmployeeSelector = forwardRef(({ onSelect }, ref) => {
   // Memoize handlers
   const handleEmployeeSelect = useCallback(
     (employee) => {
+      Keyboard.dismiss();
       onSelect(employee);
-      ref?.current?.dismiss();
+      handleDismiss();
     },
-    [onSelect]
+    [onSelect, handleDismiss]
+  );
+
+  // Memoize sheet change handler
+  const handleSheetChange = useCallback(
+    (index) => {
+      if (index === -1) {
+        handleDismiss();
+      }
+    },
+    [handleDismiss]
   );
 
   // Memoize render item
@@ -168,147 +201,88 @@ const EmployeeSelector = forwardRef(({ onSelect }, ref) => {
     [handleEmployeeSelect]
   );
 
-  // Memoize separator
-  const ItemSeparator = useCallback(
-    () => <View style={styles.separator} />,
-    []
-  );
-
   // Memoize key extractor
   const keyExtractor = useCallback((item) => item.id.toString(), []);
 
-  return (
-    <BottomSheetModal
-      ref={ref}
-      snapPoints={["50%", "80%"]}
-      keyboardBehavior="extend"
-      enablePanDownToClose
-      index={1}
-      onDismiss={handleDismiss}
-      keyboardBlurBehavior="none"
-    >
-      <View style={styles.container}>
-        <View style={styles.header}>
-          <Text style={styles.title}>Select Employee</Text>
-          <Text style={styles.subtitle}>{filteredData.length} employees</Text>
-        </View>
-
-        <SearchInput ref={searchInputRef} onSearch={handleSearch} />
-
-        <BottomSheetFlatList
-          data={filteredData}
-          renderItem={renderItem}
-          keyExtractor={keyExtractor}
-          contentContainerStyle={styles.listContainer}
-          ItemSeparatorComponent={ItemSeparator}
-          keyboardShouldPersistTaps="handled"
-          keyboardDismissMode="none"
-        />
-      </View>
-    </BottomSheetModal>
+  // Memoize backdrop component
+  const renderBackdrop = useCallback(
+    (props) => (
+      <BottomSheetBackdrop
+        {...props}
+        disappearsOnIndex={-1}
+        appearsOnIndex={0}
+        pressBehavior="close"
+      />
+    ),
+    []
   );
-});
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#f5f5f5",
-  },
-  header: {
-    padding: 16,
-    backgroundColor: "#fff",
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: "600",
-    color: "#000",
-  },
-  subtitle: {
-    fontSize: 14,
-    color: "#666",
-    marginTop: 4,
-  },
-  searchContainer: {
-    padding: 12,
-    backgroundColor: "#fff",
-    borderBottomWidth: 1,
-    borderBottomColor: "#eee",
-  },
-  searchInput: {
-    padding: 12,
-    backgroundColor: "#f0f0f0",
-    borderRadius: 8,
-    fontSize: 16,
-  },
-  listContainer: {
-    padding: 12,
-  },
-  employeeItem: {
-    padding: 12,
-    backgroundColor: "#fff",
-    borderRadius: 8,
-  },
-  employeeContent: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  avatarCircle: {
-    width: 45,
-    height: 45,
-    borderRadius: 25,
-    backgroundColor: "#e0e0ff",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  avatarText: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#4040ff",
-  },
-  employeeInfo: {
-    marginLeft: 12,
-    flex: 1,
-  },
-  employeeName: {
-    fontSize: 16,
-    fontWeight: "500",
-    color: "#000",
-  },
-  employeeDetails: {
-    fontSize: 14,
-    color: "#666",
-    marginTop: 2,
-  },
-  separator: {
-    height: 8,
-  },
+  return (
+    <BottomSheet
+      ref={ref}
+      snapPoints={snapPoints}
+      enablePanDownToClose
+      index={isVisible ? 1 : -1}
+      backdropComponent={renderBackdrop}
+      enableDynamicSizing={false}
+      onChange={handleSheetChange}
+    >
+      <View className="flex-1">
+        <View className="absolute left-0 right-0 top-0 z-10 bg-white shadow-sm">
+          <View className="p-4">
+            <Text className="text-xl font-semibold text-black">
+              Select Employee
+            </Text>
+            <Text className="mt-1 text-sm text-gray-600">
+              {filteredData.length} employees
+            </Text>
+          </View>
+          <SearchInput ref={searchInputRef} onSearch={handleSearch} />
+        </View>
+        <View className="flex-1" style={{ marginTop: 116 }}>
+          <BottomSheetFlashList
+            data={filteredData}
+            renderItem={renderItem}
+            keyExtractor={keyExtractor}
+            estimatedItemSize={77}
+            contentContainerStyle={{ paddingVertical: 8 }}
+          />
+        </View>
+      </View>
+    </BottomSheet>
+  );
 });
 
 const TestScreen = () => {
   const bottomSheetRef = useRef(null);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
+  const [isBottomSheetVisible, setIsBottomSheetVisible] = useState(false);
 
   const handlePress = useCallback(() => {
-    bottomSheetRef.current?.present();
+    setIsBottomSheetVisible(true);
+  }, []);
+
+  const handleDismiss = useCallback(() => {
+    setIsBottomSheetVisible(false);
   }, []);
 
   return (
-    <View style={{ flex: 1, justifyContent: "center", padding: 16 }}>
-      <Pressable
-        style={{
-          padding: 16,
-          backgroundColor: "#007AFF",
-          borderRadius: 8,
-        }}
-        onPress={handlePress}
-      >
-        <Text style={{ color: "#fff", textAlign: "center" }}>
-          {selectedEmployee ? selectedEmployee.name : "Select Employee"}
-        </Text>
-      </Pressable>
+    <GestureHandlerRootView className="flex-1">
+      <View className="flex-1 p-4">
+        <Pressable className="rounded-lg bg-blue-500 p-4" onPress={handlePress}>
+          <Text className="text-center text-white">
+            {selectedEmployee ? selectedEmployee.name : "Select Employee"}
+          </Text>
+        </Pressable>
 
-      <EmployeeSelector ref={bottomSheetRef} onSelect={setSelectedEmployee} />
-    </View>
+        <EmployeeSelector
+          ref={bottomSheetRef}
+          onSelect={setSelectedEmployee}
+          isVisible={isBottomSheetVisible}
+          onClose={handleDismiss}
+        />
+      </View>
+    </GestureHandlerRootView>
   );
 };
 

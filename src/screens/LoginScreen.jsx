@@ -17,8 +17,8 @@ import { useAuthStore } from "../store/authStore";
 import { LinearGradient } from "expo-linear-gradient";
 
 const LoginScreen = () => {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
+  const [username, setUsername] = useState("sekre@msdm.app");
+  const [password, setPassword] = useState("sekre123");
   const [showPassword, setShowPassword] = useState(false);
   const [keyboardVisible, setKeyboardVisible] = useState(false);
 
