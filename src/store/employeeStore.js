@@ -1,6 +1,9 @@
 import { create } from "zustand";
 import { fetchEmployeesByDepartment } from "../services/employeeService";
 import { logger } from "../utils/logger";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
+const STORAGE_KEY = "@employee_store";
 
 export const useEmployeeStore = create((set, get) => ({
   // State
@@ -10,15 +13,48 @@ export const useEmployeeStore = create((set, get) => ({
   selectedSupervisor: null,
   isLoading: false,
   error: null,
+  isInitialized: false,
+
+  // Initialize store from storage
+  initializeStore: async () => {
+    try {
+      const storedData = await AsyncStorage.getItem(STORAGE_KEY);
+      if (storedData) {
+        const { employeesByDepartment } = JSON.parse(storedData);
+        set({
+          employeesByDepartment,
+          isInitialized: true,
+        });
+      }
+    } catch (error) {
+      logger.error("Error loading stored employee data:", error);
+    }
+  },
 
   // Actions
-  fetchEmployees: async () => {
+  fetchEmployees: async (forceRefresh = false) => {
+    const state = get();
+    // Skip fetch if data is already loaded unless force refresh is requested
+    if (
+      state.isInitialized &&
+      !forceRefresh &&
+      Object.keys(state.employeesByDepartment).length > 0
+    ) {
+      return;
+    }
+
     set({ isLoading: true, error: null });
     try {
       const response = await fetchEmployeesByDepartment();
       if (response.success) {
-        set({
+        const newData = {
           employeesByDepartment: response.data,
+        };
+        // Store in AsyncStorage
+        await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(newData));
+        set({
+          ...newData,
+          isInitialized: true,
           error: null,
         });
       } else {

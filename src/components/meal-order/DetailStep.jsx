@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, lazy, Suspense } from "react";
 import {
   View,
   Text,
@@ -11,34 +11,32 @@ import {
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useMealOrderStore } from "../../store/mealOrderStore";
 import { useEmployeeStore } from "../../store/employeeStore";
-import DropPointSheet from "./DropPointSheet";
-import UserSelectSheet from "./UserSelectSheet";
-import DepartmentSheet from "./DepartmentSheet";
-import CustomPICSheet from "./CustomPICSheet";
-import JobTitleSheet from "./JobTitleSheet";
-import JobTitleSelection from "./JobTitleSelection";
+const DetailStepSheets = lazy(() =>
+  import("./DetailStepSheets").then((module) => ({
+    default: module.DetailStepSheets,
+  }))
+);
 
 export const DetailStep = () => {
   const { formData, updateFormData, updatePIC, updateSupervisor } =
     useMealOrderStore();
   const { fetchEmployees, employeesByDepartment } = useEmployeeStore();
 
-  // Fetch employees data when component mounts
-  useEffect(() => {
-    fetchEmployees();
-  }, []);
-  const [dropPointVisible, setDropPointVisible] = useState(false);
-  const [picSheetVisible, setPicSheetVisible] = useState(false);
-  const [departmentSheetVisible, setDepartmentSheetVisible] = useState(false);
-  const [customPicSheetVisible, setCustomPicSheetVisible] = useState(false);
-  const [jobTitleSheetVisible, setJobTitleSheetVisible] = useState(false);
-  const [isCustomPic, setIsCustomPic] = useState(false);
+  const [isDropPointSheetVisible, setIsDropPointSheetVisible] = useState(false);
+  const [isEmployeeSheetVisible, setIsEmployeeSheetVisible] = useState(false);
+  const [isSubBidangSheetVisible, setIsSubBidangSheetVisible] = useState(false);
+  const [isJudulPekerjaanSheetVisible, setIsJudulPekerjaanSheetVisible] =
+    useState(false);
+
+  //new
+  const [selectedEmployee, setSelectedEmployee] = useState(null);
 
   // Animation states
   const [pressedStates, setPressedStates] = useState({
     pic: false,
     department: false,
     dropPoint: false,
+    jobTitle: false,
   });
 
   // Animation values
@@ -46,6 +44,7 @@ export const DetailStep = () => {
     pic: useRef(new Animated.Value(1)).current,
     department: useRef(new Animated.Value(1)).current,
     dropPoint: useRef(new Animated.Value(1)).current,
+    jobTitle: useRef(new Animated.Value(1)).current,
   };
 
   const handlePressIn = (key) => {
@@ -83,13 +82,13 @@ export const DetailStep = () => {
   const quickDropPoints = ["Lobby Lantai 1", "Kantin Utama", "Ruang Meeting A"];
 
   return (
-    <ScrollView className="flex-1 bg-gray-50">
-      <View className="py-6">
+    <ScrollView
+      className="flex-1 bg-gray-50"
+      contentContainerStyle={{ flexGrow: 1 }}
+    >
+      <View className="flex-1 py-6">
         {/* Category Selection */}
-        <View className="mb-4 px-6">
-          <Text className="mb-6 text-2xl font-bold tracking-tight text-gray-900">
-            Tipe Pesanan
-          </Text>
+        <View className="mb-4 px-3">
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
             <View className="flex-row">
               {mealTimes.map((meal) => {
@@ -154,23 +153,59 @@ export const DetailStep = () => {
         </View>
 
         {/* Main Form Section */}
-        <View className="px-6">
+        <View className="px-4">
           {/* Job Title Selection */}
-          <JobTitleSelection
-            jobTitle={formData.judulPekerjaan}
-            onPress={() => setJobTitleSheetVisible(true)}
-          />
+          <View className="mb-4">
+            <Animated.View
+              style={{ transform: [{ scale: scaleAnims.jobTitle }] }}
+            >
+              <TouchableOpacity
+                onPress={() => setIsJudulPekerjaanSheetVisible(true)}
+                onPressIn={() => handlePressIn("jobTitle")}
+                onPressOut={() => handlePressOut("jobTitle")}
+                className={`flex-row items-center justify-between rounded-2xl border px-4 py-3 shadow-md ${
+                  pressedStates.jobTitle
+                    ? "border-indigo-300 bg-indigo-50"
+                    : "border-gray-200 bg-white"
+                }`}
+              >
+                <View className="flex-row items-center">
+                  <View className="rounded-xl bg-indigo-50 p-2">
+                    <MaterialCommunityIcons
+                      name={
+                        formData.judulPekerjaan
+                          ? "check-circle"
+                          : "bookmark-outline"
+                      }
+                      size={24}
+                      color={formData.judulPekerjaan ? "#4CAF50" : "#4F46E5"}
+                    />
+                  </View>
+                  <Text
+                    className={`ml-3 ${
+                      formData.judulPekerjaan
+                        ? "text-base font-medium text-gray-900"
+                        : "text-base text-gray-400"
+                    }`}
+                  >
+                    {formData.judulPekerjaan || "Masukkan Judul Pekerjaan"}
+                  </Text>
+                </View>
+                <MaterialCommunityIcons
+                  name="chevron-right"
+                  size={24}
+                  color="#4F46E5"
+                />
+              </TouchableOpacity>
+            </Animated.View>
+          </View>
 
           {/* PIC Information */}
           <View className="mb-4">
             <View className="space-y-4">
               <Animated.View style={{ transform: [{ scale: scaleAnims.pic }] }}>
                 <TouchableOpacity
-                  onPress={() =>
-                    isCustomPic
-                      ? setCustomPicSheetVisible(true)
-                      : setPicSheetVisible(true)
-                  }
+                  onPress={() => setIsEmployeeSheetVisible(true)}
                   onPressIn={() => handlePressIn("pic")}
                   onPressOut={() => handlePressOut("pic")}
                   className={`flex-row items-center justify-between rounded-2xl border px-4 py-3 shadow-md ${
@@ -223,13 +258,12 @@ export const DetailStep = () => {
                   />
                 </TouchableOpacity>
               </Animated.View>
-
               <View className="space-y-4">
                 <Animated.View
                   style={{ transform: [{ scale: scaleAnims.department }] }}
                 >
                   <TouchableOpacity
-                    onPress={() => setDepartmentSheetVisible(true)}
+                    onPress={() => setIsSubBidangSheetVisible(true)}
                     onPressIn={() => handlePressIn("department")}
                     onPressOut={() => handlePressOut("department")}
                     className={`flex-row items-center justify-between rounded-2xl border px-4 py-3 shadow-md ${
@@ -303,7 +337,7 @@ export const DetailStep = () => {
                 style={{ transform: [{ scale: scaleAnims.dropPoint }] }}
               >
                 <TouchableOpacity
-                  onPress={() => setDropPointVisible(true)}
+                  onPress={() => setIsDropPointSheetVisible(true)}
                   onPressIn={() => handlePressIn("dropPoint")}
                   onPressOut={() => handlePressOut("dropPoint")}
                   className={`flex-row items-center justify-between rounded-2xl border px-4 py-3 shadow-md ${
@@ -388,73 +422,53 @@ export const DetailStep = () => {
         </View>
 
         {/* Bottom Sheets */}
-        <CustomPICSheet
-          visible={customPicSheetVisible}
-          onClose={() => setCustomPicSheetVisible(false)}
-          onSave={updatePIC}
-          initialData={formData.pic}
-        />
-
-        <DropPointSheet
-          visible={dropPointVisible}
-          onClose={() => setDropPointVisible(false)}
-          onSelect={(point) => updateFormData({ dropPoint: point })}
-          selected={formData.dropPoint}
-        />
-
-        <UserSelectSheet
-          visible={picSheetVisible}
-          onClose={() => setPicSheetVisible(false)}
-          onSelect={(user) => {
-            // Update PIC info
-            updatePIC({
-              name: user.name,
-              nomorHp: user.nomorHp || "",
-            });
-
-            // Auto-fill department and supervisor if not manually set
-            if (user.department && !formData.supervisor.subBidang) {
-              const supervisor = employeesByDepartment[user.department]?.find(
+        <Suspense fallback={null}>
+          <DetailStepSheets
+            isSubBidangSheetVisible={isSubBidangSheetVisible}
+            isEmployeeSheetVisible={isEmployeeSheetVisible}
+            isDropPointSheetVisible={isDropPointSheetVisible}
+            isJudulPekerjaanSheetVisible={isJudulPekerjaanSheetVisible}
+            onSubBidangClose={() => setIsSubBidangSheetVisible(false)}
+            onEmployeeClose={() => setIsEmployeeSheetVisible(false)}
+            onDropPointClose={() => setIsDropPointSheetVisible(false)}
+            onJudulPekerjaanClose={() => setIsJudulPekerjaanSheetVisible(false)}
+            onSubBidangSelect={(department) => {
+              const supervisor = employeesByDepartment[department]?.find(
                 (emp) => emp.isAsman
               );
               if (supervisor) {
                 updateSupervisor({
-                  subBidang: user.department,
+                  subBidang: department,
                   name: supervisor.name,
                   nomorHp: supervisor.nomorHp || "",
                 });
               }
-            }
-          }}
-          selected={formData.pic.name ? { name: formData.pic.name } : null}
-          title="Select PIC"
-        />
-
-        <DepartmentSheet
-          visible={departmentSheetVisible}
-          onClose={() => setDepartmentSheetVisible(false)}
-          onSelect={(department) => {
-            // Allow manual department selection
-            const supervisor = employeesByDepartment[department]?.find(
-              (emp) => emp.isAsman
-            );
-            if (supervisor) {
-              updateSupervisor({
-                subBidang: department,
-                name: supervisor.name,
-                nomorHp: supervisor.nomorHp || "",
+            }}
+            onEmployeeSelect={(user) => {
+              updatePIC({
+                name: user.name,
+                nomorHp: user.nomorHp || "",
               });
-            }
-          }}
-          selected={formData.supervisor.subBidang}
-        />
 
-        <JobTitleSheet
-          visible={jobTitleSheetVisible}
-          onClose={() => setJobTitleSheetVisible(false)}
-          onSave={(title) => updateFormData({ judulPekerjaan: title })}
-          initialValue={formData.judulPekerjaan}
-        />
+              if (user.department && !formData.supervisor.subBidang) {
+                const supervisor = employeesByDepartment[user.department]?.find(
+                  (emp) => emp.isAsman
+                );
+                if (supervisor) {
+                  updateSupervisor({
+                    subBidang: user.department,
+                    name: supervisor.name,
+                    nomorHp: supervisor.nomorHp || "",
+                  });
+                }
+              }
+            }}
+            onDropPointSelect={(point) => updateFormData({ dropPoint: point })}
+            onJudulPekerjaanSave={(title) =>
+              updateFormData({ judulPekerjaan: title })
+            }
+          />
+        </Suspense>
       </View>
     </ScrollView>
   );

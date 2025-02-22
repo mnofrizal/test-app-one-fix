@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useCallback } from "react";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import {
   View,
@@ -9,7 +9,7 @@ import {
   Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { submitOrder } from "../services/orderService";
 import StepIndicator from "react-native-step-indicator";
 
@@ -22,16 +22,30 @@ import {
   labels,
 } from "../components/meal-order/StepIndicatorStyle";
 import { useMealOrderStore } from "../store/mealOrderStore";
+import { useEmployeeStore } from "../store/employeeStore";
 import {
   isDetailStepValid,
   isPemesanStepValid,
   isMenuStepValid,
 } from "../store/mealOrderStore";
+import DetailStepRefined from "../components/meal-order/DetailStepRefined";
 
 const MealOrderScreen = () => {
   const navigation = useNavigation();
   const { currentStep, setCurrentStep, resetStep, formData } =
     useMealOrderStore();
+  const { fetchEmployees, initializeStore } = useEmployeeStore();
+
+  // Initialize employee data when screen is focused
+  useFocusEffect(
+    useCallback(() => {
+      const loadData = async () => {
+        await initializeStore();
+        await fetchEmployees();
+      };
+      loadData();
+    }, [])
+  );
 
   const canProceed = () => {
     switch (currentStep) {
@@ -57,11 +71,10 @@ const MealOrderScreen = () => {
     );
   }, [currentStep, formData.entityCounts]);
 
-  // Split useEffect for initialization and back handler
+  // Reset form data when component mounts
   useEffect(() => {
-    // Reset form data when component mounts
     resetStep();
-  }, []);
+  }, [resetStep]);
 
   // Separate useEffect for back handler to update when currentStep changes
   useEffect(() => {
@@ -164,7 +177,7 @@ const MealOrderScreen = () => {
   const renderStep = () => {
     switch (currentStep) {
       case 0:
-        return <DetailStep />;
+        return <DetailStepRefined />;
       case 1:
         return <PemesanStep />;
       case 2:
@@ -172,13 +185,13 @@ const MealOrderScreen = () => {
       case 3:
         return <SummaryStep />;
       default:
-        return <DetailStep />;
+        return <DetailStepRefined />;
     }
   };
 
   return (
-    <View className="flex-1 bg-blue-900 pt-8" edges={["top"]}>
-      <View className="bg-blue-900 shadow-sm">
+    <View className="flex-1 bg-blue-900">
+      <View className="bg-blue-900 pt-8 shadow-sm">
         <View className="flex-row items-center justify-between px-4 py-2">
           <TouchableOpacity
             onPress={() => navigation.goBack()}
@@ -225,56 +238,60 @@ const MealOrderScreen = () => {
         />
       </View>
 
-      <ScrollView className="flex-1">{renderStep()}</ScrollView>
-      {canProceed() && (
-        <View className="bg-white shadow-lg">
-          {currentStep === 1 && totalCount > 0 && (
-            <View className="flex-row items-center justify-between border-b border-t border-gray-100 p-3">
-              <View className="flex-row items-center">
-                <View className="rounded-xl bg-indigo-100 p-2">
-                  <MaterialCommunityIcons
-                    name="account-group"
-                    size={24}
-                    color="#4F46E5"
-                  />
+      <View className="flex-1 bg-white">
+        <ScrollView className="flex-1" contentContainerStyle={{ flexGrow: 1 }}>
+          {renderStep()}
+        </ScrollView>
+        {canProceed() && (
+          <View className="bg-white shadow-lg">
+            {currentStep === 1 && totalCount > 0 && (
+              <View className="flex-row items-center justify-between border-b border-t border-gray-100 p-3">
+                <View className="flex-row items-center">
+                  <View className="rounded-xl bg-indigo-100 p-2">
+                    <MaterialCommunityIcons
+                      name="account-group"
+                      size={24}
+                      color="#4F46E5"
+                    />
+                  </View>
+                  <View className="ml-3">
+                    <Text className="text-base font-semibold text-gray-900">
+                      Total Pemesanan
+                    </Text>
+                    <Text className="text-sm font-medium text-slate-500">
+                      Jumlah Pesanan
+                    </Text>
+                  </View>
                 </View>
-                <View className="ml-3">
-                  <Text className="text-base font-semibold text-gray-900">
-                    Total Pemesanan
-                  </Text>
-                  <Text className="text-sm font-medium text-slate-500">
-                    Jumlah Pesanan
+                <View className="rounded-full bg-indigo-100 px-4 py-2">
+                  <Text className="text-base font-bold text-indigo-600">
+                    {totalCount}
                   </Text>
                 </View>
               </View>
-              <View className="rounded-full bg-indigo-100 px-4 py-2">
-                <Text className="text-base font-bold text-indigo-600">
-                  {totalCount}
+            )}
+            <View className="p-4">
+              <TouchableOpacity
+                className={`w-full rounded-xl py-3 ${
+                  canProceed() ? "bg-blue-900 shadow-md" : "bg-slate-300"
+                }`}
+                disabled={!canProceed()}
+                onPress={() => {
+                  if (currentStep === 3) {
+                    handleSubmit();
+                  } else {
+                    setCurrentStep(Math.min(3, currentStep + 1));
+                  }
+                }}
+              >
+                <Text className="text-center text-lg font-semibold text-white">
+                  {currentStep === 3 ? "Submit Order" : "Next"}
                 </Text>
-              </View>
+              </TouchableOpacity>
             </View>
-          )}
-          <View className="p-4">
-            <TouchableOpacity
-              className={`w-full rounded-xl py-3 ${
-                canProceed() ? "bg-blue-900 shadow-md" : "bg-slate-300"
-              }`}
-              disabled={!canProceed()}
-              onPress={() => {
-                if (currentStep === 3) {
-                  handleSubmit();
-                } else {
-                  setCurrentStep(Math.min(3, currentStep + 1));
-                }
-              }}
-            >
-              <Text className="text-center text-lg font-semibold text-white">
-                {currentStep === 3 ? "Submit Order" : "Next"}
-              </Text>
-            </TouchableOpacity>
           </View>
-        </View>
-      )}
+        )}
+      </View>
     </View>
   );
 };
