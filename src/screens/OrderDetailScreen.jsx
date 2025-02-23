@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigation } from "@react-navigation/native";
 import {
   View,
@@ -39,7 +39,14 @@ const handleDelete = (
         try {
           await deleteOrder(orderId);
           // Refresh orders in both stores to update all screens
-          await Promise.all([adminStore.fetchOrders()]);
+          // Refresh all necessary data in the store
+          await Promise.all([
+            adminStore.fetchOrders(),
+            adminStore.fetchRecentActiveOrders(),
+            adminStore.fetchRecentActivities(),
+            adminStore.fetchStatusStats(),
+            adminStore.fetchNewestOrders(),
+          ]);
           Alert.alert("Success", "Order deleted successfully");
           navigation.goBack();
         } catch (error) {
@@ -577,9 +584,45 @@ const OrderDetailScreen = ({ route }) => {
 
   const store = user?.role === "ADMIN" ? adminStore : secretaryStore;
   const { fetchOrderDetails } = store;
-  const { order } = route.params;
+  const { orderId, order: initialOrder } = route.params || {};
 
+  const [order, setOrder] = useState(initialOrder);
   const [isLoading, setIsLoading] = useState(false);
+
+  const [error, setError] = useState(null);
+
+  // Effect to load order details
+  useEffect(() => {
+    const loadOrder = async () => {
+      if (orderId && !initialOrder) {
+        setIsLoading(true);
+        setError(null);
+        try {
+          const result = await fetchOrderDetails(orderId);
+          if (result?.success) {
+            setOrder(result.data);
+          } else {
+            setError(result?.message || "Failed to load order details");
+            navigation.goBack();
+          }
+        } catch (error) {
+          console.error("Error loading order details:", error);
+          setError(error.message || "An error occurred");
+          navigation.goBack();
+        } finally {
+          setIsLoading(false);
+        }
+      }
+    };
+    loadOrder();
+  }, [orderId, initialOrder, fetchOrderDetails, navigation]);
+
+  useEffect(() => {
+    if (error) {
+      Alert.alert("Error", error);
+    }
+  }, [error]);
+
   const [showRejectSheet, setShowRejectSheet] = useState(false);
 
   const currentApprovalLink = order?.approvalLinks?.find(
@@ -610,10 +653,13 @@ const OrderDetailScreen = ({ route }) => {
     setIsLoading(true);
     try {
       await respondToRequest(currentApprovalLink.token, false, reason);
-      // Refresh orders in both stores to update all screens
+      // Refresh all necessary data in both stores to update all screens
       await Promise.all([
         adminStore.fetchOrders(),
-        // secretaryStore.fetchOrders(),
+        adminStore.fetchRecentActiveOrders(),
+        adminStore.fetchRecentActivities(),
+        adminStore.fetchStatusStats(),
+        adminStore.fetchNewestOrders(),
       ]);
       setShowRejectSheet(false);
       Alert.alert("Success", "Order has been rejected successfully");
@@ -635,8 +681,14 @@ const OrderDetailScreen = ({ route }) => {
         true,
         "Request approved"
       );
-      // Refresh orders in both stores to update all screens
-      await Promise.all([adminStore.fetchOrders()]);
+      // Refresh all necessary data in both stores to update all screens
+      await Promise.all([
+        adminStore.fetchOrders(),
+        adminStore.fetchRecentActiveOrders(),
+        adminStore.fetchRecentActivities(),
+        adminStore.fetchStatusStats(),
+        adminStore.fetchNewestOrders(),
+      ]);
       Alert.alert("Success", "Order has been approved successfully");
       navigation.goBack();
     } catch (error) {
@@ -687,6 +739,16 @@ const OrderDetailScreen = ({ route }) => {
       inactiveColor="#6B7280"
     />
   );
+
+  // Show loading state while fetching initial order data
+  if (isLoading || !order) {
+    return (
+      <View className="flex-1 items-center justify-center bg-white">
+        <ActivityIndicator size="large" color="#4F46E5" />
+        <Text className="mt-4 text-gray-600">Loading order details...</Text>
+      </View>
+    );
+  }
 
   return (
     <View className="relative flex-1 bg-white">

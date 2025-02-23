@@ -67,15 +67,23 @@ export const useSecretaryStore = create((set, get) => ({
 
   // Get single order details
   fetchOrderDetails: async (orderId) => {
-    set({ loading: true, error: null });
+    set({ loading: true, error: null, selectedOrder: null });
     try {
       const response = await secretaryService.getOrderById(orderId);
-      set({
-        selectedOrder: response.data,
-        loading: false,
-      });
+      if (response.data) {
+        set({
+          selectedOrder: response.data,
+          loading: false,
+          error: null,
+        });
+        return { success: true, data: response.data };
+      } else {
+        set({ error: "Failed to fetch order details", loading: false });
+        return { success: false, message: "Failed to fetch order details" };
+      }
     } catch (error) {
       set({ error: error.message, loading: false });
+      return { success: false, message: error.message };
     }
   },
 

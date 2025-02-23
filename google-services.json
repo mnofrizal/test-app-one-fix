@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "589055760552",
+    "project_id": "general-affairs-suralaya",
+    "storage_bucket": "general-affairs-suralaya.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:589055760552:android:cf589bd96166725e000a9d",
+        "android_client_info": {
+          "package_name": "com.msdm.gas"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBaQqghyzEFDSV7iGz5UOlaaGwRRIJPay8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

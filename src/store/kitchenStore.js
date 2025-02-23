@@ -128,7 +128,12 @@ export const useKitchenStore = create((set, get) => ({
 
   // Fetch order details
   fetchOrderDetails: async (orderId) => {
-    set({ isLoading: true, error: null });
+    // Clear all previous state to prevent stale data
+    set({
+      isLoading: true,
+      error: null,
+      selectedOrder: null, // Clear selectedOrder first
+    });
     try {
       const response = await getKitchenOrderById(orderId);
       if (response.success) {

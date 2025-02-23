@@ -4,6 +4,7 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useAuthStore } from "../store/authStore";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
+import { logout as logoutService } from "../services/authService";
 
 const ProfileOption = ({
   icon,
@@ -30,7 +31,7 @@ const ProfileOption = ({
 const ProfileScreen = ({ navigation }) => {
   const { user, logout } = useAuthStore();
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     Alert.alert(
       "Keluar",
       "Apakah Anda yakin ingin keluar?",
@@ -41,7 +42,10 @@ const ProfileScreen = ({ navigation }) => {
         },
         {
           text: "Keluar",
-          onPress: logout,
+          onPress: async () => {
+            await logoutService();
+            logout();
+          },
           style: "destructive",
         },
       ],

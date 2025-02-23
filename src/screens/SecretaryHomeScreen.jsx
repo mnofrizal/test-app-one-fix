@@ -231,9 +231,9 @@ const ServiceExtraMenuItem = ({ title, icon, onPress, route }) => {
       onPress={handlePress}
     >
       <View
-        className={`mb-3 h-16 w-16 items-center justify-center rounded-full ${bgColor} shadow-xl`}
+        className={`mb-2 h-14 w-14 items-center justify-center rounded-full ${bgColor} shadow-xl`}
       >
-        <MaterialCommunityIcons name={icon} size={32} color={iconColor} />
+        <MaterialCommunityIcons name={icon} size={30} color={iconColor} />
       </View>
       <Text className="font-base text-center text-sm text-gray-900">
         {title}
@@ -289,10 +289,16 @@ const formatOrderStatus = (status) => {
   switch (status) {
     case "PENDING_SUPERVISOR":
       return { text: "ASMAN", color: "yellow" };
+    case "REJECTED_SUPERVISOR":
+      return { text: "REJECT", color: "red" };
     case "PENDING_GA":
       return { text: "ADMIN", color: "orange" };
+    case "REJECTED_GA":
+      return { text: "REJECT", color: "red" };
     case "PENDING_KITCHEN":
       return { text: "KITCHEN", color: "purple" };
+    case "REJECTED_KITCHEN":
+      return { text: "REJECT", color: "red" };
     case "IN_PROGRESS":
       return { text: "PROSES", color: "blue" };
     case "COMPLETED":
@@ -505,17 +511,23 @@ const HomeScreen = () => {
   const extraMenuItems = [
     { title: "Event Meal", key: "event-meal", icon: "food-variant" },
     {
-      title: "Test Page",
-      key: "test-page",
-      icon: "shield-account",
-      route: "TestPage",
+      title: "Menu List",
+      key: "menu-list",
+      icon: "book-open",
+      route: "ListMenu",
     },
-    {
-      title: "Test Page",
-      key: "test-page2",
-      icon: "shield-key",
-      route: "TestPage2",
-    },
+    // {
+    //   title: "Test Page",
+    //   key: "test-page",
+    //   icon: "shield-account",
+    //   route: "TestPage",
+    // },
+    // {
+    //   title: "Test Page",
+    //   key: "test-page2",
+    //   icon: "shield-key",
+    //   route: "TestPage2",
+    // },
   ];
 
   const onRefresh = React.useCallback(async () => {
@@ -584,10 +596,10 @@ const HomeScreen = () => {
               <MaterialCommunityIcons name="bell" size={24} color="white" />
             </TouchableOpacity>
             <TouchableOpacity
-              className="h-10 w-10 rounded-full bg-gray-300"
+              className="h-10 w-10 items-center justify-center rounded-full border-2 border-green-600 bg-gray-300"
               onPress={() => navigation.navigate("Profile")}
             >
-              <MaterialCommunityIcons name="account" size={40} color="white" />
+              <MaterialCommunityIcons name="account" size={32} color="white" />
             </TouchableOpacity>
           </View>
         </View>

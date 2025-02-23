@@ -516,18 +516,18 @@ const HomeScreen = () => {
       icon: "book-open",
       route: "ListMenu",
     },
-    {
-      title: "Test Page",
-      key: "test-page",
-      icon: "shield-account",
-      route: "TestPage",
-    },
-    {
-      title: "Test Page",
-      key: "test-page2",
-      icon: "shield-key",
-      route: "TestPage2",
-    },
+    // {
+    //   title: "Test Page",
+    //   key: "test-page",
+    //   icon: "shield-account",
+    //   route: "TestPage",
+    // },
+    // {
+    //   title: "Test Page",
+    //   key: "test-page2",
+    //   icon: "shield-key",
+    //   route: "TestPage2",
+    // },
   ];
 
   const onRefresh = React.useCallback(async () => {

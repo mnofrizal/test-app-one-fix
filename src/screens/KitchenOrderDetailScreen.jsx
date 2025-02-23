@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -76,18 +76,66 @@ const ConfirmationDialog = ({ visible, onClose, onConfirm, isLoading }) => (
 );
 
 const KitchenOrderDetailScreen = ({ route, navigation }) => {
-  const { order } = route.params;
+  const { orderId, order: initialOrder } = route.params || {};
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [localIsLoading, setLocalIsLoading] = useState(false);
-  const { startOrder, isLoading, error, clearError } = useKitchenStore();
+  const {
+    startOrder,
+    isLoading,
+    error,
+    clearError,
+    fetchOrderDetails,
+    selectedOrder,
+    setSelectedOrder,
+  } = useKitchenStore();
 
-  // Handle errors with toast
-  React.useEffect(() => {
+  // State
+  const [order, setOrder] = useState(initialOrder);
+
+  // Effects
+  useEffect(() => {
+    const loadOrder = async () => {
+      // Clear previous order data
+      setOrder(initialOrder);
+
+      // Always fetch fresh data for notifications
+      if (orderId) {
+        await fetchOrderDetails(orderId);
+      }
+    };
+    loadOrder();
+
+    // Cleanup on unmount or when orderId changes
+    return () => {
+      setOrder(null);
+      setSelectedOrder(null); // Clear store state on unmount
+    };
+  }, [orderId, initialOrder, fetchOrderDetails]);
+
+  useEffect(() => {
+    if (selectedOrder) {
+      setOrder(selectedOrder);
+    }
+  }, [selectedOrder]);
+
+  useEffect(() => {
     if (error) {
       ToastAndroid.show(error, ToastAndroid.SHORT);
       clearError();
     }
-  }, [error]);
+  }, [error, clearError]);
+
+  // Loading state
+  if (!order) {
+    return (
+      <SafeAreaView className="flex-1 bg-gray-50">
+        <View className="flex-1 items-center justify-center">
+          <ActivityIndicator size="large" color="#1d4ed8" />
+          <Text className="mt-4 text-gray-600">Loading order details...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   const formatDate = (dateString) => {
     try {
