@@ -8,6 +8,8 @@ export const fetchEmployeesByDepartment = async () => {
       },
     });
 
+    // console.log(response.data.data);
+
     if (response.data.success) {
       return {
         success: true,

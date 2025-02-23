@@ -1,7 +1,7 @@
 {
   "expo": {
     "newArchEnabled": false,
-    "name": "test-app-one",
+    "name": "GAS",
     "slug": "test-app-one",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -24,7 +24,13 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "permissions": ["CAMERA"]
+      "permissions": [
+        "CAMERA",
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
+      ],
+      "package": "com.msdm.gas",
+      "buildType": "apk"
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -36,7 +42,13 @@
           "cameraPermission": "Allow $(PRODUCT_NAME) to access your camera to take photos of completed orders."
         }
       ],
-      "expo-font"
-    ]
+      "expo-font",
+      "expo-dev-client"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "94126c87-57fc-413d-b0ea-84539bc62809"
+      }
+    }
   }
 }

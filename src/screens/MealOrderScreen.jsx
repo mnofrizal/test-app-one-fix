@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback } from "react";
+import React, { useEffect, useCallback, useState } from "react";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import {
   View,
@@ -7,13 +7,14 @@ import {
   Text,
   BackHandler,
   Alert,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { submitOrder } from "../services/orderService";
 import StepIndicator from "react-native-step-indicator";
 
-import { DetailStep } from "../components/meal-order/DetailStep";
+// import { DetailStep } from "../components/meal-order/DetailStepOriginal";
 import { PemesanStep } from "../components/meal-order/PemesanStep";
 import { MenuStep } from "../components/meal-order/MenuStep";
 import { SummaryStep } from "../components/meal-order/SummaryStep";
@@ -31,6 +32,7 @@ import {
 import DetailStepRefined from "../components/meal-order/DetailStepRefined";
 
 const MealOrderScreen = () => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const navigation = useNavigation();
   const { currentStep, setCurrentStep, resetStep, formData } =
     useMealOrderStore();
@@ -94,6 +96,7 @@ const MealOrderScreen = () => {
   }, [currentStep, setCurrentStep]); // Include dependencies
 
   const handleSubmit = async () => {
+    setIsSubmitting(true);
     try {
       // Prepare base payload
       const basePayload = {
@@ -171,6 +174,8 @@ const MealOrderScreen = () => {
         error.message || "Failed to submit order. Please try again.",
         [{ text: "OK" }]
       );
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -191,7 +196,16 @@ const MealOrderScreen = () => {
 
   return (
     <View className="flex-1 bg-blue-900">
-      <View className="bg-blue-900 pt-8 shadow-sm">
+      <View
+        className="bg-[#076fcd] pt-8"
+        style={{
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.1,
+          shadowRadius: 4,
+          elevation: 2,
+        }}
+      >
         <View className="flex-row items-center justify-between px-4 py-2">
           <TouchableOpacity
             onPress={() => navigation.goBack()}
@@ -224,7 +238,7 @@ const MealOrderScreen = () => {
               stepStatus === "unfinished"
                 ? "#94A3B8"
                 : stepStatus === "current"
-                ? "#1c40af"
+                ? "#076fcd"
                 : "#ffffff";
 
             return (
@@ -247,14 +261,7 @@ const MealOrderScreen = () => {
             {currentStep === 1 && totalCount > 0 && (
               <View className="flex-row items-center justify-between border-b border-t border-gray-100 p-3">
                 <View className="flex-row items-center">
-                  <View className="rounded-xl bg-indigo-100 p-2">
-                    <MaterialCommunityIcons
-                      name="account-group"
-                      size={24}
-                      color="#4F46E5"
-                    />
-                  </View>
-                  <View className="ml-3">
+                  <View className="ml-2">
                     <Text className="text-base font-semibold text-gray-900">
                       Total Pemesanan
                     </Text>
@@ -263,8 +270,8 @@ const MealOrderScreen = () => {
                     </Text>
                   </View>
                 </View>
-                <View className="rounded-full bg-indigo-100 px-4 py-2">
-                  <Text className="text-base font-bold text-indigo-600">
+                <View className="rounded-full bg-[#63c67c]/10 px-4 py-2">
+                  <Text className="text-base font-semibold text-green-600">
                     {totalCount}
                   </Text>
                 </View>
@@ -273,9 +280,13 @@ const MealOrderScreen = () => {
             <View className="p-4">
               <TouchableOpacity
                 className={`w-full rounded-xl py-3 ${
-                  canProceed() ? "bg-blue-900 shadow-md" : "bg-slate-300"
+                  !canProceed()
+                    ? "bg-slate-300"
+                    : isSubmitting && currentStep === 3
+                    ? "bg-[#63c67c]/50"
+                    : "bg-[#63c67c] shadow-md"
                 }`}
-                disabled={!canProceed()}
+                disabled={!canProceed() || (isSubmitting && currentStep === 3)}
                 onPress={() => {
                   if (currentStep === 3) {
                     handleSubmit();
@@ -284,9 +295,13 @@ const MealOrderScreen = () => {
                   }
                 }}
               >
-                <Text className="text-center text-lg font-semibold text-white">
-                  {currentStep === 3 ? "Submit Order" : "Next"}
-                </Text>
+                {isSubmitting && currentStep === 3 ? (
+                  <ActivityIndicator color="white" size="small" />
+                ) : (
+                  <Text className="text-center text-lg font-semibold text-white">
+                    {currentStep === 3 ? "Submit Order" : "Next"}
+                  </Text>
+                )}
               </TouchableOpacity>
             </View>
           </View>

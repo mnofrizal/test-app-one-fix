@@ -38,7 +38,7 @@ const EntityCard = ({
   return (
     <View
       className={`mb-4 overflow-hidden rounded-2xl border  ${
-        isSelected ? "border-indigo-200" : "border-slate-200"
+        isSelected ? "border-[#63c67c]" : "border-slate-200"
       } bg-white shadow-sm`}
     >
       <TouchableOpacity
@@ -50,19 +50,19 @@ const EntityCard = ({
         <View className="flex-row items-center justify-center">
           <View
             className={`rounded-lg p-2 ${
-              isSelected ? "bg-indigo-100" : "bg-slate-50"
+              isSelected ? "bg-[#63c67c]/10" : "bg-slate-50"
             }`}
           >
             <MaterialCommunityIcons
               name={entityIcons[entity]}
               size={24}
-              color={isSelected ? "#4F46E5" : "#64748B"}
+              color={isSelected ? "#1da14e" : "#64748B"}
             />
           </View>
           <View className="ml-3">
             <Text
               className={`text-lg font-semibold ${
-                isSelected ? "text-indigo-600" : "text-gray-900"
+                isSelected ? "text-green-600" : "text-gray-900"
               }`}
             >
               {entity}
@@ -124,7 +124,7 @@ const EntityCard = ({
               <MaterialCommunityIcons
                 name="account-group"
                 size={20}
-                color={showWarning ? "#DC2626" : "#4F46E5"}
+                color={showWarning ? "#DC2626" : "#63c67c"}
               />
               <Text
                 className={`ml-2 text-base font-medium ${

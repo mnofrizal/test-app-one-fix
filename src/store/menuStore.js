@@ -116,4 +116,13 @@ export const useMenuStore = create((set, get) => ({
 
   // Set selected menu
   setSelectedMenu: (menu) => set({ selectedMenu: menu }),
+
+  // Reset store
+  resetStore: () =>
+    set({
+      menus: [],
+      isLoading: false,
+      error: null,
+      selectedMenu: null,
+    }),
 }));

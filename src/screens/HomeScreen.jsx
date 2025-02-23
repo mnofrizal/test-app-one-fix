@@ -20,16 +20,11 @@ import { useSecretaryStore } from "../store/secretaryStore";
 import { useAdminStore } from "../store/adminStore";
 import { useEmployeeStore } from "../store/employeeStore";
 import useStore from "../store/useStore";
-import { ActivityIndicator } from "react-native";
 import { StatusBar } from "expo-status-bar";
+import { SkeletonOrderList } from "../components/SkeletonOrderCard";
+import { SkeletonActiveOrderList } from "../components/SkeletonActiveOrderCard";
 
 const { width } = Dimensions.get("window");
-
-const LoadingIndicator = () => (
-  <View className="flex-1 items-center justify-center py-4">
-    <ActivityIndicator size="large" color="#4F46E5" />
-  </View>
-);
 
 const ErrorMessage = ({ message, onRetry }) => (
   <View className="items-center justify-center py-4">
@@ -46,6 +41,8 @@ const ErrorMessage = ({ message, onRetry }) => (
 );
 
 const ActiveOrderCard = ({
+  order,
+  category,
   title,
   orderNo,
   status,
@@ -78,17 +75,28 @@ const ActiveOrderCard = ({
 
   return (
     <TouchableOpacity
-      className="mr-4 w-72 rounded-xl border border-gray-300 bg-white p-4 shadow-sm"
+      className="mr-4 w-72 rounded-2xl border border-gray-300 bg-white p-4 shadow-sm"
       onPress={onPress}
     >
+      <View className="absolute right-2 top-2">
+        <Text className="text-xl font-semibold text-zinc-200">{orderNo}</Text>
+      </View>
       <View className="mb-3 flex-row items-center justify-between">
         <View className="flex-row items-center">
-          <View className="rounded-full bg-indigo-50 p-2">
+          <View className="rounded-xl bg-indigo-50 p-2.5">
             <MaterialCommunityIcons name={icon} size={20} color="#4F46E5" />
           </View>
           <View className="ml-3">
-            <Text className="text-sm font-medium text-gray-900">{title}</Text>
-            <Text className="text-xs text-gray-500">{orderNo}</Text>
+            <Text className="text-sm font-semibold text-gray-900">
+              {category}
+            </Text>
+            <Text
+              className="w-44 text-xs text-gray-500"
+              numberOfLines={1}
+              ellipsizeMode="tail"
+            >
+              {order.supervisor.subBidang}
+            </Text>
           </View>
         </View>
       </View>
@@ -122,11 +130,21 @@ const formatTime = (date) => {
 };
 
 const WeatherWidget = ({ currentTime }) => (
-  <View className="z-20 mt-2 flex-row items-center justify-between rounded-2xl bg-blue-800 p-3 pb-10 shadow-xl">
+  <View
+    style={{
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 10,
+      elevation: 4,
+      boxShadow: "0 0 8px rgba(0, 0, 0, 0.2)", // Added glow effect
+    }}
+    className="z-20 mt-2 flex-row items-center justify-between rounded-3xl bg-[#1565c0] p-3 pb-10"
+  >
     <View className="flex-row items-center">
       <MaterialCommunityIcons name="weather-sunny" size={24} color="white" />
       <View className="ml-3">
-        <Text className="text-lg font-bold text-white">28°C</Text>
+        <Text className="text-lg font-extrabold text-white">28°C</Text>
         <Text className="text-sm text-blue-100">Cilegon, Cerah</Text>
       </View>
     </View>
@@ -142,17 +160,17 @@ const ServiceMenuItem = ({ title, icon, onPress, route }) => {
   let bgColor = "bg-indigo-100";
 
   if (icon === "food") {
-    iconColor = "#FFD07A";
-    bgColor = "bg-orange-50";
+    iconColor = "#fff";
+    bgColor = "bg-[#ff9800]";
   } else if (icon === "car") {
-    iconColor = "#00AACC";
-    bgColor = "bg-blue-50";
+    iconColor = "#fff";
+    bgColor = "bg-blue-500";
   } else if (icon === "door") {
-    iconColor = "#FF0000";
-    bgColor = "bg-red-50";
+    iconColor = "#fff";
+    bgColor = "bg-red-500";
   } else if (icon === "pencil") {
-    iconColor = "#00A0A0";
-    bgColor = "bg-teal-50";
+    iconColor = "#fff";
+    bgColor = "bg-teal-500";
   }
 
   const handlePress = () => {
@@ -169,7 +187,7 @@ const ServiceMenuItem = ({ title, icon, onPress, route }) => {
       onPress={handlePress}
     >
       <View
-        className={`mb-3 h-16 w-16 items-center justify-center rounded-full ${bgColor} shadow-xl`}
+        className={`mb-3 h-14 w-14 items-center justify-center rounded-full ${bgColor} shadow-xl`}
       >
         <MaterialCommunityIcons name={icon} size={32} color={iconColor} />
       </View>
@@ -213,9 +231,9 @@ const ServiceExtraMenuItem = ({ title, icon, onPress, route }) => {
       onPress={handlePress}
     >
       <View
-        className={`mb-3 h-16 w-16 items-center justify-center rounded-full ${bgColor} shadow-xl`}
+        className={`mb-2 h-14 w-14 items-center justify-center rounded-full ${bgColor} shadow-xl`}
       >
-        <MaterialCommunityIcons name={icon} size={32} color={iconColor} />
+        <MaterialCommunityIcons name={icon} size={30} color={iconColor} />
       </View>
       <Text className="font-base text-center text-sm text-gray-900">
         {title}
@@ -231,10 +249,8 @@ const SectionHeader = ({ title, more, pillCount, navigation }) => (
         {title}
       </Text>
       {pillCount && (
-        <View className="ml-2 rounded-full bg-indigo-50 px-3 py-1">
-          <Text className="text-xs font-medium text-indigo-700">
-            {pillCount}
-          </Text>
+        <View className="ml-2 rounded-full bg-pink-500 px-2 py-1">
+          <Text className="text-xs font-extrabold text-white">{pillCount}</Text>
         </View>
       )}
     </View>
@@ -249,8 +265,8 @@ const QuickAction = ({ title, icon, onPress }) => (
     className="mr-3 flex-row items-center rounded-full border border-slate-200 bg-white px-4 py-2 shadow-sm"
     onPress={onPress}
   >
-    <MaterialCommunityIcons name={icon} size={18} color="#4F46E5" />
-    <Text className="ml-2 text-sm font-medium text-gray-700">{title}</Text>
+    <MaterialCommunityIcons name={icon} size={18} color="#3f51b5" />
+    <Text className="ml-2 text-sm font-bold text-gray-600">{title}</Text>
   </TouchableOpacity>
 );
 
@@ -273,10 +289,16 @@ const formatOrderStatus = (status) => {
   switch (status) {
     case "PENDING_SUPERVISOR":
       return { text: "ASMAN", color: "yellow" };
+    case "REJECTED_SUPERVISOR":
+      return { text: "REJECT", color: "red" };
     case "PENDING_GA":
       return { text: "ADMIN", color: "orange" };
+    case "REJECTED_GA":
+      return { text: "REJECT", color: "red" };
     case "PENDING_KITCHEN":
       return { text: "KITCHEN", color: "purple" };
+    case "REJECTED_KITCHEN":
+      return { text: "REJECT", color: "red" };
     case "IN_PROGRESS":
       return { text: "PROSES", color: "blue" };
     case "COMPLETED":
@@ -322,7 +344,17 @@ const EmptyState = () => (
   </View>
 );
 
-const ActivityItem = ({ title, time, status, icon, statusColor, onPress }) => {
+const ActivityItem = ({
+  title,
+  porsi,
+  subBidang,
+  category,
+  time,
+  status,
+  icon,
+  statusColor,
+  onPress,
+}) => {
   const getStatusStyles = (color) => {
     switch (color) {
       case "yellow":
@@ -346,20 +378,31 @@ const ActivityItem = ({ title, time, status, icon, statusColor, onPress }) => {
 
   return (
     <TouchableOpacity
-      className="mb-3 flex-row items-center justify-between rounded-xl border border-gray-200 bg-white p-4 shadow-sm"
+      className="mb-3 flex-row items-center justify-between rounded-2xl border border-gray-200 bg-white p-4 shadow-sm"
       onPress={onPress}
     >
       <View className="flex-row flex-wrap items-center">
-        <View className="mr-3 rounded-full bg-blue-50 p-2">
+        <View className="mr-3 rounded-xl bg-blue-50 p-2.5">
           <MaterialCommunityIcons name={icon} size={20} color="#4F46E5" />
         </View>
-        <View className="max-w-[70%] flex-shrink">
-          <Text className="text-sm font-medium text-gray-900">{title}</Text>
-          <Text className="text-xs text-gray-500">{time}</Text>
+        <View className="flex-1">
+          <Text className="text-sm font-semibold text-gray-900">
+            {category}{" "}
+          </Text>
+          <View>
+            <Text className="text-xs text-gray-500">{subBidang}</Text>
+          </View>
+          <View className="mt-1 flex-row items-center justify-between">
+            <View>
+              <Text className="text-xs text-gray-500">{time}</Text>
+            </View>
+            <View className={`rounded-full ${bgColor} px-3 py-1`}>
+              <Text className={`text-xs font-medium ${textColor}`}>
+                {status}
+              </Text>
+            </View>
+          </View>
         </View>
-      </View>
-      <View className={` rounded-full ${bgColor} px-3 py-1`}>
-        <Text className={`text-xs font-medium ${textColor}`}>{status}</Text>
       </View>
     </TouchableOpacity>
   );
@@ -468,6 +511,12 @@ const HomeScreen = () => {
   const extraMenuItems = [
     { title: "Event Meal", key: "event-meal", icon: "food-variant" },
     {
+      title: "Menu List",
+      key: "menu-list",
+      icon: "book-open",
+      route: "ListMenu",
+    },
+    {
       title: "Test Page",
       key: "test-page",
       icon: "shield-account",
@@ -507,7 +556,7 @@ const HomeScreen = () => {
 
   return (
     <ScrollView
-      className="flex-1 bg-slate-50"
+      className="flex-1 bg-[#fafafa]"
       refreshControl={
         <RefreshControl
           refreshing={refreshing}
@@ -524,7 +573,7 @@ const HomeScreen = () => {
         <View className="absolute -left-[339px] -top-[840px] right-0 z-0">
           <FontAwesome name="circle" size={1250} color="#1c3a8a" />
         </View>
-        <View className="absolute -right-2 -top-20 z-10 opacity-20">
+        <View className="absolute -right-2 -top-20 z-10 opacity-10">
           <FontAwesome name="bolt" size={400} color="darkblue" />
         </View>
         <View className="z-50 mb-1 flex-row items-center justify-between">
@@ -547,10 +596,10 @@ const HomeScreen = () => {
               <MaterialCommunityIcons name="bell" size={24} color="white" />
             </TouchableOpacity>
             <TouchableOpacity
-              className="h-10 w-10 rounded-full bg-gray-300"
+              className="h-10 w-10 items-center justify-center rounded-full border-2 border-green-600 bg-gray-300"
               onPress={() => navigation.navigate("Profile")}
             >
-              <MaterialCommunityIcons name="account" size={40} color="white" />
+              <MaterialCommunityIcons name="account" size={32} color="white" />
             </TouchableOpacity>
           </View>
         </View>
@@ -563,8 +612,18 @@ const HomeScreen = () => {
 
       <View className="w-full">
         {/* Services Section */}
-        <View className="mx-4 -mt-14 shadow-xl">
-          <View className="rounded-3xl border border-slate-200 bg-white p-4 shadow-lg">
+        <View className="mx-5 -mt-14">
+          <View
+            className="rounded-3xl border border-gray-100 bg-white p-4"
+            style={{
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.1,
+              shadowRadius: 10,
+              elevation: 4,
+              boxShadow: "0 0 8px rgba(0, 0, 0, 0.2)", // Added glow effect
+            }}
+          >
             <View className="flex-row justify-between">
               {menuItems.map((item) => (
                 <ServiceMenuItem
@@ -608,7 +667,7 @@ const HomeScreen = () => {
         </View>
 
         {/* Search Bar */}
-        <View className="mb-2 mt-2 px-4 py-2">
+        <View className="mb-3 mt-2 px-5 py-2">
           {/* Quick Actions */}
           <ScrollView
             horizontal
@@ -631,10 +690,10 @@ const HomeScreen = () => {
         </View>
 
         {/* Main Content */}
-        <View className="px-4 pb-4">
+        <View className="pb-4">
           {/* Active Orders */}
           {recentActiveOrders.length > 0 && (
-            <View className="mb-8">
+            <View className="mb-8 px-5">
               <View className="flex-row items-center justify-between">
                 <SectionHeader
                   title={`Pesanan Aktif`}
@@ -643,8 +702,10 @@ const HomeScreen = () => {
                   navigation={navigation}
                 />
               </View>
-              {loading && !recentActiveOrders.length ? (
-                <LoadingIndicator />
+              {loading ? (
+                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                  <SkeletonActiveOrderList />
+                </ScrollView>
               ) : error ? (
                 <ErrorMessage
                   message={error}
@@ -654,6 +715,8 @@ const HomeScreen = () => {
                 <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                   {recentActiveOrders.map((order) => (
                     <ActiveOrderCard
+                      order={order}
+                      category={order.category}
                       key={order.id}
                       title={order.judulPekerjaan}
                       orderNo={`#${order.id}`}
@@ -668,6 +731,7 @@ const HomeScreen = () => {
                       onPress={() =>
                         navigation.navigate("OrderDetail", {
                           orderId: order.id,
+                          order: order,
                         })
                       }
                     />
@@ -681,7 +745,7 @@ const HomeScreen = () => {
 
           {/* Newest Orders Section */}
           <View className="mb-6">
-            <View className="flex-row items-center justify-between">
+            <View className="flex-row items-center justify-between px-5">
               <SectionHeader
                 title="Semua Pesanan"
                 more="Lihat Semua"
@@ -689,24 +753,31 @@ const HomeScreen = () => {
               />
             </View>
             {loading ? (
-              <LoadingIndicator />
+              <SkeletonOrderList />
             ) : error ? (
               <ErrorMessage message={error} onRetry={fetchNewestOrders} />
             ) : newestOrders && newestOrders.length > 0 ? (
               newestOrders.map((order) => {
                 const statusInfo = formatOrderStatus(order.status);
                 return (
-                  <ActivityItem
-                    key={order.id}
-                    title={`${order.judulPekerjaan} (${order.category})`}
-                    time={formatRelativeTime(order.createdAt)}
-                    status={statusInfo.text}
-                    icon={getIconForOrderType(order.type)}
-                    statusColor={statusInfo.color}
-                    onPress={() =>
-                      navigation.navigate("OrderDetail", { orderId: order.id })
-                    }
-                  />
+                  <View key={order.id} className="px-5">
+                    <ActivityItem
+                      title={`${order.judulPekerjaan}`}
+                      category={order.category}
+                      porsi={order.employeeOrders.length}
+                      subBidang={order.supervisor.subBidang}
+                      time={formatRelativeTime(order.createdAt)}
+                      status={statusInfo.text}
+                      icon={getIconForOrderType(order.type)}
+                      statusColor={statusInfo.color}
+                      onPress={() =>
+                        navigation.navigate("OrderDetail", {
+                          orderId: order.id,
+                          order: order,
+                        })
+                      }
+                    />
+                  </View>
                 );
               })
             ) : (

@@ -15,19 +15,29 @@ export const useEmployeeStore = create((set, get) => ({
   error: null,
   isInitialized: false,
 
-  // Initialize store from storage
+  // Initialize store with fresh data
   initializeStore: async () => {
     try {
-      const storedData = await AsyncStorage.getItem(STORAGE_KEY);
-      if (storedData) {
-        const { employeesByDepartment } = JSON.parse(storedData);
+      // Always fetch fresh data on initialize
+      const response = await fetchEmployeesByDepartment();
+      if (response.success) {
+        const newData = {
+          employeesByDepartment: response.data,
+        };
+        // Store in AsyncStorage
+        await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(newData));
         set({
-          employeesByDepartment,
+          ...newData,
           isInitialized: true,
+          error: null,
         });
+      } else {
+        set({ error: response.message });
+        logger.error("Failed to initialize employees:", response.message);
       }
     } catch (error) {
-      logger.error("Error loading stored employee data:", error);
+      logger.error("Error initializing employee data:", error);
+      set({ error: error.message });
     }
   },
 
@@ -96,9 +106,7 @@ export const useEmployeeStore = create((set, get) => ({
   getDepartmentEmployees: (department) => {
     const state = get();
     if (!department || !state.employeesByDepartment[department]) return [];
-    return state.employeesByDepartment[department].filter(
-      (emp) => !emp.isAsman
-    );
+    return state.employeesByDepartment[department];
   },
 
   getDepartmentSupervisor: (department) => {
@@ -109,12 +117,16 @@ export const useEmployeeStore = create((set, get) => ({
     );
   },
 
-  // Reset selections
-  clearSelections: () => {
+  // Reset selections and data
+  resetStore: () => {
     set({
+      employeesByDepartment: {},
       selectedDepartment: null,
       selectedEmployee: null,
       selectedSupervisor: null,
+      isLoading: false,
+      error: null,
+      isInitialized: false,
     });
   },
 

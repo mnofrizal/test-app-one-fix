@@ -11,15 +11,13 @@ const OptionCard = ({ title, isSelected, onSelect }) => (
   <TouchableOpacity
     onPress={onSelect}
     className={`mb-4 rounded-xl border p-5 shadow-sm transition-colors ${
-      isSelected
-        ? "border-indigo-500 bg-indigo-50"
-        : "border-slate-200 bg-white"
+      isSelected ? "border-[#63c67c] bg-green-50" : "border-slate-200 bg-white"
     }`}
   >
     <View className="flex-row items-center justify-between">
       <Text
         className={`text-lg font-semibold ${
-          isSelected ? "text-indigo-700" : "text-gray-900"
+          isSelected ? "text-green-700" : "text-gray-900"
         }`}
       >
         {title}
@@ -27,7 +25,7 @@ const OptionCard = ({ title, isSelected, onSelect }) => (
       <View
         className={`h-7 w-7 items-center justify-center rounded-full border-2 ${
           isSelected
-            ? "border-indigo-500 bg-indigo-500"
+            ? "border-[#63c67c] bg-[#63c67c]"
             : "border-slate-300 bg-white"
         }`}
       >
@@ -290,7 +288,7 @@ export const MenuStep = () => {
                     <MaterialCommunityIcons
                       name="food"
                       size={22}
-                      color="#4F46E5"
+                      color="#096ecf"
                     />
                     <Text
                       className={`ml-3 ${
@@ -305,7 +303,7 @@ export const MenuStep = () => {
                   <MaterialCommunityIcons
                     name="chevron-down"
                     size={22}
-                    color="#64748B"
+                    color="#096ecf"
                   />
                 </TouchableOpacity>
 
@@ -313,7 +311,7 @@ export const MenuStep = () => {
                   <MaterialCommunityIcons
                     name="note-text-outline"
                     size={22}
-                    color="#4F46E5"
+                    color="#096ecf"
                   />
                   <TextInput
                     className="ml-3 flex-1 text-base text-gray-900"

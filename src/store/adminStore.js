@@ -197,4 +197,28 @@ export const useAdminStore = create((set, get) => ({
   // Utility functions
   clearSelectedOrder: () => set({ selectedOrder: null }),
   clearError: () => set({ error: null }),
+
+  // Reset store
+  resetStore: () =>
+    set({
+      orders: [],
+      totalOrders: 0,
+      currentPage: 1,
+      totalPages: 1,
+      loading: false,
+      error: null,
+      selectedOrder: null,
+      recentActiveOrders: [],
+      recentActivities: [],
+      statusStats: {},
+      typeStats: {},
+      newestOrders: [],
+      filters: {
+        startDate: null,
+        endDate: null,
+        status: null,
+        type: null,
+        limit: 10,
+      },
+    }),
 }));

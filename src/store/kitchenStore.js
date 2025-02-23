@@ -306,4 +306,23 @@ export const useKitchenStore = create((set, get) => ({
 
   // Set selected order
   setSelectedOrder: (order) => set({ selectedOrder: order }),
+
+  // Reset store
+  resetStore: () =>
+    set({
+      orders: [],
+      pendingOrders: [],
+      inProgressOrders: [],
+      completedOrders: [],
+      selectedOrder: null,
+      dailyStats: null,
+      topItems: [],
+      stats: {
+        PENDING_KITCHEN: 0,
+        IN_PROGRESS: 0,
+        COMPLETED: 0,
+      },
+      isLoading: false,
+      error: null,
+    }),
 }));

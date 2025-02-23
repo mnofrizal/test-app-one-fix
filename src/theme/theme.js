@@ -46,6 +46,12 @@ export const typography = {
     semibold: "600",
     bold: "700",
   },
+  fontFamily: {
+    regular: "Poppins_400Regular",
+    medium: "Poppins_500Medium",
+    semibold: "Poppins_600SemiBold",
+    bold: "Poppins_700Bold",
+  },
 };
 
 export const layout = {

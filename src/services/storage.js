@@ -58,10 +58,8 @@ export const removeUser = async () => {
 
 export const clearStorage = async () => {
   try {
-    await AsyncStorage.multiRemove([
-      STORAGE_KEYS.ACCESS_TOKEN,
-      STORAGE_KEYS.USER,
-    ]);
+    // Clear all keys in AsyncStorage
+    await AsyncStorage.clear();
   } catch (error) {
     console.error("Error clearing storage:", error);
   }

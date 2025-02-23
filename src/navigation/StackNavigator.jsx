@@ -20,6 +20,7 @@ import {
 import TestScreen from "../screens/TestScreen";
 import { Platform } from "react-native";
 import TestScreen2 from "../screens/TestScreen2";
+import WhatsappSettingScreen from "../screens/WhatsappSettingScreen";
 
 const Stack = createNativeStackNavigator();
 
@@ -69,7 +70,9 @@ const StackNavigator = () => {
         },
         headerShadowVisible: true,
         animation: "fade_from_bottom",
-        presentation: "transparentModal",
+        animationDuration: 100,
+        presentation: "card",
+        // presentation: "transparentModal",
       }}
     >
       {!isAuthenticated ? (
@@ -93,7 +96,7 @@ const StackNavigator = () => {
             component={MealOrderSuccess}
             options={{
               headerShown: false,
-              animation: "slide_from_right",
+              animation: "fade_from_bottom",
             }}
           />
           <Stack.Screen
@@ -110,6 +113,16 @@ const StackNavigator = () => {
             component={TestScreen2}
             options={{
               // presentation: "transparentModal",
+              animation: "slide_from_right",
+              animationDuration: 100,
+            }}
+          />
+
+          <Stack.Screen
+            name="WhatsappSetting"
+            component={WhatsappSettingScreen}
+            options={{
+              title: "WhatsApp Settings",
               animation: "slide_from_right",
               animationDuration: 100,
             }}
@@ -135,7 +148,6 @@ const StackNavigator = () => {
               component={ListMenuScreen}
               options={{
                 headerShown: false,
-                animation: "slide_from_right",
               }}
             />
           )}

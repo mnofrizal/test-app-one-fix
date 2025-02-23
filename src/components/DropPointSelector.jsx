@@ -14,6 +14,7 @@ import {
   Pressable,
   BackHandler,
   TouchableOpacity,
+  TextInput,
 } from "react-native";
 import BottomSheet, {
   BottomSheetFlashList,
@@ -23,15 +24,18 @@ import BottomSheet, {
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 const dropPoints = [
-  "Kantor Pusat Lt. 1",
-  "Kantor Pusat Lt. 2",
-  "Kantor Pusat Lt. 3",
-  "Gedung B Lt. 1",
-  "Gedung B Lt. 2",
-  "Gedung C Lt. 1",
-  "Gedung C Lt. 2",
-  "Ruang Meeting Utama",
-  "Lobby Utama",
+  "Lobby Gedung ADB",
+  "Ruang Teknisi Listrik 1-4",
+  "Ruang Instrument 1-4",
+  "Ruang Labor",
+  "Ruang Lingkungan",
+  "Ruang Mekanik Ash",
+  "Ruang Mekanik Mill Fan 1-4",
+  "Ruang Sipil",
+  "Ruang Rendal Har 1-4",
+  "Ruang Bengkel 1-4",
+  "Ruang teknisi alat bantu 1-4 (BOP)",
+  "Listrik HAR 5-7",
 ];
 
 // Uncontrolled search input component to prevent re-renders
@@ -53,11 +57,11 @@ const SearchInput = forwardRef(({ onSearch }, ref) => {
   );
 
   return (
-    <View className="mt-3 rounded-lg border border-gray-200 bg-white px-3">
-      <BottomSheetTextInput
+    <View className="border-b border-gray-200 bg-white p-3 px-0">
+      <TextInput
         ref={inputRef}
         placeholder="Search drop point"
-        className="py-2.5 text-base text-gray-900"
+        className="rounded-lg bg-gray-100 p-3 text-base"
         onChangeText={handleChangeText}
         value={localValue}
         returnKeyType="done"

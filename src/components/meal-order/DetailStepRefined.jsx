@@ -5,12 +5,17 @@ import React, {
   useEffect,
   useMemo,
 } from "react";
-import { View, Text, Pressable, TouchableOpacity } from "react-native";
+import {
+  View,
+  Text,
+  Pressable,
+  TouchableOpacity,
+  TextInput,
+} from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import EmployeeSelector from "../../components/EmployeeSelector";
 import DropPointSelector from "../../components/DropPointSelector";
 import SubBidangSelector from "../../components/SubBidangSelector";
-import JudulPekerjaanSheet from "../../components/JudulPekerjaanSheet";
 import { useEmployeeStore } from "../../store/employeeStore";
 import { useMealOrderStore } from "../../store/mealOrderStore";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
@@ -31,15 +36,12 @@ export const DetailStepRefined = () => {
   const [isEmployeeSheetVisible, setIsEmployeeSheetVisible] = useState(false);
   const [isDropPointSheetVisible, setIsDropPointSheetVisible] = useState(false);
   const [isSubBidangSheetVisible, setIsSubBidangSheetVisible] = useState(false);
-  const [isJudulPekerjaanSheetVisible, setIsJudulPekerjaanSheetVisible] =
-    useState(false);
-
   const [isRendered, setIsRendered] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsRendered(true);
-    }, 10);
+    }, 380);
 
     return () => clearTimeout(timer);
   }, []);
@@ -87,7 +89,7 @@ export const DetailStepRefined = () => {
 
   if (!isRendered) {
     return (
-      <GestureHandlerRootView className="flex-1">
+      <GestureHandlerRootView className="flex-1 bg-[#f8f9ff]">
         <View className="flex-1 p-4">
           {/* Skeleton for Category Pills */}
           <View className="mb-4 flex-row flex-wrap gap-2">
@@ -139,10 +141,15 @@ export const DetailStepRefined = () => {
   }
 
   return (
-    <GestureHandlerRootView className="flex-1">
+    <GestureHandlerRootView className="flex-1 bg-[#f8f9ff]">
       <View className="flex-1 p-4">
         {/* Category Pills */}
-        <View className="mb-4 flex-row flex-wrap gap-2">
+        {/* <View>
+          <Text className="mb-4 px-2 text-lg font-semibold text-gray-800">
+            Tipe Pesanan
+          </Text>
+        </View> */}
+        <View className="mb-6 flex-row flex-wrap gap-2 pt-2">
           {categories.map((category) => (
             <Pressable
               key={category.id}
@@ -150,7 +157,7 @@ export const DetailStepRefined = () => {
               className={`rounded-full px-4 py-2 ${
                 formData.category === category.label
                   ? "bg-blue-500 border border-blue-500"
-                  : "bg-gray-100 border border-gray-200"
+                  : "bg-[#eeeeee] border border-[#eeeeee]"
               }`}
             >
               <Text
@@ -168,14 +175,14 @@ export const DetailStepRefined = () => {
         {currentRecommendation && (
           <TouchableOpacity
             onPress={() => updateFormData({ category: currentRecommendation })}
-            className="mb-4 flex-row items-center rounded-xl bg-indigo-50/50 px-4 py-3"
+            className="mb-4 flex-row items-center rounded-xl bg-orange-200/20 px-4 py-3"
           >
             <MaterialCommunityIcons
               name="clock-outline"
               size={14}
-              color="#4F46E5"
+              color="#f96d03"
             />
-            <Text className="ml-2 text-sm font-medium text-indigo-600">
+            <Text className="ml-2 text-sm font-medium text-orange-600">
               Saat ini - {currentRecommendation}
             </Text>
           </TouchableOpacity>
@@ -183,49 +190,39 @@ export const DetailStepRefined = () => {
 
         {/* Selection Buttons */}
         <View className="space-y-4">
-          <TouchableOpacity
-            onPress={() => setIsJudulPekerjaanSheetVisible(true)}
-            className={`flex-row items-center justify-between rounded-2xl border px-4 py-3 shadow-md ${
+          <View
+            className={`flex-row items-center rounded-2xl border px-4 py-2.5 shadow-md ${
               formData.judulPekerjaan
-                ? "bg-green-50 border-green-500"
+                ? "bg-green-50 border-[#63c67c]"
                 : "border-gray-200 bg-white"
             }`}
           >
-            <View className="flex-row items-center">
-              <View className="rounded-xl p-2">
-                <MaterialCommunityIcons
-                  name={
-                    formData.judulPekerjaan
-                      ? "check-circle"
-                      : "bookmark-outline"
-                  }
-                  size={24}
-                  color={formData.judulPekerjaan ? "#4CAF50" : "#4F46E5"}
-                />
-              </View>
-              <Text
-                className={`ml-3 ${
-                  formData.judulPekerjaan
-                    ? "text-base font-medium text-gray-900"
-                    : "text-base text-gray-400"
-                }`}
-              >
-                {formData.judulPekerjaan || "Masukkan Judul Pekerjaan"}
-              </Text>
+            <View className="rounded-xl p-2">
+              <MaterialCommunityIcons
+                name={
+                  formData.judulPekerjaan ? "check-circle" : "bookmark-outline"
+                }
+                size={24}
+                color={formData.judulPekerjaan ? "#63c67c" : "#076fcd"}
+              />
             </View>
-            <MaterialCommunityIcons
-              name="chevron-right"
-              size={24}
-              color="#4F46E5"
+            <TextInput
+              className="ml-3 flex-1 text-base"
+              placeholder="Masukkan Judul Pekerjaan"
+              value={formData.judulPekerjaan}
+              onChangeText={(text) => updateFormData({ judulPekerjaan: text })}
+              placeholderTextColor="#9CA3AF"
             />
-          </TouchableOpacity>
+          </View>
 
           <TouchableOpacity
             onPress={() => setIsEmployeeSheetVisible(true)}
             className={`flex-row items-center justify-between rounded-2xl border px-4 py-3 shadow-md ${
-              formData.pic.name
-                ? "border-green-500 bg-green-50"
-                : "border-gray-200 bg-white"
+              !formData.pic.name
+                ? "border-gray-200 bg-white"
+                : formData.pic.nomorHp && formData.pic.name
+                ? "bg-green-50 border-[#63c67c]"
+                : "bg-red-50 border-red-600"
             }`}
           >
             <View className="flex-row items-center">
@@ -234,11 +231,11 @@ export const DetailStepRefined = () => {
                   <MaterialCommunityIcons
                     name="check-circle"
                     size={24}
-                    color="#4CAF50"
+                    color="#63c67c"
                   />
                 </View>
               ) : formData.pic.name ? (
-                <View className="rounded-xl bg-red-50 p-2">
+                <View className="rounded-xl p-2">
                   <MaterialCommunityIcons
                     name="close-circle"
                     size={24}
@@ -246,11 +243,11 @@ export const DetailStepRefined = () => {
                   />
                 </View>
               ) : (
-                <View className="rounded-xl bg-indigo-50 p-2">
+                <View className="rounded-xl p-2">
                   <MaterialCommunityIcons
                     name="account-circle"
                     size={24}
-                    color="#4F46E5"
+                    color="#076fcd"
                   />
                 </View>
               )}
@@ -268,7 +265,7 @@ export const DetailStepRefined = () => {
             <MaterialCommunityIcons
               name="chevron-right"
               size={24}
-              color="#4F46E5"
+              color="#096ecf"
             />
           </TouchableOpacity>
 
@@ -277,7 +274,7 @@ export const DetailStepRefined = () => {
               onPress={() => setIsSubBidangSheetVisible(true)}
               className={`flex-row items-center justify-between rounded-2xl border px-4 py-3 shadow-md ${
                 formData.supervisor.subBidang
-                  ? "border-green-500 bg-green-50"
+                  ? "border-[#63c67c] bg-green-50"
                   : "border-gray-200 bg-white"
               }`}
             >
@@ -287,15 +284,15 @@ export const DetailStepRefined = () => {
                     <MaterialCommunityIcons
                       name="check-circle"
                       size={24}
-                      color="#4CAF50"
+                      color="#63c67c"
                     />
                   </View>
                 ) : (
-                  <View className="rounded-xl bg-indigo-50 p-2">
+                  <View className="rounded-xl p-2">
                     <MaterialCommunityIcons
                       name="office-building"
                       size={24}
-                      color="#4F46E5"
+                      color="#076fcd"
                     />
                   </View>
                 )}
@@ -316,18 +313,18 @@ export const DetailStepRefined = () => {
               <MaterialCommunityIcons
                 name="chevron-right"
                 size={24}
-                color="#4F46E5"
+                color="#096ecf"
               />
             </TouchableOpacity>
 
             {formData.supervisor.subBidang && (
-              <View className="flex-row items-center rounded-xl bg-indigo-50/50 px-4 py-3">
+              <View className="mb-4 flex-row items-center rounded-xl bg-orange-200/20 px-4 py-3">
                 <MaterialCommunityIcons
-                  name="information"
-                  size={18}
-                  color="#4F46E5"
+                  name="information-outline"
+                  size={14}
+                  color="#f96d03"
                 />
-                <Text className="ml-2 text-sm font-medium text-indigo-600">
+                <Text className="ml-2 text-sm font-medium text-orange-600">
                   ASMAN: {formData.supervisor.name}
                 </Text>
               </View>
@@ -340,7 +337,7 @@ export const DetailStepRefined = () => {
                 onPress={() => setIsDropPointSheetVisible(true)}
                 className={`flex-row items-center justify-between rounded-2xl border px-4 py-3 shadow-md ${
                   formData.dropPoint
-                    ? "border-green-500 bg-green-50"
+                    ? "border-[#63c67c] bg-green-50"
                     : "border-gray-200 bg-white"
                 }`}
               >
@@ -350,15 +347,15 @@ export const DetailStepRefined = () => {
                       <MaterialCommunityIcons
                         name="check-circle"
                         size={24}
-                        color="#4CAF50"
+                        color="#63c67c"
                       />
                     </View>
                   ) : (
-                    <View className="rounded-xl bg-indigo-50 p-2">
+                    <View className="rounded-xl p-2">
                       <MaterialCommunityIcons
                         name="map-marker"
                         size={24}
-                        color="#4F46E5"
+                        color="#076fcd"
                       />
                     </View>
                   )}
@@ -375,7 +372,7 @@ export const DetailStepRefined = () => {
                 <MaterialCommunityIcons
                   name="chevron-right"
                   size={24}
-                  color="#4F46E5"
+                  color="#096ecf"
                 />
               </TouchableOpacity>
 
@@ -440,12 +437,6 @@ export const DetailStepRefined = () => {
           onSelect={(point) => updateFormData({ dropPoint: point })}
           isVisible={isDropPointSheetVisible}
           onClose={handleDropPointDismiss}
-        />
-
-        <JudulPekerjaanSheet
-          isVisible={isJudulPekerjaanSheetVisible}
-          onClose={() => setIsJudulPekerjaanSheetVisible(false)}
-          onSave={(title) => updateFormData({ judulPekerjaan: title })}
         />
       </View>
     </GestureHandlerRootView>

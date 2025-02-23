@@ -160,3 +160,60 @@ export const validateOrder = async (orderData) => {
     throw new Error("Network error. Please check your connection.");
   }
 };
+
+export const deleteOrder = async (id) => {
+  try {
+    const response = await api.delete(`/service-requests/${id}`);
+
+    if (response.data.success) {
+      return {
+        success: true,
+        data: response.data.data,
+        message: response.data.message,
+      };
+    }
+
+    throw new Error(response.data.message || "Failed to delete order");
+  } catch (error) {
+    if (error.response) {
+      throw new Error(error.response.data.message || "Failed to delete order");
+    }
+    throw new Error("Network error. Please check your connection.");
+  }
+};
+
+export const respondToRequest = async (token, approved, responseNote) => {
+  try {
+    // Create FormData and append fields
+    const formData = new FormData();
+    formData.append("response", approved);
+    formData.append("responseNote", responseNote || "");
+
+    const response = await api.post(
+      `/requests/approval/respond/${token}`,
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
+
+    if (response.data.success) {
+      return {
+        success: true,
+        data: response.data.data,
+        message: response.data.message,
+      };
+    }
+
+    throw new Error(response.data.message || "Failed to respond to request");
+  } catch (error) {
+    if (error.response) {
+      throw new Error(
+        error.response.data.message || "Failed to respond to request"
+      );
+    }
+    throw new Error("Network error. Please check your connection.");
+  }
+};

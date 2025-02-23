@@ -9,6 +9,7 @@ import {
   ScrollView,
   StatusBar,
   Keyboard,
+  ActivityIndicator,
 } from "react-native";
 import ErrorAlert from "../components/ErrorAlert";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
@@ -213,12 +214,7 @@ const LoginScreen = () => {
                 <View className="flex-row items-center justify-center">
                   {isLoading ? (
                     <View className="flex-row items-center">
-                      <MaterialCommunityIcons
-                        name="loading"
-                        size={24}
-                        color="#1E40AF"
-                        className="animate-spin"
-                      />
+                      <ActivityIndicator size="small" color="#1E40AF" />
                       <Text className="ml-2 text-base font-semibold text-blue-900">
                         Signing In...
                       </Text>

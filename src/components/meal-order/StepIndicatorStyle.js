@@ -7,14 +7,14 @@ export const customStyles = {
   stepStrokeWidth: 3,
 
   // Colors for current step
-  stepStrokeCurrentColor: "#1c40af", // indigo-600
+  stepStrokeCurrentColor: "#076fcd", // indigo-600
   stepIndicatorCurrentColor: "#ffffff",
-  currentStepLabelColor: "#1c40af",
+  currentStepLabelColor: "#076fcd",
 
   // Colors for finished steps
-  stepStrokeFinishedColor: "#1c40af",
-  separatorFinishedColor: "#1c40af",
-  stepIndicatorFinishedColor: "#1c40af",
+  stepStrokeFinishedColor: "#076fcd",
+  separatorFinishedColor: "#076fcd",
+  stepIndicatorFinishedColor: "#076fcd",
 
   // Colors for unfinished steps
   stepStrokeUnFinishedColor: "#CBD5E1", // slate-300
@@ -22,7 +22,7 @@ export const customStyles = {
   stepIndicatorUnFinishedColor: "#ffffff",
 
   // Label configurations
-  labelColor: "#1c40af", // slate-500
+  labelColor: "#076fcd", // slate-500
   labelSize: 14,
 };
 

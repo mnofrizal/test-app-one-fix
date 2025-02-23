@@ -5,7 +5,13 @@ import React, {
   useEffect,
   useCallback,
 } from "react";
-import { View, Text, TouchableOpacity, Platform } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  Platform,
+  TextInput,
+} from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { BottomSheetTextInput } from "@gorhom/bottom-sheet";
@@ -255,8 +261,8 @@ const EnhancedEmployeeSelectSheet = ({
       </View>
 
       <View className="p-4">
-        <BottomSheetTextInput
-          className="mb-4 rounded-lg border border-gray-200 bg-white px-3 py-2.5"
+        <TextInput
+          className="mb-4 rounded-lg border border-gray-200 bg-white px-3 py-4 text-base text-gray-900"
           placeholder="Tambah catatan pesanan (opsional)"
           multiline={true}
           numberOfLines={4}

@@ -13,6 +13,7 @@ import {
   Keyboard,
   TouchableOpacity,
   BackHandler,
+  TextInput,
 } from "react-native";
 import BottomSheet, {
   BottomSheetFlashList,
@@ -41,11 +42,11 @@ const SearchInput = forwardRef(({ onSearch }, ref) => {
   );
 
   return (
-    <View className="mt-3 rounded-lg border border-gray-200 bg-white px-3">
-      <BottomSheetTextInput
+    <View className="border-b border-gray-200 bg-white p-3 px-0">
+      <TextInput
         ref={inputRef}
         placeholder="Search sub bidang"
-        className="py-2.5 text-base text-gray-900"
+        className="rounded-lg bg-gray-100 p-3 text-base"
         onChangeText={handleChangeText}
         value={localValue}
         returnKeyType="done"

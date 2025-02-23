@@ -1,5 +1,12 @@
 import { logger } from "../utils/logger";
 import { clearStorage } from "./storage";
+import { useAdminStore } from "../store/adminStore";
+import { useKitchenStore } from "../store/kitchenStore";
+import { useMenuStore } from "../store/menuStore";
+import { useSecretaryStore } from "../store/secretaryStore";
+import { useMealOrderStore } from "../store/mealOrderStore";
+import { useEmployeeStore } from "../store/employeeStore";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 /**
  * Auth Events Service
@@ -8,10 +15,31 @@ import { clearStorage } from "./storage";
 
 let logoutCallback = async () => {
   try {
+    // Clear all storage first
     await clearStorage();
-    logger.debug("Default logout: Storage cleared");
+
+    // Then reset all stores
+    useAdminStore.getState().resetStore();
+    useKitchenStore.getState().resetStore();
+    useMenuStore.getState().resetStore();
+    useSecretaryStore.getState().resetStore();
+    useMealOrderStore.getState().resetStep();
+    useEmployeeStore.getState().resetStore();
+    logger.debug("Logout completed: All stores reset and storage cleared");
   } catch (error) {
-    logger.error("Error in default logout:", error);
+    logger.error("Error during logout:", error);
+    // Attempt to clear everything even if there's an error
+    try {
+      useAdminStore.getState().resetStore();
+      useKitchenStore.getState().resetStore();
+      useMenuStore.getState().resetStore();
+      useSecretaryStore.getState().resetStore();
+      useMealOrderStore.getState().resetStep();
+      useEmployeeStore.getState().resetStore();
+      await clearStorage();
+    } catch (fallbackError) {
+      logger.error("Critical error during logout fallback:", fallbackError);
+    }
   }
 };
 
