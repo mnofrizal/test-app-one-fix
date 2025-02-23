@@ -3,6 +3,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 const STORAGE_KEYS = {
   ACCESS_TOKEN: "accessToken",
   USER: "user",
+  NOTIFICATIONS: "notifications",
 };
 
 export const setToken = async (token) => {
@@ -62,5 +63,55 @@ export const clearStorage = async () => {
     await AsyncStorage.clear();
   } catch (error) {
     console.error("Error clearing storage:", error);
+  }
+};
+
+// Notification Storage Methods
+export const getStoredNotifications = async () => {
+  try {
+    const notifications = await AsyncStorage.getItem(
+      STORAGE_KEYS.NOTIFICATIONS
+    );
+    return notifications ? JSON.parse(notifications) : [];
+  } catch (error) {
+    console.error("Error getting notifications:", error);
+    return [];
+  }
+};
+
+export const storeNotifications = async (notifications) => {
+  try {
+    await AsyncStorage.setItem(
+      STORAGE_KEYS.NOTIFICATIONS,
+      JSON.stringify(notifications)
+    );
+  } catch (error) {
+    console.error("Error storing notifications:", error);
+  }
+};
+
+export const addNotificationToStorage = async (notification) => {
+  try {
+    const currentNotifications = await getStoredNotifications();
+    const updatedNotifications = [notification, ...currentNotifications];
+    await storeNotifications(updatedNotifications);
+    return updatedNotifications;
+  } catch (error) {
+    console.error("Error adding notification:", error);
+    return [];
+  }
+};
+
+export const updateNotificationInStorage = async (notificationId, updates) => {
+  try {
+    const notifications = await getStoredNotifications();
+    const updatedNotifications = notifications.map((n) =>
+      n.id === notificationId ? { ...n, ...updates } : n
+    );
+    await storeNotifications(updatedNotifications);
+    return updatedNotifications;
+  } catch (error) {
+    console.error("Error updating notification:", error);
+    return [];
   }
 };

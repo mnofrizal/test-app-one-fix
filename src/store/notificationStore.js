@@ -2,6 +2,12 @@ import { create } from "zustand";
 import * as Notifications from "expo-notifications";
 import api from "../config/api";
 import {
+  getStoredNotifications,
+  storeNotifications,
+  addNotificationToStorage,
+  updateNotificationInStorage,
+} from "../services/storage";
+import {
   NOTIFICATION_TYPES,
   getNotificationTitle,
 } from "../constants/notificationTypes";
@@ -15,37 +21,61 @@ const useNotificationStore = create((set, get) => ({
     set({ expoPushToken: token });
   },
 
-  addNotification: (notification) => {
+  // Initialize notifications from storage
+  initializeNotifications: async () => {
+    const storedNotifications = await getStoredNotifications();
+    const unreadCount = storedNotifications.filter((n) => !n.read).length;
+    set({ notifications: storedNotifications, unreadCount });
+  },
+
+  addNotification: async (notification) => {
+    const updatedNotifications = await addNotificationToStorage(notification);
     set((state) => ({
-      notifications: [notification, ...state.notifications],
+      notifications: updatedNotifications,
       unreadCount: state.unreadCount + 1,
     }));
   },
 
-  markAsRead: (notificationId) => {
-    set((state) => ({
-      notifications: state.notifications.map((n) =>
-        n.id === notificationId ? { ...n, read: true } : n
-      ),
-      unreadCount: Math.max(0, state.unreadCount - 1),
-    }));
+  markAsRead: async (notificationId) => {
+    const updatedNotifications = await updateNotificationInStorage(
+      notificationId,
+      { read: true }
+    );
+    const unreadCount = updatedNotifications.filter((n) => !n.read).length;
+    set({ notifications: updatedNotifications, unreadCount });
   },
 
-  markAllAsRead: () => {
-    set((state) => ({
-      notifications: state.notifications.map((n) => ({ ...n, read: true })),
-      unreadCount: 0,
+  markAllAsRead: async () => {
+    const currentNotifications = await getStoredNotifications();
+    const updatedNotifications = currentNotifications.map((n) => ({
+      ...n,
+      read: true,
     }));
+    await storeNotifications(updatedNotifications);
+    set({ notifications: updatedNotifications, unreadCount: 0 });
   },
 
-  clearNotifications: () => {
+  deleteNotification: async (notificationId) => {
+    const currentNotifications = await getStoredNotifications();
+    const updatedNotifications = currentNotifications.filter(
+      (n) => n.id !== notificationId
+    );
+    await storeNotifications(updatedNotifications);
+    set({
+      notifications: updatedNotifications,
+      unreadCount: updatedNotifications.filter((n) => !n.read).length,
+    });
+  },
+
+  clearNotifications: async () => {
+    await storeNotifications([]);
     set({ notifications: [], unreadCount: 0 });
   },
 
   // Actions
-  handleNewNotification: (notification) => {
+  handleNewNotification: async (notification) => {
     const store = get();
-    store.addNotification({
+    await store.addNotification({
       id: notification.messageId || Date.now().toString(),
       title: notification.request.content.data?.type
         ? getNotificationTitle(notification.request.content.data.type)

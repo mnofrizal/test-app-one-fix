@@ -50,7 +50,7 @@ export const NOTIFICATION_TYPES = {
   kitchen_new_order: {
     screen: "KitchenOrderDetail",
     getParams: (data) => ({ orderId: data.orderId }),
-    title: "New Kitchen Order",
+    title: "Pesanan Baru",
   },
 
   // Secretary notifications

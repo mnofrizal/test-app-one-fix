@@ -19,6 +19,7 @@ import { FontAwesome, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useSecretaryStore } from "../store/secretaryStore";
 import { useAdminStore } from "../store/adminStore";
 import { useEmployeeStore } from "../store/employeeStore";
+import { useMenuStore } from "../store/menuStore";
 import useStore from "../store/useStore";
 import { StatusBar } from "expo-status-bar";
 import { SkeletonOrderList } from "../components/SkeletonOrderCard";
@@ -440,6 +441,7 @@ const HomeScreen = () => {
   } = store;
 
   const { fetchEmployees } = useEmployeeStore();
+  const { fetchMenus } = useMenuStore();
 
   React.useEffect(() => {
     const loadData = async () => {
@@ -450,6 +452,7 @@ const HomeScreen = () => {
         fetchStatusStats(),
         fetchNewestOrders(),
         fetchEmployees(), // Pre-fetch employees data
+        fetchMenus(), // Pre-fetch menus data
       ]);
     };
     loadData();
@@ -460,6 +463,7 @@ const HomeScreen = () => {
     fetchStatusStats,
     fetchNewestOrders,
     fetchEmployees,
+    fetchMenus,
   ]);
 
   React.useEffect(() => {
@@ -540,6 +544,7 @@ const HomeScreen = () => {
         fetchStatusStats(),
         fetchNewestOrders(),
         fetchEmployees(), // Refresh employees data
+        fetchMenus(), // Refresh menus data
       ]);
     } catch (error) {
       console.error("Refresh error:", error);
@@ -552,6 +557,7 @@ const HomeScreen = () => {
     fetchStatusStats,
     fetchNewestOrders,
     fetchEmployees,
+    fetchMenus,
   ]);
 
   return (
