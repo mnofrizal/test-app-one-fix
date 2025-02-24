@@ -54,22 +54,38 @@ const SkeletonOrderCard = () => {
       <View className="px-5 py-4">
         <View className="flex-row items-center justify-between">
           <View className="flex-row items-center">
-            <SkeletonItem style={{ width: 48, height: 48, borderRadius: 12 }} />
             <View className="ml-3 flex-1">
-              <SkeletonItem
-                style={{
-                  width: 120,
-                  height: 24,
-                  borderRadius: 4,
-                  marginBottom: 8,
-                }}
-              />
-              <SkeletonItem
-                style={{ width: 80, height: 16, borderRadius: 4 }}
-              />
+              <View className="flex-row items-center justify-between">
+                <SkeletonItem
+                  style={{
+                    width: 100,
+                    height: 24,
+                    borderRadius: 4,
+                    marginBottom: 8,
+                  }}
+                />
+
+                <SkeletonItem
+                  style={{ width: 60, height: 24, borderRadius: 4 }}
+                />
+              </View>
+              <View className="mt-2 flex-row items-center justify-between">
+                <SkeletonItem
+                  style={{ width: 230, height: 16, borderRadius: 4 }}
+                />
+              </View>
+              <View className="mt-2 flex-row items-center justify-between">
+                <SkeletonItem
+                  style={{ width: 80, height: 16, borderRadius: 4 }}
+                />
+              </View>
+              <View className="mt-2 flex-row items-center justify-between">
+                <SkeletonItem
+                  style={{ width: 150, height: 16, borderRadius: 4 }}
+                />
+              </View>
             </View>
           </View>
-          <SkeletonItem style={{ width: 80, height: 24, borderRadius: 999 }} />
         </View>
       </View>
     </View>
@@ -78,7 +94,7 @@ const SkeletonOrderCard = () => {
 
 export const SkeletonOrderList = () => {
   return (
-    <View className="px-4 py-4">
+    <View className="">
       {[1, 2, 3].map((key) => (
         <SkeletonOrderCard key={key} />
       ))}
