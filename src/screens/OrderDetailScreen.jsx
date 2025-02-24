@@ -9,6 +9,8 @@ import {
   RefreshControl,
   TouchableOpacity,
   Alert,
+  Image,
+  Modal,
 } from "react-native";
 import RejectReasonSheet from "../components/RejectReasonSheet";
 import { TabView, TabBar } from "react-native-tab-view";
@@ -19,6 +21,7 @@ import { deleteOrder, respondToRequest } from "../services/orderService";
 import { useSecretaryStore } from "../store/secretaryStore";
 import { useAdminStore } from "../store/adminStore";
 import { useAuthStore } from "../store/authStore";
+import { API_URL, BASE_URL } from "../config/api";
 
 const handleDelete = (
   orderId,
@@ -433,7 +436,13 @@ const MenuTab = ({ order, onRefresh, refreshing }) => {
   );
 };
 
-const ApprovalTab = ({ order, onRefresh, refreshing }) => {
+const ApprovalTab = ({
+  order,
+  onRefresh,
+  refreshing,
+  setModalVisible,
+  setSelectedImage,
+}) => {
   if (!order) return null;
 
   return (
@@ -556,6 +565,36 @@ const ApprovalTab = ({ order, onRefresh, refreshing }) => {
                         </Text>
                       </View>
                     )}
+                    {approval.type === "KITCHEN_DELIVERY" && order.evidence && (
+                      <View className="mt-2 rounded-lg bg-gray-50 p-3">
+                        <TouchableOpacity
+                          onPress={() => {
+                            setModalVisible(true);
+                            setSelectedImage(
+                              `https://a8d8-180-254-75-233.ngrok-free.app/${order.evidence.replace(
+                                /\\/g,
+                                "/"
+                              )}`
+                            );
+                          }}
+                        >
+                          <Image
+                            source={{
+                              uri: `${BASE_URL}/${order.evidence.replace(
+                                /\\/g,
+                                "/"
+                              )}`,
+                            }}
+                            style={{
+                              width: "100%",
+                              height: 400,
+                              borderRadius: 8,
+                            }}
+                            resizeMode=""
+                          />
+                        </TouchableOpacity>
+                      </View>
+                    )}
                   </View>
                 </View>
               </View>
@@ -568,6 +607,8 @@ const ApprovalTab = ({ order, onRefresh, refreshing }) => {
 };
 
 const OrderDetailScreen = ({ route }) => {
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null);
   const navigation = useNavigation();
   const layout = Dimensions.get("window");
   const [index, setIndex] = useState(0);
@@ -722,6 +763,8 @@ const OrderDetailScreen = ({ route }) => {
             order={order}
             refreshing={refreshing}
             onRefresh={handleRefresh}
+            setModalVisible={setModalVisible}
+            setSelectedImage={setSelectedImage}
           />
         );
       default:
@@ -752,6 +795,29 @@ const OrderDetailScreen = ({ route }) => {
 
   return (
     <View className="relative flex-1 bg-white">
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View className="flex-1 items-center justify-center bg-black bg-opacity-95">
+          <TouchableOpacity
+            className="absolute right-4 top-12 z-10 p-4"
+            onPress={() => setModalVisible(false)}
+          >
+            <MaterialCommunityIcons name="close" size={30} color="white" />
+          </TouchableOpacity>
+          <Image
+            source={{ uri: selectedImage }}
+            style={{
+              width: "100%",
+              height: "80%",
+              resizeMode: "contain",
+            }}
+          />
+        </View>
+      </Modal>
       {/* Header */}
       <View className="bg-blue-800 px-4 pb-3 pt-12 shadow-sm">
         <View className="mb-2 flex-row items-center">

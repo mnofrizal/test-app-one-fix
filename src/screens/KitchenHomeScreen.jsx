@@ -16,133 +16,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuthStore } from "../store/authStore";
 import { useKitchenStore } from "../store/kitchenStore";
 import { SkeletonOrderList } from "../components/SkeletonOrderCard";
-
-const OrderCard = ({ order, onPress, style }) => {
-  const scaleAnim = React.useRef(new Animated.Value(1)).current;
-
-  const onPressIn = () => {
-    Animated.spring(scaleAnim, {
-      toValue: 0.98,
-      useNativeDriver: true,
-    }).start();
-  };
-
-  const onPressOut = () => {
-    Animated.spring(scaleAnim, {
-      toValue: 1,
-      useNativeDriver: true,
-    }).start();
-  };
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case "PENDING_KITCHEN":
-        return "bg-blue-100 text-blue-800";
-      case "IN_PROGRESS":
-        return "bg-yellow-100 text-yellow-800";
-      case "COMPLETED":
-        return "bg-green-100 text-green-800";
-      case "CANCELED":
-        return "bg-red-100 text-red-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
-
-  const getStatusText = (status) => {
-    switch (status) {
-      case "PENDING_KITCHEN":
-        return "Menunggu";
-      case "IN_PROGRESS":
-        return "Diproses";
-      case "COMPLETED":
-        return "Selesai";
-      case "CANCELED":
-        return "Dibatalkan";
-      default:
-        return status;
-    }
-  };
-
-  const totalItems = order.employeeOrders.reduce((total, employee) => {
-    return (
-      total + employee.orderItems.reduce((sum, item) => sum + item.quantity, 0)
-    );
-  }, 0);
-
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return `Jam ${date.getHours().toString().padStart(2, "0")}:${date
-      .getMinutes()
-      .toString()
-      .padStart(2, "0")}`;
-  };
-
-  const truncateText = (text, length = 30) => {
-    if (!text) return "";
-    return text.length > length ? text.substring(0, length) + "..." : text;
-  };
-
-  return (
-    <Animated.View style={[{ transform: [{ scale: scaleAnim }] }, style]}>
-      <TouchableOpacity
-        className="mb-3 rounded-xl border border-gray-100 bg-white p-4 shadow-md"
-        onPress={() => onPress(order)}
-        onPressIn={onPressIn}
-        onPressOut={onPressOut}
-        activeOpacity={0.9}
-      >
-        <View className="flex-row items-start justify-between">
-          <View className="mr-3 flex-1">
-            <Text className="text-base font-medium text-gray-900">
-              #{order.id || "-"}
-            </Text>
-            <Text className="mt-1 text-sm font-medium text-gray-700">
-              {truncateText(order.judulPekerjaan)}
-            </Text>
-            <View className="mt-1 flex-row items-center">
-              <MaterialCommunityIcons name="tag" size={16} color="#6B7280" />
-              <Text className="ml-1 text-sm text-gray-600">
-                {order.category || "-"}
-              </Text>
-              <MaterialCommunityIcons
-                name="map-marker"
-                size={16}
-                color="#6B7280"
-                style={{ marginLeft: 8 }}
-              />
-              <Text className="ml-1 text-sm text-gray-600">
-                {order.dropPoint || "-"}
-              </Text>
-            </View>
-            <Text className="mt-1 text-sm text-gray-600">
-              Total Item: {totalItems}
-            </Text>
-          </View>
-          <View className="rounded-full bg-blue-100 px-2.5 py-1">
-            <Text className="text-sm font-medium text-blue-800">
-              {formatDate(order.requestDate)}
-            </Text>
-          </View>
-        </View>
-        <View className="mt-2 flex-row items-center justify-between">
-          <Text className="text-sm font-medium text-gray-600">
-            PIC: {order.pic?.name || "-"}
-          </Text>
-          <View
-            className={`rounded-full px-2.5 py-1 ${getStatusColor(
-              order.status
-            )}`}
-          >
-            <Text className="text-sm font-medium">
-              {getStatusText(order.status)}
-            </Text>
-          </View>
-        </View>
-      </TouchableOpacity>
-    </Animated.View>
-  );
-};
+import KitchenOrderCard from "../components/KitchenOrderCard";
 
 const KitchenHomeScreen = ({ navigation }) => {
   const { user } = useAuthStore();
@@ -211,8 +85,6 @@ const KitchenHomeScreen = ({ navigation }) => {
         return pendingOrders;
       case "IN_PROGRESS":
         return inProgressOrders;
-      case "COMPLETED":
-        return completedOrders;
       default:
         return [];
     }
@@ -253,11 +125,11 @@ const KitchenHomeScreen = ({ navigation }) => {
   );
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50">
+    <SafeAreaView className="flex-1 bg-white">
       {/* Scrollable Content with Sticky Tabs */}
       <ScrollView
         style={{ flex: 1 }}
-        stickyHeaderIndices={[2]} // Updated index since header is now scrollable
+        stickyHeaderIndices={[2]}
         refreshControl={
           <RefreshControl
             refreshing={isLoading}
@@ -268,9 +140,6 @@ const KitchenHomeScreen = ({ navigation }) => {
                   break;
                 case "IN_PROGRESS":
                   await fetchInProgressOrders();
-                  break;
-                case "COMPLETED":
-                  await fetchCompletedOrders();
                   break;
               }
               await fetchKitchenStats();
@@ -283,7 +152,7 @@ const KitchenHomeScreen = ({ navigation }) => {
           <View className="flex-row items-center justify-between">
             <View>
               <Text className="text-2xl font-bold text-gray-900">Dapur</Text>
-              <Text className="text-sm text-gray-600">
+              <Text className="text-base text-gray-600">
                 Selamat Datang, {user?.name}
               </Text>
             </View>
@@ -307,7 +176,7 @@ const KitchenHomeScreen = ({ navigation }) => {
         </View>
 
         {/* Stats Cards Section */}
-        <View className="px-4 py-4">
+        <View className="bg-gray-50 px-4 py-4">
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
@@ -323,7 +192,7 @@ const KitchenHomeScreen = ({ navigation }) => {
                 </Text>
               </View>
             </View>
-            <View className="mr-4 w-52 rounded-3xl border border-yellow-100 bg-yellow-50 p-5 shadow-md">
+            <View className="mr-4 w-52 rounded-2xl border border-yellow-100 bg-yellow-50 p-5 shadow-md">
               <View>
                 <Text className="text-base font-medium text-yellow-700">
                   Diproses
@@ -359,12 +228,11 @@ const KitchenHomeScreen = ({ navigation }) => {
               label="Diproses"
               icon="progress-clock"
             />
-            <TabItem name="COMPLETED" label="Selesai" icon="check-circle" />
           </View>
         </View>
 
         {/* Order List */}
-        <View className="flex-1 px-4 pb-4 pt-4">
+        <View className="flex-1 bg-gray-50 px-4 pb-4 pt-4">
           {isLoading ? (
             <SkeletonOrderList />
           ) : getActiveOrders().length === 0 ? (
@@ -376,16 +244,12 @@ const KitchenHomeScreen = ({ navigation }) => {
               />
               <Text className="mt-4 text-base text-gray-500">
                 Belum ada pesanan yang{" "}
-                {activeTab === "PENDING_KITCHEN"
-                  ? "menunggu"
-                  : activeTab === "IN_PROGRESS"
-                  ? "diproses"
-                  : "selesai"}
+                {activeTab === "PENDING_KITCHEN" ? "menunggu" : "diproses"}
               </Text>
             </View>
           ) : (
             getActiveOrders().map((order) => (
-              <OrderCard
+              <KitchenOrderCard
                 key={order.id}
                 order={order}
                 onPress={handleOrderPress}

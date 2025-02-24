@@ -145,7 +145,7 @@ export default function App() {
         {/* <SafeAreaProvider style={{ backgroundColor: "black" }}> */}
         <NavigationContainer ref={navigationRef}>
           <StackNavigator />
-          <StatusBar style="light" />
+          <StatusBar style="dark" />
         </NavigationContainer>
         {/* </SafeAreaProvider> */}
       </BottomSheetModalProvider>

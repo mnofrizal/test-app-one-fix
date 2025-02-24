@@ -11,6 +11,7 @@ import PoolHomeScreen from "../screens/PoolHomeScreen";
 import PMHomeScreen from "../screens/PMHomeScreen";
 import SecretaryHomeScreen from "../screens/SecretaryHomeScreen";
 import OrderScreen from "../screens/OrderScreen";
+import KitchenOrdersScreen from "../screens/KitchenOrdersScreen";
 import NotificationScreen from "../screens/NotificationScreen";
 import ProfileScreen from "../screens/ProfileScreen";
 
@@ -105,8 +106,8 @@ export const KitchenTabNavigator = () => (
       }}
     />
     <Tab.Screen
-      name="Order"
-      component={OrderScreen}
+      name="Orders"
+      component={KitchenOrdersScreen}
       options={{
         tabBarIcon: ({ focused, color }) => (
           <TabIcon focused={focused} iconName="clipboard-list" color={color} />

@@ -5,6 +5,7 @@ import { getToken } from "../services/storage";
 // export const API_URL = "https://be-sekre.msdm.app/api"; // Replace with your IP address
 // export const API_URL = "http://localhost:5200/api"; // Replace with your IP address
 export const API_URL = "https://a8d8-180-254-75-233.ngrok-free.app/api"; // Replace with your IP address
+export const BASE_URL = "https://a8d8-180-254-75-233.ngrok-free.app"; // Replace with your IP address
 
 export const api = axios.create({
   baseURL: API_URL,

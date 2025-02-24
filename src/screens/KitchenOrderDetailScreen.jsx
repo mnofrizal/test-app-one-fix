@@ -160,16 +160,19 @@ const KitchenOrderDetailScreen = ({ route, navigation }) => {
   }
 
   const formatDate = (dateString) => {
-    try {
-      const date = new Date(dateString);
-      if (isNaN(date.getTime())) return "-";
-      return `${date.getHours().toString().padStart(2, "0")}:${date
-        .getMinutes()
-        .toString()
-        .padStart(2, "0")}`;
-    } catch (error) {
-      return "-";
-    }
+    const date = new Date(dateString);
+
+    // Format the date part (day, month, year)
+    const day = date.getDate().toString().padStart(2, "0");
+    const month = (date.getMonth() + 1).toString().padStart(2, "0"); // Month is 0-indexed
+    const year = date.getFullYear().toString().slice(-2); // Get last 2 digits of year
+
+    // Format the time part (hours, minutes)
+    const hours = date.getHours().toString().padStart(2, "0");
+    const minutes = date.getMinutes().toString().padStart(2, "0");
+
+    // Combine date and time
+    return `${day}/${month}/${year} ${hours}:${minutes}`;
   };
 
   const getTotalItems = (orders) => {
@@ -211,7 +214,7 @@ const KitchenOrderDetailScreen = ({ route, navigation }) => {
       setLocalIsLoading(false);
     }
   };
-
+  console.log(order);
   return (
     <SafeAreaView className="flex-1 bg-gray-50">
       {/* Header */}
@@ -227,7 +230,13 @@ const KitchenOrderDetailScreen = ({ route, navigation }) => {
             <Text className="text-xl font-semibold text-black">
               Detail Pesanan
             </Text>
-            <Text className="text-sm text-black">Order #{order.id || "-"}</Text>
+            <View className="flex-row items-center justify-center">
+              <Text className="text-sm text-black">#{order.id || "-"}</Text>
+              <View className="mx-1 h-4 w-[1px] rotate-12 bg-gray-300" />
+              <Text className={`text-sm text-black`}>
+                {formatDate(order.requestDate)}
+              </Text>
+            </View>
           </View>
         </View>
         <View
@@ -271,7 +280,7 @@ const KitchenOrderDetailScreen = ({ route, navigation }) => {
 
       {/* Order Info */}
       {/* Order Info */}
-      <View className="bg-white p-6 py-2 pb-0 pt-4">
+      <View className="border-b border-gray-100 bg-white p-6 py-2 pb-0 pt-4">
         <Text className="mb-4 text-lg font-semibold text-gray-900">
           {order.judulPekerjaan}
         </Text>
@@ -279,7 +288,7 @@ const KitchenOrderDetailScreen = ({ route, navigation }) => {
 
       <ScrollView className="flex-1">
         <View className="bg-white p-6 py-2 pt-0 shadow-lg">
-          <View className="flex-row flex-wrap border-t border-gray-100 pt-3">
+          <View className="flex-row flex-wrap pt-3">
             <View className="mb-4 w-1/2">
               <View className="flex-row items-center">
                 <Text className="text-xs text-gray-600">Kategori</Text>

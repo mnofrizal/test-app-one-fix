@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   RefreshControl,
   Dimensions,
+  Image,
 } from "react-native";
 import { TabView, TabBar } from "react-native-tab-view";
 import { useNavigation } from "@react-navigation/native";
@@ -19,9 +20,28 @@ import { useSecretaryStore } from "../store/secretaryStore";
 import { useAdminStore } from "../store/adminStore";
 import { useAuthStore } from "../store/authStore";
 import { StatusBar } from "expo-status-bar";
+import { BASE_URL } from "../config/api";
 
 const OrderCard = React.memo(
-  ({ type, category, title, date, time, status, details, subBidang }) => {
+  ({
+    type,
+    category,
+    title,
+    date,
+    time,
+    status,
+    details,
+    subBidang,
+    employeeOrders,
+    evidence,
+  }) => {
+    const totalItems = employeeOrders.reduce((total, employee) => {
+      return (
+        total +
+        employee.orderItems.reduce((sum, item) => sum + item.quantity, 0)
+      );
+    }, 0);
+
     const getStatusColor = (status) => {
       switch (status) {
         case "COMPLETED":
@@ -128,7 +148,7 @@ const OrderCard = React.memo(
         className="mb-4 overflow-hidden rounded-2xl border-2 border-gray-100 bg-white"
       >
         <View
-          className={`relative px-5 py-4 ${serviceInfo.lightBg} shadow-sm`}
+          className={`relative px-5 py-3 ${serviceInfo.lightBg} shadow-sm`}
           style={{
             borderLeftWidth: 4,
             borderLeftColor: serviceInfo.color,
@@ -137,26 +157,42 @@ const OrderCard = React.memo(
           <View className="flex-row items-center justify-between">
             <View className="flex-row items-center">
               <View className={`mr-4 rounded-xl ${serviceInfo.bg} `}>
-                <MaterialCommunityIcons
-                  name={serviceInfo.icon}
-                  size={20}
-                  color={serviceInfo.color}
-                />
+                {evidence ? (
+                  <Image
+                    source={{
+                      uri: `${BASE_URL}/${evidence.replace(/\\/g, "/")}`,
+                    }}
+                    className="h-10 w-10 rounded-lg"
+                  />
+                ) : (
+                  <MaterialCommunityIcons
+                    name={serviceInfo.icon}
+                    size={20}
+                    color={serviceInfo.color}
+                  />
+                )}
               </View>
               <View className="flex-1">
                 <View className="flex-row flex-wrap items-center justify-between">
                   <View className="flex-shrink">
-                    <Text className="mr-2 text-base font-semibold text-gray-900">
+                    <Text className="mr-2 text-base font-semibold text-gray-800">
                       {title}
                     </Text>
                   </View>
                 </View>
-                <Text className="text-xs font-medium text-gray-500">
-                  {time} -{" "}
+                <View className="mt-2 flex-row items-center">
+                  <Text className="text-xs font-medium text-gray-500">
+                    {time}
+                  </Text>
+                  <View className="mx-2 h-4 w-[1px] rotate-12 bg-gray-300" />
                   <Text className={`text-xs font-semibold ${statusInfo.text}`}>
                     {category}
                   </Text>
-                </Text>
+                  <View className="mx-2 h-4 w-[1px] rotate-12 bg-gray-300" />
+                  <Text className={`text-xs text-gray-500`}>
+                    {totalItems} Porsi
+                  </Text>
+                </View>
               </View>
             </View>
           </View>
@@ -174,7 +210,7 @@ const OrderCard = React.memo(
                   />
                 </View>
                 <View className="ml-3">
-                  <Text className="text-sm font-medium text-gray-900">
+                  <Text className="text-xs font-medium capitalize text-gray-900">
                     {details.assignee}
                   </Text>
                   <Text className="text-xs text-gray-500">
@@ -372,7 +408,11 @@ const OrdersList = React.memo(({ orders, searchQuery }) => {
                 category={order.category}
                 title={order.judulPekerjaan}
                 date={new Date(order.requestDate).toLocaleDateString()}
-                time={new Date(order.requestDate).toLocaleTimeString()}
+                time={new Date(order.requestDate).toLocaleTimeString("en-GB", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                  hour12: false,
+                })}
                 status={order.status}
                 details={{
                   assignee: order.pic?.name,
@@ -381,6 +421,8 @@ const OrdersList = React.memo(({ orders, searchQuery }) => {
                   ).toLocaleString()}`,
                 }}
                 subBidang={order.supervisor?.subBidang}
+                employeeOrders={order.employeeOrders}
+                evidence={order.evidence}
               />
             </TouchableOpacity>
           ))}
