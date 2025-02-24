@@ -8,31 +8,38 @@ import {
   ToastAndroid,
   ActivityIndicator,
 } from "react-native";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+import {
+  MaterialCommunityIcons,
+  Ionicons,
+  FontAwesome5,
+} from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useKitchenStore } from "../store/kitchenStore";
 
 const MenuItemCard = ({ item, employeeName, entity }) => (
-  <View className="mb-3 rounded-xl border border-gray-200 bg-white p-4">
-    <View className="flex-row items-start justify-between">
-      <View className="flex-1">
-        <Text className="text-base font-medium text-gray-900">
-          {item.menuItem.name}
-        </Text>
-        <Text className="mt-1 text-sm text-gray-600">
-          Jumlah: {item.quantity}
-        </Text>
-        <Text className="text-sm text-gray-600">
-          Catatan: {item.notes || "-"}
-        </Text>
-        <Text className="mt-1 text-sm font-medium text-gray-700">
-          {employeeName} - {entity}
-        </Text>
-      </View>
-      <View className="rounded-full bg-blue-100 px-3 py-1">
-        <Text className="text-sm font-medium text-blue-800">
-          {item.menuItem.category}
-        </Text>
+  <View className="mb-3 rounded-xl border border-gray-200 bg-white shadow-sm">
+    {/* Main Content */}
+    <View className="p-4">
+      <View className="flex-row items-center justify-between">
+        <View className="flex-1 flex-row items-center">
+          <View className="rounded-lg bg-blue-50 px-3 py-3">
+            <View className="flex-row items-center">
+              <Text className="ml-1 text-xl font-semibold text-blue-600">
+                {item.quantity}×
+              </Text>
+            </View>
+          </View>
+          <View className="ml-3">
+            <Text className="text-lg font-semibold text-gray-900">
+              {item.menuItem.name}
+            </Text>
+            <View className="mt-1 flex-row items-center">
+              <Text className="text-xs text-gray-600">
+                Notes: {item.notes || "-"}
+              </Text>
+            </View>
+          </View>
+        </View>
       </View>
     </View>
   </View>
@@ -42,31 +49,46 @@ const ConfirmationDialog = ({ visible, onClose, onConfirm, isLoading }) => (
   <Modal transparent visible={visible} animationType="fade">
     <View className="flex-1 items-center justify-center bg-black/50 px-4">
       <View className="w-full max-w-sm rounded-2xl bg-white p-6">
-        <Text className="mb-2 text-xl font-semibold text-gray-900">
-          Konfirmasi Proses
-        </Text>
-        <Text className="mb-6 text-base text-gray-600">
-          Apakah Anda yakin ingin memproses pesanan ini?
-        </Text>
+        <View className="mb-4 items-center">
+          <View className="mb-3 rounded-full bg-blue-100 p-3">
+            <MaterialCommunityIcons
+              name="progress-clock"
+              size={32}
+              color="#1D4ED8"
+            />
+          </View>
+          <Text className="text-xl font-semibold text-gray-900">
+            Konfirmasi Proses
+          </Text>
+          <Text className="mt-2 text-center text-sm text-gray-600">
+            Apakah Anda yakin ingin memproses pesanan ini?
+          </Text>
+        </View>
         <View className="flex-row space-x-3">
           <TouchableOpacity
-            className="flex-1 rounded-xl border border-gray-300 bg-white py-3"
+            className="flex-1 flex-row items-center justify-center rounded-xl border border-gray-300 bg-white py-3"
             onPress={onClose}
             disabled={isLoading}
           >
-            <Text className="text-center font-medium text-gray-700">Batal</Text>
+            <MaterialCommunityIcons name="close" size={20} color="#6B7280" />
+            <Text className="ml-2 text-center font-medium text-gray-700">
+              Batal
+            </Text>
           </TouchableOpacity>
           <TouchableOpacity
-            className="flex-1 rounded-xl bg-blue-600 py-3"
+            className="flex-1 flex-row items-center justify-center rounded-xl bg-blue-600 py-3"
             onPress={onConfirm}
             disabled={isLoading}
           >
             {isLoading ? (
               <ActivityIndicator color="white" />
             ) : (
-              <Text className="text-center font-medium text-white">
-                Ya, Proses
-              </Text>
+              <>
+                <MaterialCommunityIcons name="check" size={20} color="white" />
+                <Text className="ml-2 text-center font-medium text-white">
+                  Ya, Proses
+                </Text>
+              </>
             )}
           </TouchableOpacity>
         </View>
@@ -193,25 +215,19 @@ const KitchenOrderDetailScreen = ({ route, navigation }) => {
   return (
     <SafeAreaView className="flex-1 bg-gray-50">
       {/* Header */}
-      <View className="flex-row items-center justify-between bg-white px-6 py-4 shadow-sm">
+      <View className="flex-row items-center justify-between border-b border-gray-200 bg-white px-6 py-3 shadow-lg">
         <View className="flex-row items-center">
           <TouchableOpacity
             onPress={() => navigation.goBack()}
             className="mr-4"
           >
-            <MaterialCommunityIcons
-              name="arrow-left"
-              size={24}
-              color="#1F2937"
-            />
+            <MaterialCommunityIcons name="arrow-left" size={24} color="black" />
           </TouchableOpacity>
           <View>
-            <Text className="text-2xl font-bold text-gray-900">
+            <Text className="text-xl font-semibold text-black">
               Detail Pesanan
             </Text>
-            <Text className="text-base text-gray-600">
-              Order #{order.id || "-"}
-            </Text>
+            <Text className="text-sm text-black">Order #{order.id || "-"}</Text>
           </View>
         </View>
         <View
@@ -254,133 +270,158 @@ const KitchenOrderDetailScreen = ({ route, navigation }) => {
       </View>
 
       {/* Order Info */}
-      <View className="bg-white p-4 shadow-sm">
+      {/* Order Info */}
+      <View className="bg-white p-6 py-2 pb-0 pt-4">
         <Text className="mb-4 text-lg font-semibold text-gray-900">
           {order.judulPekerjaan}
         </Text>
-        <View className="flex-row flex-wrap">
-          <View className="mb-4 w-1/2 pr-2">
-            <Text className="text-base text-gray-600">Jenis</Text>
-            <Text className="text-lg font-semibold text-gray-900">
-              {order.type}
-            </Text>
-          </View>
-          <View className="mb-4 w-1/2 pl-2">
-            <Text className="text-base text-gray-600">Kategori</Text>
-            <Text className="text-lg font-semibold text-gray-900">
-              {order.category}
-            </Text>
-          </View>
-          <View className="mb-4 w-1/2 pr-2">
-            <Text className="text-base text-gray-600">Lokasi</Text>
-            <Text className="text-lg font-semibold text-gray-900">
-              {order.dropPoint}
-            </Text>
-          </View>
-          <View className="mb-4 w-1/2 pl-2">
-            <Text className="text-base text-gray-600">Waktu Request</Text>
-            <Text className="text-lg font-semibold text-gray-900">
-              Jam {formatDate(order.requestDate)}
-            </Text>
-          </View>
-          <View className="mb-4 w-1/2 pr-2">
-            <Text className="text-base text-gray-600">PIC</Text>
-            <Text className="text-lg font-semibold text-gray-900">
-              {order.pic.name}
-            </Text>
-            <Text className="text-sm text-gray-600">{order.pic.nomorHp}</Text>
-          </View>
-          <View className="mb-4 w-1/2 pl-2">
-            <Text className="text-base text-gray-600">Supervisor</Text>
-            <Text className="text-lg font-semibold text-gray-900">
-              {order.supervisor.name}
-            </Text>
-            <Text className="text-sm text-gray-600">
-              {order.supervisor.subBidang}
-            </Text>
-          </View>
-        </View>
       </View>
 
-      {/* Menu Items */}
-      <ScrollView className="flex-1 p-4">
-        <View className="mb-4 flex-row items-center justify-between">
-          <Text className="text-lg font-semibold text-gray-900">
-            Daftar Menu
-          </Text>
-          <Text className="text-base text-gray-600">
-            Total Item: {getTotalItems(order.employeeOrders)}
-          </Text>
-        </View>
-        {order.employeeOrders?.length === 0 ? (
-          <View className="rounded-xl border border-gray-200 bg-white p-6">
-            <Text className="text-center text-gray-600">
-              Tidak ada item pesanan
-            </Text>
-          </View>
-        ) : (
-          order.employeeOrders?.map((employee) => (
-            <View key={employee.id} className="mb-6">
-              <View className="mb-2 flex-row items-center justify-between">
-                <View>
-                  <Text className="font-medium text-gray-900">
-                    {employee.employeeName}
-                  </Text>
-                  <Text className="text-sm text-gray-600">
-                    {employee.entity}
-                  </Text>
-                </View>
-                <Text className="text-sm text-gray-600">
-                  {employee.orderItems?.reduce(
-                    (sum, item) => sum + (item.quantity || 0),
-                    0
-                  )}{" "}
-                  item
+      <ScrollView className="flex-1">
+        <View className="bg-white p-6 py-2 pt-0 shadow-lg">
+          <View className="flex-row flex-wrap border-t border-gray-100 pt-3">
+            <View className="mb-4 w-1/2">
+              <View className="flex-row items-center">
+                <Text className="text-xs text-gray-600">Kategori</Text>
+              </View>
+              <View className="mt-1 self-start rounded-md bg-blue-100 px-3 py-1">
+                <Text className="text-sm font-semibold uppercase text-blue-800">
+                  {order.category}
                 </Text>
               </View>
-              {employee.orderItems?.map((item) => (
-                <MenuItemCard
-                  key={item.id}
-                  item={item}
-                  employeeName={employee.employeeName}
-                  entity={employee.entity}
-                />
-              ))}
             </View>
-          ))
-        )}
+            <View className="mb-4 w-1/2 pr-2">
+              <View className="flex-row items-center">
+                <Text className="text-xs text-gray-600">Lokasi</Text>
+              </View>
+              <Text className="mt-1 text-sm font-semibold text-gray-900">
+                {order.dropPoint}
+              </Text>
+            </View>
+
+            <View className="mb-3 w-1/2 pr-2">
+              <View className="flex-row items-center">
+                <Text className="text-xs text-gray-600">PIC</Text>
+              </View>
+              <Text className="mt-1 text-sm font-semibold capitalize text-gray-900">
+                {order.pic.name}
+              </Text>
+              <Text className="text-xs text-gray-600">{order.pic.nomorHp}</Text>
+            </View>
+            <View className="mb-3 w-1/2">
+              <View className="flex-row items-center">
+                <Text className="text-xs text-gray-600">Sub Bidang</Text>
+              </View>
+              <Text className="mt-1 text-sm font-semibold capitalize text-gray-900">
+                {order.supervisor.subBidang}
+              </Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Menu Items */}
+        <View className="p-4">
+          <View className="mb-4 flex-row items-center justify-between rounded-lg bg-white p-4 shadow-sm">
+            <View className="flex-row items-center">
+              <MaterialCommunityIcons
+                name="clipboard-list"
+                size={20}
+                color="#4B5563"
+              />
+              <Text className="ml-2 text-base font-semibold text-gray-900">
+                Daftar Pesanan
+              </Text>
+            </View>
+            <View className="flex-row items-center rounded-full bg-blue-50 px-3 py-1">
+              <MaterialCommunityIcons name="food" size={16} color="#1D4ED8" />
+              <Text className="ml-1 text-sm font-medium text-blue-700">
+                {getTotalItems(order.employeeOrders)} Item
+              </Text>
+            </View>
+          </View>
+          {!order.employeeOrders?.length ? (
+            <View className="rounded-xl border border-gray-200 bg-white p-6">
+              <Text className="text-center text-gray-600">
+                Tidak ada item pesanan
+              </Text>
+            </View>
+          ) : (
+            (() => {
+              // Group items across all employees
+              const allGroupedItems = order.employeeOrders.reduce(
+                (acc, employee) => {
+                  employee.orderItems?.forEach((item) => {
+                    const key = item.menuItem.name;
+                    if (!acc[key]) {
+                      acc[key] = {
+                        ...item,
+                        quantity: 0,
+                      };
+                    }
+                    acc[key].quantity += item.quantity;
+                  });
+                  return acc;
+                },
+                {}
+              );
+
+              return Object.values(allGroupedItems).map((item) => (
+                <MenuItemCard
+                  key={item.menuItem.name}
+                  item={item}
+                  employeeName=""
+                  entity=""
+                />
+              ));
+            })()
+          )}
+        </View>
       </ScrollView>
 
       {/* Bottom Button */}
       {order.status === "PENDING_KITCHEN" ? (
         <View className="border-t border-gray-200 bg-white p-4">
           <TouchableOpacity
-            className="rounded-xl bg-blue-600 py-4"
+            className="flex-row items-center justify-center rounded-xl bg-blue-600 py-4"
             onPress={handleProcessOrder}
             disabled={isLoading || localIsLoading}
           >
             {isLoading || localIsLoading ? (
               <ActivityIndicator color="white" />
             ) : (
-              <Text className="text-center font-semibold text-white">
-                Mulai Proses Pesanan
-              </Text>
+              <>
+                <MaterialCommunityIcons
+                  name="play-circle-outline"
+                  size={24}
+                  color="white"
+                />
+                <Text className="ml-2 text-center font-semibold text-white">
+                  Mulai Proses Pesanan
+                </Text>
+              </>
             )}
           </TouchableOpacity>
         </View>
       ) : order.status === "IN_PROGRESS" ? (
         <View className="border-t border-gray-200 bg-white p-4">
           <TouchableOpacity
-            className="flex-row items-center justify-center rounded-xl bg-green-600 py-4"
+            className="flex-row items-center justify-center space-x-2 rounded-xl bg-green-600 py-4"
             onPress={handleCompletePress}
             disabled={isLoading || localIsLoading}
           >
             {isLoading || localIsLoading ? (
               <ActivityIndicator color="white" />
             ) : (
-              <Text className="font-semibold text-white">
-                Selesaikan Pesanan
-              </Text>
+              <>
+                <MaterialCommunityIcons
+                  name="check-circle-outline"
+                  size={24}
+                  color="white"
+                />
+                <Text className="font-semibold text-white">
+                  Selesaikan Pesanan
+                </Text>
+              </>
             )}
           </TouchableOpacity>
         </View>
