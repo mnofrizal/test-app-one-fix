@@ -18,7 +18,9 @@ import { useAuthStore } from "../store/authStore";
 import { FontAwesome, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useSecretaryStore } from "../store/secretaryStore";
 import { useAdminStore } from "../store/adminStore";
+import useNotificationStore from "../store/notificationStore";
 import { useEmployeeStore } from "../store/employeeStore";
+import { useMenuStore } from "../store/menuStore";
 import useStore from "../store/useStore";
 import { StatusBar } from "expo-status-bar";
 import { SkeletonOrderList } from "../components/SkeletonOrderCard";
@@ -419,6 +421,8 @@ const HomeScreen = () => {
   const rotateValue = useSharedValue(0);
   const opacityValue = useSharedValue(0);
 
+  const { unreadCount, initializeNotifications } = useNotificationStore();
+
   const secretaryStore = useSecretaryStore();
   const adminStore = useAdminStore();
 
@@ -440,8 +444,10 @@ const HomeScreen = () => {
   } = store;
 
   const { fetchEmployees } = useEmployeeStore();
+  const { fetchMenus } = useMenuStore();
 
   React.useEffect(() => {
+    initializeNotifications();
     const loadData = async () => {
       await Promise.all([
         fetchOrders(1),
@@ -450,6 +456,7 @@ const HomeScreen = () => {
         fetchStatusStats(),
         fetchNewestOrders(),
         fetchEmployees(), // Pre-fetch employees data
+        fetchMenus(), // Pre-fetch menus data
       ]);
     };
     loadData();
@@ -460,6 +467,8 @@ const HomeScreen = () => {
     fetchStatusStats,
     fetchNewestOrders,
     fetchEmployees,
+    fetchMenus,
+    initializeNotifications,
   ]);
 
   React.useEffect(() => {
@@ -540,6 +549,7 @@ const HomeScreen = () => {
         fetchStatusStats(),
         fetchNewestOrders(),
         fetchEmployees(), // Refresh employees data
+        fetchMenus(), // Refresh menus data
       ]);
     } catch (error) {
       console.error("Refresh error:", error);
@@ -552,6 +562,7 @@ const HomeScreen = () => {
     fetchStatusStats,
     fetchNewestOrders,
     fetchEmployees,
+    fetchMenus,
   ]);
 
   return (
@@ -585,14 +596,20 @@ const HomeScreen = () => {
               {user?.name?.replace("Sekretaris", "Sec.") || "User"}
             </Text>
           </View>
+
           <View className="flex-row items-center">
+            {/* notification icon */}
             <TouchableOpacity
               className="mr-4 rounded-full bg-blue-800 p-2"
               onPress={() => navigation.navigate("Notification")}
             >
-              <View className="absolute -right-1 -top-1 z-10 h-4 w-4 items-center justify-center rounded-full bg-red-500">
-                <Text className="text-xs font-bold text-white">3</Text>
-              </View>
+              {unreadCount > 0 && (
+                <View className="absolute -right-1 -top-1 z-10 h-4 w-4 items-center justify-center rounded-full bg-red-500">
+                  <Text className="text-xs font-bold text-white">
+                    {unreadCount}
+                  </Text>
+                </View>
+              )}
               <MaterialCommunityIcons name="bell" size={24} color="white" />
             </TouchableOpacity>
             <TouchableOpacity

@@ -184,25 +184,12 @@ const DetailTab = ({ order, onRefresh, refreshing }) => {
           <Text className="mb-3 text-sm font-medium uppercase tracking-wider text-gray-500">
             Status Pesanan
           </Text>
-          <View className="flex-row items-center justify-between">
+          <View
+            className={`flex-row items-center justify-between rounded-lg   ${getStatusBgColor(
+              status.color
+            )} p-4`}
+          >
             <View className="flex-row items-center">
-              <View
-                className={`mr-3 h-10 w-10 items-center justify-center rounded-full ${getStatusBgColor(
-                  status.color
-                )}`}
-              >
-                <MaterialCommunityIcons
-                  name={
-                    status.color === "green"
-                      ? "check-circle"
-                      : status.color === "red"
-                      ? "close-circle"
-                      : "clock-outline"
-                  }
-                  size={24}
-                  color={status.color}
-                />
-              </View>
               <View>
                 <Text
                   className={`text-xl font-semibold ${getStatusTextColor(
@@ -215,6 +202,19 @@ const DetailTab = ({ order, onRefresh, refreshing }) => {
                   Last updated: {formatTime(order.updatedAt)}
                 </Text>
               </View>
+            </View>
+            <View className={`items-center justify-center rounded-full`}>
+              <MaterialCommunityIcons
+                name={
+                  status.color === "green"
+                    ? "check-circle"
+                    : status.color === "red"
+                    ? "close-circle"
+                    : "clock-outline"
+                }
+                size={36}
+                color={status.color}
+              />
             </View>
           </View>
         </View>
@@ -669,7 +669,9 @@ const OrderDetailScreen = ({ route }) => {
   const currentApprovalLink = order?.approvalLinks?.find(
     (link) => !link.isUsed
   );
-  const canApprove = currentApprovalLink && user?.role === "ADMIN";
+  const notCompletedStatus = order?.status !== "COMPLETED";
+  const canApprove =
+    currentApprovalLink && user?.role === "ADMIN" && notCompletedStatus;
   const showApproveButton = canApprove;
 
   const handleRefresh = React.useCallback(async () => {

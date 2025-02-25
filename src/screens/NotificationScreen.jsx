@@ -173,8 +173,8 @@ const NotificationScreen = () => {
     notifications,
     initializeNotifications,
     markAsRead,
+    markAllAsRead,
     deleteNotification,
-    clearNotifications,
   } = useNotificationStore();
 
   const navigation = useNavigation();
@@ -237,26 +237,26 @@ const NotificationScreen = () => {
           </View>
           {notifications.length > 0 && (
             <TouchableOpacity
-              className="rounded-lg bg-red-50 px-3 py-2"
+              className="rounded-lg bg-indigo-50 px-3 py-2"
               onPress={() => {
                 Alert.alert(
-                  "Clear All Notifications",
-                  "Are you sure you want to clear all notifications? This cannot be undone.",
+                  "Mark All as Read",
+                  "Are you sure you want to mark all notifications as read?",
                   [
                     {
                       text: "Cancel",
                       style: "cancel",
                     },
                     {
-                      text: "Clear All",
-                      style: "destructive",
-                      onPress: clearNotifications,
+                      text: "Mark All",
+                      style: "default",
+                      onPress: markAllAsRead,
                     },
                   ]
                 );
               }}
             >
-              <Text className="font-medium text-red-600">Clear All</Text>
+              <Text className="font-medium text-indigo-600">Mark as Read</Text>
             </TouchableOpacity>
           )}
         </View>

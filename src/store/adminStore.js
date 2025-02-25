@@ -26,7 +26,7 @@ export const useAdminStore = create((set, get) => ({
     endDate: null,
     status: null,
     type: null,
-    limit: 10,
+    limit: 200,
   },
 
   // Actions

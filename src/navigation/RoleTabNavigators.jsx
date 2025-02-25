@@ -1,6 +1,7 @@
 import React from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { TouchableOpacity } from "react-native";
+import { TouchableOpacity, View, Text } from "react-native";
+import useNotificationStore from "../store/notificationStore";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 // Import screens
@@ -18,8 +19,15 @@ import ProfileScreen from "../screens/ProfileScreen";
 const Tab = createBottomTabNavigator();
 
 // Custom tab icon component
-const TabIcon = ({ focused, iconName, color }) => (
-  <MaterialCommunityIcons name={iconName} size={27} color={color} />
+const TabIcon = ({ focused, iconName, color, showBadge, badgeCount }) => (
+  <View>
+    <MaterialCommunityIcons name={iconName} size={27} color={color} />
+    {showBadge && (
+      <View className="absolute -right-2 -top-1 h-4 w-4 items-center justify-center rounded-full bg-red-500">
+        <Text className="text-xs font-bold text-white">{badgeCount}</Text>
+      </View>
+    )}
+  </View>
 );
 
 // Common tab navigator options
@@ -31,7 +39,7 @@ const tabNavigatorOptions = {
     paddingBottom: 8,
     paddingTop: 8,
   },
-  tabBarActiveTintColor: "#1e3a8a",
+  tabBarActiveTintColor: "#1c3a8a",
   tabBarInactiveTintColor: "#8E8E93",
   tabBarLabelStyle: {
     fontSize: 12,
@@ -40,30 +48,40 @@ const tabNavigatorOptions = {
 };
 
 // Common screens that appear in all role navigators
-const commonScreens = (Tab) => (
-  <>
-    <Tab.Screen
-      name="Notification"
-      component={NotificationScreen}
-      options={{
-        tabBarIcon: ({ focused, color }) => (
-          <TabIcon focused={focused} iconName="bell" color={color} />
-        ),
-        tabBarLabel: "Notifications",
-      }}
-    />
-    <Tab.Screen
-      name="Profile"
-      component={ProfileScreen}
-      options={{
-        tabBarIcon: ({ focused, color }) => (
-          <TabIcon focused={focused} iconName="account" color={color} />
-        ),
-        tabBarLabel: "Profile",
-      }}
-    />
-  </>
-);
+const commonScreens = (Tab) => {
+  const { unreadCount } = useNotificationStore();
+
+  return (
+    <>
+      <Tab.Screen
+        name="Notification"
+        component={NotificationScreen}
+        options={{
+          tabBarIcon: ({ focused, color }) => (
+            <TabIcon
+              focused={focused}
+              iconName="bell"
+              color={color}
+              showBadge={unreadCount > 0}
+              badgeCount={unreadCount}
+            />
+          ),
+          tabBarLabel: "Notifications",
+        }}
+      />
+      <Tab.Screen
+        name="Profile"
+        component={ProfileScreen}
+        options={{
+          tabBarIcon: ({ focused, color }) => (
+            <TabIcon focused={focused} iconName="account" color={color} />
+          ),
+          tabBarLabel: "Profile",
+        }}
+      />
+    </>
+  );
+};
 
 // Admin Tab Navigator
 export const AdminTabNavigator = () => (

@@ -56,7 +56,7 @@ const ProfileScreen = ({ navigation }) => {
   return (
     <ScrollView className="flex-1 bg-gray-50">
       {/* Header */}
-      <View className="bg-blue-900 px-6 pb-8 pt-14">
+      <View className="bg-blue-900 px-6 pb-12 pt-14">
         <View className="items-center">
           <View className="mb-4 h-24 w-24 items-center justify-center rounded-full bg-blue-800">
             <MaterialCommunityIcons name="account" size={64} color="white" />
@@ -67,25 +67,35 @@ const ProfileScreen = ({ navigation }) => {
       </View>
 
       {/* Quick Stats */}
-      <View className="-mt-4 flex-row px-4">
-        <View className="flex-1 rounded-xl bg-white p-4 shadow-sm">
-          <View className="items-center">
+      <View className="-mt-8 flex-row px-4">
+        <View
+          style={{
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.1,
+            shadowRadius: 10,
+            elevation: 4,
+            boxShadow: "0 0 8px rgba(0, 0, 0, 0.1)", // Added glow effect
+          }}
+          className="flex-1 flex-row items-center justify-between rounded-l-xl rounded-r-xl bg-white p-4 shadow-sm"
+        >
+          <View className="flex-1 items-center">
             <Text className="text-2xl font-bold text-gray-900">0</Text>
             <Text className="text-sm text-gray-500">Pesanan</Text>
           </View>
-        </View>
-        <View className="mx-2" />
-        <View className="flex-1 rounded-xl bg-white p-4 shadow-sm">
-          <View className="items-center">
+
+          <View className="h-full w-px bg-gray-200" />
+
+          <View className="flex-1 items-center">
             <Text className="text-2xl font-bold text-gray-900">0</Text>
             <Text className="text-sm text-gray-500">Aktif</Text>
           </View>
-        </View>
-        <View className="mx-2" />
-        <View className="flex-1 rounded-xl bg-white p-4 shadow-sm">
-          <View className="items-center">
+
+          <View className="h-full w-px bg-gray-200" />
+
+          <View className="flex-1 items-center">
             <Text className="text-2xl font-bold text-gray-900">0</Text>
-            <Text className="text-sm text-gray-500">Tertunda</Text>
+            <Text className="text-sm text-gray-500">Pending</Text>
           </View>
         </View>
       </View>
@@ -102,12 +112,14 @@ const ProfileScreen = ({ navigation }) => {
           subtitle="Perbarui informasi Anda"
         />
 
-        <ProfileOption
-          icon="whatsapp"
-          title="Whatsapp Notifikasi"
-          subtitle="Kelola Whatsapp notifikasi"
-          onPress={() => navigation.navigate("WhatsappSetting")}
-        />
+        {user?.role === "ADMIN" && (
+          <ProfileOption
+            icon="whatsapp"
+            title="Whatsapp Notifikasi"
+            subtitle="Kelola Whatsapp notifikasi"
+            onPress={() => navigation.navigate("WhatsappSetting")}
+          />
+        )}
 
         <Text className="mb-4 mt-6 text-base font-semibold text-gray-900">
           Dukungan

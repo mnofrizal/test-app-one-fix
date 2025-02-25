@@ -3,7 +3,7 @@ import api from "./interceptors";
 // Basic CRUD operations
 export const getAllOrders = async ({
   page = 1,
-  limit = 10,
+  limit = 200, //change later
   startDate,
   endDate,
   status,

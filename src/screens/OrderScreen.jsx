@@ -2,18 +2,18 @@ import React, { useState, useEffect, useMemo } from "react";
 import {
   View,
   Text,
-  ScrollView,
   TouchableOpacity,
   TextInput,
   ActivityIndicator,
-  RefreshControl,
   Dimensions,
   Image,
+  ScrollView,
 } from "react-native";
 import { TabView, TabBar } from "react-native-tab-view";
 import { useNavigation } from "@react-navigation/native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import Animated, { FadeIn, Layout } from "react-native-reanimated";
+import { FlashList } from "@shopify/flash-list";
 import BottomSheet from "../components/BottomSheet";
 import { SkeletonOrderList } from "../components/SkeletonOrderCard";
 import { useSecretaryStore } from "../store/secretaryStore";
@@ -175,7 +175,7 @@ const OrderCard = React.memo(
               <View className="flex-1">
                 <View className="flex-row flex-wrap items-center justify-between">
                   <View className="flex-shrink">
-                    <Text className="mr-2 text-base font-semibold text-gray-800">
+                    <Text className="mr-2 text-sm font-semibold text-gray-800">
                       {title}
                     </Text>
                   </View>
@@ -275,10 +275,10 @@ const DateFilterSheet = React.memo(
         <View className="flex-1 px-6">
           <View className="mb-6 border-b border-gray-100 pb-4">
             <Text className="text-xl font-bold text-gray-900">
-              Filter by Date
+              Filter Berdasarkan Tanggal
             </Text>
             <Text className="text-base text-gray-500">
-              Select a date range to filter orders
+              Pilih rentang tanggal untuk memfilter pesanan
             </Text>
           </View>
 
@@ -287,42 +287,44 @@ const DateFilterSheet = React.memo(
               <Text className="mb-3 text-sm font-medium text-gray-500">
                 {group.title}
               </Text>
-              {group.filters.map((filter) => (
-                <TouchableOpacity
-                  key={filter.value}
-                  onPress={() => {
-                    if (filter.value === "all") {
-                      onSelect(null);
-                      onReset?.();
-                    } else {
-                      onSelect(filter.value);
-                    }
-                    onClose();
-                  }}
-                  className={`mb-2 flex-row items-center rounded-full px-4 py-2 ${
-                    selectedDate === filter.value
-                      ? "bg-gray-900"
-                      : "bg-white border border-gray-200"
-                  }`}
-                >
-                  <MaterialCommunityIcons
-                    name={filter.icon}
-                    size={18}
-                    color={
-                      selectedDate === filter.value ? "#ffffff" : "#374151"
-                    }
-                  />
-                  <Text
-                    className={`ml-2 text-sm font-medium ${
+              <View className="flex-row flex-wrap items-center">
+                {group.filters.map((filter) => (
+                  <TouchableOpacity
+                    key={filter.value}
+                    onPress={() => {
+                      if (filter.value === "all") {
+                        onSelect(null);
+                        onReset?.();
+                      } else {
+                        onSelect(filter.value);
+                      }
+                      onClose();
+                    }}
+                    className={`mb-2 mr-2 flex-row items-center rounded-full px-4 py-2 ${
                       selectedDate === filter.value
-                        ? "text-white"
-                        : "text-gray-700"
+                        ? "bg-gray-900"
+                        : "bg-white border border-gray-200"
                     }`}
                   >
-                    {filter.label}
-                  </Text>
-                </TouchableOpacity>
-              ))}
+                    <MaterialCommunityIcons
+                      name={filter.icon}
+                      size={18}
+                      color={
+                        selectedDate === filter.value ? "#ffffff" : "#374151"
+                      }
+                    />
+                    <Text
+                      className={`ml-2 text-sm font-medium ${
+                        selectedDate === filter.value
+                          ? "text-white"
+                          : "text-gray-700"
+                      }`}
+                    >
+                      {filter.label}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
             </View>
           ))}
         </View>
@@ -333,121 +335,139 @@ const DateFilterSheet = React.memo(
 
 const dateFilterGroups = [
   {
-    title: "Quick Filters",
+    title: "Filter Cepat",
     filters: [
-      { label: "Clear Dates", value: "all", icon: "calendar-remove" },
-      { label: "Today", value: "today", icon: "calendar-today" },
-      { label: "This Week", value: "week", icon: "calendar-week" },
-      { label: "This Month", value: "month", icon: "calendar-month" },
+      { label: "Hapus Tanggal", value: "all", icon: "calendar-remove" },
+      { label: "Hari Ini", value: "today", icon: "calendar-today" },
+      { label: "Minggu Ini", value: "week", icon: "calendar-week" },
+      { label: "Bulan Ini", value: "month", icon: "calendar-month" },
     ],
   },
   {
-    title: "Custom Range",
+    title: "Rentang Kustom",
     filters: [
-      { label: "Last 7 Days", value: "last7", icon: "calendar-range" },
-      { label: "Last 30 Days", value: "last30", icon: "calendar-range" },
-      { label: "Last 90 Days", value: "last90", icon: "calendar-range" },
+      { label: "7 Hari Terakhir", value: "last7", icon: "calendar-range" },
+      { label: "30 Hari Terakhir", value: "last30", icon: "calendar-range" },
+      { label: "90 Hari Terakhir", value: "last90", icon: "calendar-range" },
     ],
   },
 ];
 
-const OrdersList = React.memo(({ orders, searchQuery }) => {
-  const navigation = useNavigation();
-  // Filter orders by search query
-  const filteredOrders = useMemo(
-    () =>
-      orders.filter((order) =>
+const OrderTab = React.memo(
+  ({ orders, searchQuery, refreshing, onRefresh }) => {
+    const navigation = useNavigation();
+
+    // Flatten and prepare data for FlashList
+    const data = useMemo(() => {
+      // Filter orders by search query
+      const filteredOrders = orders.filter((order) =>
         searchQuery
           ? order.judulPekerjaan
               .toLowerCase()
               .includes(searchQuery.toLowerCase())
           : true
-      ),
-    [orders, searchQuery]
-  );
+      );
 
-  // Group filtered orders by date
-  const groupedOrders = useMemo(() => {
-    return filteredOrders.reduce((groups, order) => {
-      const date = new Date(order.requestDate).toLocaleDateString();
-      if (!groups[date]) {
-        groups[date] = [];
-      }
-      groups[date].push(order);
-      return groups;
-    }, {});
-  }, [filteredOrders]);
-
-  if (Object.entries(groupedOrders).length === 0) {
-    return (
-      <View className="mt-4 items-center">
-        <MaterialCommunityIcons
-          name="clipboard-text-search"
-          size={48}
-          color="#9CA3AF"
-        />
-        <Text className="mt-2 text-base font-medium text-gray-500">
-          No orders found
-        </Text>
-      </View>
-    );
-  }
-
-  return (
-    <View className="p-4 py-2">
-      {Object.entries(groupedOrders).map(([date, orders]) => (
-        <View key={date}>
-          <DateLabel date={date} />
-          {orders.map((order) => (
-            <TouchableOpacity
-              key={order.id}
-              onPress={() => navigation.navigate("OrderDetail", { order })}
-            >
-              <OrderCard
-                type={order.type}
-                category={order.category}
-                title={order.judulPekerjaan}
-                date={new Date(order.requestDate).toLocaleDateString()}
-                time={new Date(order.requestDate).toLocaleTimeString("en-GB", {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                  hour12: false,
-                })}
-                status={order.status}
-                details={{
-                  assignee: order.pic?.name,
-                  time: `Required by: ${new Date(
-                    order.requiredDate
-                  ).toLocaleString()}`,
-                }}
-                subBidang={order.supervisor?.subBidang}
-                employeeOrders={order.employeeOrders}
-                evidence={order.evidence}
-              />
-            </TouchableOpacity>
-          ))}
-        </View>
-      ))}
-    </View>
-  );
-});
-
-const OrderTab = React.memo(
-  ({ orders, searchQuery, refreshing, onRefresh }) => {
-    return (
-      <ScrollView
-        className="flex-1"
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            tintColor="#4F46E5"
-            colors={["#4F46E5"]}
-          />
+      // Group by date
+      const groupedByDate = filteredOrders.reduce((acc, order) => {
+        const date = new Date(order.requestDate).toLocaleDateString();
+        if (!acc[date]) {
+          acc[date] = {
+            type: "date",
+            date,
+            data: [],
+          };
         }
-      >
-        <OrdersList orders={orders} searchQuery={searchQuery} />
-      </ScrollView>
+        acc[date].data.push({
+          type: "order",
+          ...order,
+        });
+        return acc;
+      }, {});
+
+      // Flatten into array suitable for FlashList
+      const flattened = [];
+      Object.values(groupedByDate).forEach((group) => {
+        flattened.push(group); // Add date header
+        flattened.push(...group.data); // Add orders for that date
+      });
+
+      return flattened;
+    }, [orders, searchQuery]);
+
+    const renderItem = React.useCallback(
+      ({ item }) => {
+        if (item.type === "date") {
+          return <DateLabel date={item.date} />;
+        }
+
+        return (
+          <TouchableOpacity
+            onPress={() => navigation.navigate("OrderDetail", { order: item })}
+          >
+            <OrderCard
+              type={item.type}
+              category={item.category}
+              title={item.judulPekerjaan}
+              date={new Date(item.requestDate).toLocaleDateString()}
+              time={new Date(item.requestDate).toLocaleTimeString("en-GB", {
+                hour: "2-digit",
+                minute: "2-digit",
+                hour12: false,
+              })}
+              status={item.status}
+              details={{
+                assignee: item.pic?.name,
+                time: `Required by: ${new Date(
+                  item.requiredDate
+                ).toLocaleString()}`,
+              }}
+              subBidang={item.supervisor?.subBidang}
+              employeeOrders={item.employeeOrders}
+              evidence={item.evidence}
+            />
+          </TouchableOpacity>
+        );
+      },
+      [navigation]
+    );
+
+    const keyExtractor = React.useCallback((item) => {
+      return item.type === "date" ? `date-${item.date}` : `order-${item.id}`;
+    }, []);
+
+    const getItemType = React.useCallback((item) => {
+      return item.type;
+    }, []);
+
+    if (data.length === 0) {
+      return (
+        <View className="mt-4 items-center">
+          <MaterialCommunityIcons
+            name="clipboard-text-search"
+            size={48}
+            color="#9CA3AF"
+          />
+          <Text className="mt-2 text-base font-medium text-gray-500">
+            No orders found
+          </Text>
+        </View>
+      );
+    }
+
+    return (
+      <View className="flex-1">
+        <FlashList
+          data={data}
+          renderItem={renderItem}
+          keyExtractor={keyExtractor}
+          getItemType={getItemType}
+          estimatedItemSize={150}
+          contentContainerStyle={{ padding: 16, paddingTop: 8 }}
+          onRefresh={onRefresh}
+          refreshing={refreshing}
+        />
+      </View>
     );
   }
 );
@@ -460,7 +480,7 @@ const OrderScreen = () => {
   const [routes] = useState([
     { key: "approval", title: "Approval" },
     { key: "inprogress", title: "In Progress" },
-    { key: "done", title: "Done" },
+    { key: "done", title: "Selesai" },
   ]);
   const [selectedTypes, setSelectedTypes] = useState([]);
   const [selectedDate, setSelectedDate] = useState(null);
@@ -602,42 +622,36 @@ const OrderScreen = () => {
     { label: "Room", icon: "door", value: "room" },
     { label: "Stationary", icon: "pencil", value: "stationary" },
   ];
+
   const renderTabBar = React.useCallback(
     (props) => (
       <TabBar
         {...props}
-        indicatorStyle={{ backgroundColor: "#4F46E5" }}
+        indicatorStyle={{ backgroundColor: "#63c67d" }}
         style={{ backgroundColor: "white" }}
         labelStyle={{ color: "#374151", fontWeight: "500" }}
-        activeColor="#4F46E5"
+        activeColor="#63c67ds"
         inactiveColor="#6B7280"
         renderLabel={({ route, focused, color }) => (
           <View className="flex-row items-center py-3">
-            <Text style={{ color }} className="text-sm font-medium">
-              {route.title}
-            </Text>
-            {route.key === "approval" && mappedOrders.approval.length > 0 && (
-              <View className="ml-2 rounded-full bg-gray-100 px-2 py-0.5">
-                <Text className="text-xs font-medium text-gray-600">
-                  {mappedOrders.approval.length}
+            <View className="flex-row items-center">
+              <Text style={{ color }} className="text-sm font-medium">
+                {route.title}
+              </Text>
+              <View
+                className={`ml-2 rounded-full ${
+                  focused ? "bg-blue-100" : "bg-gray-100"
+                } px-2 py-0.5`}
+              >
+                <Text
+                  className={`text-xs font-medium ${
+                    focused ? "text-blue-700" : "text-gray-600"
+                  }`}
+                >
+                  {mappedOrders[route.key].length}
                 </Text>
               </View>
-            )}
-            {route.key === "inprogress" &&
-              mappedOrders.inprogress.length > 0 && (
-                <View className="ml-2 rounded-full bg-gray-100 px-2 py-0.5">
-                  <Text className="text-xs font-medium text-gray-600">
-                    {mappedOrders.inprogress.length}
-                  </Text>
-                </View>
-              )}
-            {route.key === "done" && mappedOrders.done.length > 0 && (
-              <View className="ml-2 rounded-full bg-gray-100 px-2 py-0.5">
-                <Text className="text-xs font-medium text-gray-600">
-                  {mappedOrders.done.length}
-                </Text>
-              </View>
-            )}
+            </View>
           </View>
         )}
       />
@@ -682,7 +696,7 @@ const OrderScreen = () => {
             </View>
           </View>
           <TouchableOpacity
-            className="rounded-full bg-blue-900 p-2"
+            className="rounded-full bg-[#006fcd] p-2"
             onPress={() => navigation.navigate("MealOrder")}
           >
             <MaterialCommunityIcons name="plus" size={24} color="white" />
@@ -691,7 +705,7 @@ const OrderScreen = () => {
       </View>
 
       {/* Filter Buttons */}
-      <View className="flex-row bg-white pt-4">
+      <View className="flex-row bg-white pt-3">
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
